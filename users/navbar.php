@@ -20,9 +20,15 @@
                         <path clip-rule="evenodd" fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
                     </svg>
                 </button>
-                <a href="#" class="flex ms-2 md:me-24">
-                    <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">One Soler PMS</span>
+                <a href="#" class="flex items-center ms-2 md:me-24">
+                    <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white flex items-center">
+                        <!-- Key Icon -->
+                        <i class="fas fa-key text-inherit mr-2"></i> 
+                        <!-- RentEase Text -->
+                        RentEase
+                    </span>
                 </a>
+
             </div>
             <div class="flex items-center">
                 <div class="flex items-center ms-3 relative">
@@ -48,7 +54,7 @@
                                 <a href="profile.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem"> <i class="fas fa-user mr-4"></i>Profile</a>
                             </li>
                             <li>
-                                <a href="#" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem"> <i class="fas fa-sign-out-alt mr-4"></i>Logout</a>
+                                <a href="../authentication/logout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem"> <i class="fas fa-sign-out-alt mr-4"></i>Logout</a>
                             </li>
                         </ul>
                     </div>

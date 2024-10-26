@@ -1,3 +1,25 @@
+<?php
+
+require_once '../session/session_manager.php';
+require '../session/db.php';
+
+
+start_secure_session();
+
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) {
+    // If not logged in, redirect to login page
+    header('Location: ../authentication/login.php'); // Adjust the path as necessary
+    exit();
+}
+
+?>
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

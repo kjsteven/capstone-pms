@@ -45,7 +45,7 @@
 
             <!-- Reserve a Unit -->
             <li>
-                <a href="#" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                <a href="bookunit.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
                     <svg class="flex-shrink-0 w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M20 6H4c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM4 10h16v2H4v-2zM20 14H4c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2zM4 16h16v2H4v-2z"/>
                     </svg>
@@ -55,7 +55,7 @@
 
             <!-- View Unit Information -->
             <li>
-                <a href="#" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                <a href="unitinfo.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
                     <svg class="flex-shrink-0 w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 4a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 01-2 0v-4h-4a1 1 0 110-2h4V5a1 1 0 011-1z"/>
                     </svg>
@@ -72,7 +72,27 @@
                     <span class="flex-1 ms-3 whitespace-nowrap">Maintenance Requests</span>
                 </a>
             </li>
-        </ul>
+
+              <!-- Rent Contract -->
+                    <a href="contract.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                        <!-- New Logo SVG -->
+                        <svg class="flex-shrink-0 w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Example SVG Path for a Rental Contract Icon -->
+                            <path d="M7 2v1H2v20h20V3h-5V2H7zm1 2h6v1H8V4zm0 3h8v1H8V7zm0 3h8v1H8v-1zm0 3h8v1H8v-1zm0 3h8v1H8v-1z"/>
+                        </svg>
+                        <span class="ms-3">Rent Agreement</span>
+                    </a>
+
+                <!-- Online Payment -->
+                    <a href="payment.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                        <!-- Credit Card SVG -->
+                        <svg class="flex-shrink-0 w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v12h16V6H4zm2 3h12v2H6V9zm0 3h12v2H6v-2zm0 3h12v2H6v-2z"/>
+                        </svg>
+                        <span class="ms-3">Pay Online</span>
+                    </a>
+
+            </ul>
     </div>
 </aside>
 

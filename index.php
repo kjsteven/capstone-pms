@@ -27,7 +27,8 @@
         <div class="container mx-auto px-4 py-6 flex justify-between items-center">
             <!-- Logo -->
             <div class="text-2xl font-bold text-blue-600">
-                <a href="#">One Soler PMS</a>
+            <i class="fas fa-key text-inherit"></i> <!-- This ensures the icon inherits the text color -->
+            <span>RentEase</span>
             </div>
 
             <!-- Hamburger Icon for Mobile -->
@@ -39,18 +40,17 @@
                 </button>
             </div>
 
-            <!-- Navigation (Hidden on Mobile, Visible on Medium and Larger Screens) -->
-            <nav class="space-x-6 hidden md:block">
+            <nav class="space-x-6 hidden md:block !hidden md:!block">
                 <a href="#features" class="text-gray-700 hover:text-blue-600">Features</a>
                 <a href="#how-it-works" class="text-gray-700 hover:text-blue-600">How It Works</a>
                 <a href="#services" class="text-gray-700 hover:text-blue-600">Services</a>
                 <a href="#contact" class="text-gray-700 hover:text-blue-600">Contact</a>
             </nav>
 
-            <!-- CTA Button -->
-            <a href="#get-started" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hidden md:inline-block hover:bg-blue-500">
-                Get Started
+            <a href="./authentication/signup.php" class="bg-blue-600 text-white px-4 py-2 mt-4 block text-center hidden md:block !hidden rounded-lg shadow-md hover:bg-blue-500 md:!block">
+                Signup now
             </a>
+
         </div>
 
         <!-- Mobile Menu (hidden by default) -->
@@ -59,29 +59,33 @@
             <a href="#how-it-works" class="block text-gray-700 py-2 hover:text-blue-600">How It Works</a>
             <a href="#services" class="block text-gray-700 py-2 hover:text-blue-600">Services</a>
             <a href="#contact" class="block text-gray-700 py-2 hover:text-blue-600">Contact</a>
-            <a href="#get-started" class="bg-blue-600 text-white px-4 py-2 mt-4 block text-center rounded-lg shadow-md hover:bg-blue-500">
-                Get Started
+            <a href="./authentication/signup.php" class="bg-blue-600 text-white px-4 py-2 mt-4 block text-center rounded-lg shadow-md hover:bg-blue-500">
+                Signup now
             </a>
         </div>
     </header>
 
-
-    <!-- Heroe Section -->
-    <section class="bg-no-repeat bg-cover py-16 pb-24" style="background-image: url('images/bg2.jpg'); background-color: rgba(51, 51, 51, 0.9);">
-    <div class="container mx-auto px-4 flex flex-col md:flex-row items-center">
+<!-- Hero Section -->
+<section class="relative bg-no-repeat bg-cover py-16 pb-24" style="background-image: url('images/bg2.jpg');">
+    
+<!-- Overlay -->
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    
+    <div class="container mx-auto px-4 flex flex-col md:flex-row items-center relative z-10">
         <div class="md:w-1/2 mb-6 md:mb-0 text-center md:text-left">
             <h1 class="text-3xl md:text-5xl font-bold text-white mb-4">
-                Simplify Your Living Experience with One Soler PMS
+                Simplify Your Living Experience with RentEase
             </h1>
             <p class="text-lg md:text-xl text-white mb-8">
                 Enjoy a seamless experience for managing your rental, from maintenance requests to secure payments, all in one place.
             </p>
-            <a href="#features" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500">
+            <a href="#how-it-works" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500">
                 Discover How It Works
             </a>
         </div>
     </div>
 </section>
+
 
 <!-- Features Section -->
 <section id="features" class="py-16 bg-gray-100">

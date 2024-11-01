@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maintenance Request</title>
+    <link rel="icon" href="../images/logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -96,6 +97,32 @@
             <!-- Request History Section -->
             <div id="history-content" class="hidden-tab bg-white shadow-lg rounded-lg p-6">
                 <h2 class="text-xl font-semibold mb-6 text-left">Request History</h2>
+
+               <!-- Search and Filter Section -->
+                <div class="mb-4 flex items-center space-x-2">
+                    <!-- Status Filter styled like "All Categories" with margin on arrow -->
+                    <div class="relative">
+                        <select id="status-filter" class="border border-gray-300 rounded-lg px-4 py-2 pr-8 outline-none appearance-none">
+                            <option value="">All Status</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                        <!-- Dropdown arrow margin achieved by adding an icon with padding -->
+                        <span class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
+
+                    <!-- Keyword Search with reduced size -->
+                    <div class="relative w-full sm:w-1/4">
+                        <input type="text" id="search-keyword" placeholder="Search..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
+                        <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="min-w-full border border-gray-300">
                         <thead>
@@ -167,11 +194,11 @@
 
     </div>
 
+
     <script>
         // JavaScript for tab navigation
         const tabRequest = document.getElementById('tab-request');
         const tabHistory = document.getElementById('tab-history');
-
         const requestContent = document.getElementById('request-content');
         const historyContent = document.getElementById('history-content');
 
@@ -189,17 +216,40 @@
             tabRequest.classList.remove('border-blue-600');
         });
 
+        // JavaScript for filtering
+        const keywordInput = document.getElementById('search-keyword');
+        const statusFilter = document.getElementById('status-filter');
+        const tableBody = document.getElementById('request-table-body');
+
+        function filterRequests() {
+            const keyword = keywordInput.value.toLowerCase();
+            const status = statusFilter.value;
+
+            Array.from(tableBody.children).forEach(row => {
+                const rowText = row.innerText.toLowerCase();
+                const rowStatus = row.querySelector('td:nth-child(5)').innerText;
+
+                if ((rowText.includes(keyword) || keyword === '') && (status === rowStatus || status === '')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        keywordInput.addEventListener('input', filterRequests);
+        statusFilter.addEventListener('change', filterRequests);
+
         // Dummy functions for delete and download actions
         function deleteRequest(index) {
             alert(`Deleting request at index ${index}`);
-            // Implement your delete logic here
         }
 
         function downloadRequest(index) {
             alert(`Downloading request at index ${index}`);
-            // Implement your download logic here
         }
     </script>
+
 
 </body>
 </html>

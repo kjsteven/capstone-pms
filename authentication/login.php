@@ -22,6 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
+    if (!filter_var($username, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['error_message'] = "Invalid email format.";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+
     // Prepare and execute the SQL statement with lockout check
     $stmt = $conn->prepare(
         "SELECT user_id, password, email, is_verified, otp_used, login_attempts, 
@@ -84,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $updateStmt->execute();
             $updateStmt->close();
 
-            $_SESSION['error_message'] = "Invalid email or password. Attempt $loginAttempts of $maxAttempts.";
+            $_SESSION['error_message'] = "Wrong Password or Email. Attempt $loginAttempts of $maxAttempts.";
             header("Location: " . $_SERVER['PHP_SELF']);
             exit;
         }
@@ -151,6 +158,7 @@ function sendOtpEmail($email, $otp) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="icon" href="../images/logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href='https://unpkg.com/boxicons/css/boxicons.min.css' rel='stylesheet'>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">

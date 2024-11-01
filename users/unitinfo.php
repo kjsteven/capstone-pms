@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Unit Information</title>
+    <title>Unit Information</title>
+    <link rel="icon" href="../images/logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -11,26 +12,8 @@
         body {
             font-family: 'Poppins', sans-serif;
         }
-        @media print {
-            #printBtn, #search {
-                display: none; /* Hide the print button and search bar when printing */
-            }
-            .table {
-                margin-top: 20px;
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .table th, .table td {
-                border: 1px solid #000;
-                padding: 8px;
-                text-align: left;
-            }
-            .header {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-        }
     </style>
+    
 </head>
 <body class="bg-gray-100">
 
@@ -142,7 +125,6 @@
 
     // Print Functionality
     document.getElementById('printBtn').addEventListener('click', function() {
-        const originalContent = document.body.innerHTML;
         const printContent = document.getElementById('unitTable').outerHTML;
 
         // Create a new window to print
@@ -150,7 +132,8 @@
         newWin.document.write(`
             <html>
                 <head>
-                    <title>Print</title>
+                    <title>Print Unit Information</title>
+                    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
                     <style>
                         body {
                             font-family: 'Poppins', sans-serif;
@@ -178,9 +161,12 @@
                 </body>
             </html>
         `);
-        newWin.document.close();
-        newWin.print();
-        newWin.close();
+        
+        newWin.document.close(); // Close the document to complete loading
+        newWin.onload = function() { // Wait until the new document is fully loaded
+            newWin.print();
+            newWin.close();
+        };
     });
 </script>
 

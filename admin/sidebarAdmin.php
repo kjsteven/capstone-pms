@@ -98,6 +98,14 @@ echo '<script>
                     <span>Maintenance Requests</span>
                 </a>
             </li>
+            
+            <!-- Invoice -->
+            <li>
+                <a href="invoiceAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <i class="fas fa-file-invoice text-blue-500"></i> <!-- Updated icon -->
+                    <span>Invoice</span>
+                </a>
+            </li>
 
             <!-- Rental Payments -->
             <li>

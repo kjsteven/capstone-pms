@@ -14,11 +14,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+
 ?>
-
-
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -26,12 +23,12 @@ if (!isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <title>Dashboard</title>
     <link rel="icon" href="../images/logo.png" type="image/png">
     <style>
-        /* Optional: Custom styles for smooth transitions */
         .transition-transform {
             transition: transform 0.3s ease;
         }
@@ -40,7 +37,7 @@ if (!isset($_SESSION['user_id'])) {
         }
     </style>
 </head>
-<body> 
+<body>
 
 <!-- Include Navbar -->
 <?php include('navbar.php'); ?>
@@ -49,12 +46,180 @@ if (!isset($_SESSION['user_id'])) {
 <?php include('sidebar.php'); ?>
 
 <div class="p-4 sm:ml-64">
-    <div class="mt-14">
-        <h1 class="text-2xl font-semibold text-gray-600 dark:text-gray-600">Welcome to Your Dashboard</h1>
-        <p class="mt-4 text-gray-600 dark:text-gray-400">Here you can manage your profile, view unit information, and access other features.</p>
+    <div class="mt-20">
+        <h1 class="text-2xl font-semibold text-gray-600">Welcome Back, User</h1>
     </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8">
+        <!-- Property and Financial Cards (Left Column, Spanning 3 Columns in Total) -->
+        <div class="col-span-1 md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <!-- Total Properties Card -->
+            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-building fa-2x text-blue-500"></i>
+                    <div>
+                        <h3 class="text-xl font-semibold">$3.456K</h3>
+                        <p class="text-gray-600">Total Properties</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maintenance Card -->
+            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-tools fa-2x text-green-500"></i>
+                    <div>
+                        <h3 class="text-xl font-semibold">$45.2K</h3>
+                        <p class="text-gray-600">Maintenance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Status Card -->
+            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-money-bill-wave fa-2x text-yellow-500"></i>
+                    <div>
+                        <h3 class="text-xl font-semibold">$20K</h3>
+                        <p class="text-gray-600">Track Payment Status</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Agreement Card -->
+            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-file-contract fa-2x text-red-500"></i>
+                    <div>
+                        <h3 class="text-xl font-semibold">5 Agreements</h3>
+                        <p class="text-gray-600">View Agreement</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Calendar Section (Right Column, Spanning 2 Columns for Larger Width) -->
+        <div class="col-span-1 md:col-span-2 bg-white rounded-lg shadow-md p-6 border border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <i id="prevMonth" class="fas fa-chevron-left text-gray-500 cursor-pointer"></i>
+                <span id="monthYear" class="font-semibold text-lg">January</span>
+                <i id="nextMonth" class="fas fa-chevron-right text-gray-500 cursor-pointer"></i>
+            </div>
+            <div class="grid grid-cols-7 gap-2 text-center text-gray-500 mb-4">
+                <div>S</div>
+                <div>M</div>
+                <div>T</div>
+                <div>W</div>
+                <div>T</div>
+                <div>F</div>
+                <div>S</div>
+            </div>
+            <div id="calendarDays" class="grid grid-cols-7 gap-2 text-center"></div>
+            <button class="mt-6 w-full bg-blue-600 text-white py-2 rounded-lg">Add event</button>
+        </div>
+
+    </div> 
+
+    <!-- Chart Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md mt-6 border border-gray-200">
+        <h2 class="text-xl md:text-2xl font-semibold text-gray-800 mb-4">Rent Payments per Month</h2>
+        <div id="chart"></div>
+    </div>
+
 </div>
 
+<script>
+    // Calendar Functionality
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
+
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    const renderCalendar = () => {
+        const calendarDays = document.getElementById('calendarDays');
+        calendarDays.innerHTML = '';
+
+        const monthYear = document.getElementById('monthYear');
+        monthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+        const firstDay = firstDayOfMonth(currentMonth, currentYear);
+        const totalDays = daysInMonth(currentMonth, currentYear);
+
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.classList.add('text-gray-300');
+            calendarDays.appendChild(emptyCell);
+        }
+
+        for (let day = 1; day <= totalDays; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.textContent = day;
+            if (day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear()) {
+                dayCell.classList.add('bg-black', 'text-white', 'rounded-full', 'w-8', 'h-8', 'flex', 'items-center', 'justify-center', 'mx-auto');
+            }
+            calendarDays.appendChild(dayCell);
+        }
+    };
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar();
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar();
+    });
+
+    renderCalendar();
+
+</script>
+
+<script>
+    var options = {
+        series: [{
+            name: "Rent Payments",
+            data: [500, 600, 700, 650, 800, 750, 900, 950, 1100, 1200, 1300, 1400] // Sample rent payment amounts for each month
+        }],
+        chart: {
+            height: 350,
+            type: 'line',
+            zoom: {
+                enabled: false
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: 'smooth'
+        },
+        grid: {
+            row: {
+                colors: ['#f3f3f3', 'transparent'], // takes an array which will be repeated on columns
+                opacity: 0.5
+            },
+        },
+        xaxis: {
+            categories: monthNames,
+        }
+    };
+
+    var chart = new ApexCharts(document.querySelector("#chart"), options);
+    chart.render();
+</script>
 
 </body>
 </html>

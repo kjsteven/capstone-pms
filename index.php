@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RentEase</title>
+    <title>PropertyWise</title>
     <link rel="icon" href="images/logo.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -37,7 +37,7 @@
             <!-- Logo -->
             <a href="." class="text-2xl font-bold text-blue-600">
                 <i class="fas fa-key text-inherit"></i> <!-- This ensures the icon inherits the text color -->
-                <span>RentEase</span>
+                <span>PropertyWise</span>
             </a>
 
 
@@ -238,12 +238,13 @@
     <!-- Footer Section -->
     <footer class="bg-white py-6">
         <div class="container mx-auto text-center">
-            <p class="text-gray-600">&copy; 2024 RentEase. All Rights Reserved.</p>
             <div class="mt-4">
             <a href="/privacy" class="text-blue-600 hover:underline">Privacy Policy</a> |
             <a href="/terms" class="text-blue-600 hover:underline">Terms of Service</a> |
             <a href="/social" class="text-blue-600 hover:underline">Follow Us</a>
         </div>
+        <p class="text-gray-600 mt-5">&copy; 2024 RentEase. All Rights Reserved.</p>
+
         </div>
     </footer>
 

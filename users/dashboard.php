@@ -54,49 +54,58 @@ if (!isset($_SESSION['user_id'])) {
         <!-- Property and Financial Cards (Left Column, Spanning 3 Columns in Total) -->
         <div class="col-span-1 md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-            <!-- Total Properties Card -->
-            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-building fa-2x text-blue-500"></i>
-                    <div>
-                        <h3 class="text-xl font-semibold">$3.456K</h3>
-                        <p class="text-gray-600">Total Properties</p>
-                    </div>
+             <!-- Total Properties Card -->
+        <a href="unitinfo.php" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
+            <div class="flex items-center justify-between">
+                <div class="text-blue-500">
+                    <i class="fas fa-building fa-3x"></i>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Properties</p>
+                    <h3 class="text-xl font-bold text-gray-800 mt-2">10</h3>
                 </div>
             </div>
+        </a>
 
-            <!-- Maintenance Card -->
-            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-tools fa-2x text-green-500"></i>
-                    <div>
-                        <h3 class="text-xl font-semibold">$45.2K</h3>
-                        <p class="text-gray-600">Maintenance</p>
-                    </div>
+        <!-- Maintenance Card -->
+        <a href="maintenance.php" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
+            <div class="flex items-center justify-between">
+                <div class="text-green-500">
+                    <i class="fas fa-tools fa-3x"></i>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Maintenance</p>
+                    <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
                 </div>
             </div>
+        </a>
 
-            <!-- Payment Status Card -->
-            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-money-bill-wave fa-2x text-yellow-500"></i>
-                    <div>
-                        <h3 class="text-xl font-semibold">$20K</h3>
-                        <p class="text-gray-600">Track Payment Status</p>
-                    </div>
+        <!-- Payment Status Card -->
+        <a href="payment.php?tab=paymentHistory" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
+            <div class="flex items-center justify-between">
+                <div class="text-yellow-500">
+                    <i class="fas fa-money-bill-wave fa-3x"></i>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">Track Payment</p>
+                    <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
                 </div>
             </div>
+        </a>
 
-            <!-- View Agreement Card -->
-            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-file-contract fa-2x text-red-500"></i>
-                    <div>
-                        <h3 class="text-xl font-semibold">5 Agreements</h3>
-                        <p class="text-gray-600">View Agreement</p>
-                    </div>
+        <!-- View Agreement Card -->
+        <a href="contract.php" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
+            <div class="flex items-center justify-between">
+                <div class="text-red-500">
+                    <i class="fas fa-file-contract fa-3x"></i>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Agreements</p>
+                    <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
                 </div>
             </div>
+        </a>
+
 
         </div>
 

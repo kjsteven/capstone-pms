@@ -34,7 +34,6 @@ echo '<script>
 ?>
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,7 +41,7 @@ echo '<script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Admin Sidebar</title>
     <style>
         .transition-transform {
@@ -71,7 +70,7 @@ echo '<script>
             <li>
                 <a href="propertyAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
                     <i class="fas fa-building text-blue-500"></i>
-                    <span>Property Management</span>
+                    <span>Manage Property</span>
                 </a>
             </li>
 
@@ -79,7 +78,7 @@ echo '<script>
             <li>
                 <a href="tenantAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
                     <i class="fas fa-user-friends text-blue-500"></i>
-                    <span>Tenant Management</span>
+                    <span>Manage Tenants</span>
                 </a>
             </li>
 
@@ -114,6 +113,15 @@ echo '<script>
                     <span>Rental Payments</span>
                 </a>
             </li>
+
+             <!-- Manage Users -->
+             <li>
+                <a href="manageUsers.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <i class="fa-solid fa-users text-blue-500"></i>
+                    <span>Manage Users</span>
+                </a>
+            </li>
+
 
             <!-- Reports and Analytics -->
             <li>

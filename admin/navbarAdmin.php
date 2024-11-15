@@ -64,8 +64,8 @@ echo '<script>
                     <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white flex items-center">
                         <!-- Key Icon -->
                         <i class="fas fa-key text-inherit mr-2"></i> 
-                        <!-- RentEase Text -->
-                        RentEase
+                        <!-- PropertyWise Text -->
+                        PropertyWise
                     </span>
                 </a>
 

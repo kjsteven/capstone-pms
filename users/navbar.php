@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <title>Navbar</title>
 </head>
 <body>
@@ -16,14 +17,12 @@
             <div class="flex items-center justify-start rtl:justify-end">
                 <button id="sidebar-toggle" aria-controls="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-white rounded-lg sm:hidden hover:bg-white focus:outline-none focus:ring-2 focus:ring-white dark:text-white dark:hover:bg-white dark:focus:ring-white-600">
                     <span class="sr-only">Open sidebar</span>
-                    <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path clip-rule="evenodd" fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
-                    </svg>
+                    <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" data-feather="menu"></svg> <!-- Feather Hamburger Icon -->
                 </button>
                 <a href="#" class="flex items-center ms-2 md:me-24">
                     <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white flex items-center">
-                        <!-- Key Icon -->
-                        <i class="fas fa-key text-inherit mr-2"></i> 
+                        <!-- FontAwesome Key Icon -->
+                        <i class="fas fa-key text-inherit mr-2"></i>
                         <!-- PropertyWise Text -->
                         PropertyWise
                     </span>
@@ -35,7 +34,7 @@
                     <!-- Notification Icon -->
                     <button type="button" class="flex items-center justify-center w-10 h-10 bg-blue-700 rounded-full text-white" id="notification-button">
                         <span class="sr-only">Open notifications</span>
-                        <i class="fas fa-bell fa-lg text-blue-800 dark:text-white"></i>
+                        <svg data-feather="bell" class="w-6 h-6 text-blue-800 dark:text-white"></svg> <!-- Feather Bell Icon -->
                     </button>
 
                     <button type="button" class="flex text-sm bg-blue-600 rounded-full focus:ring-4 ms-6 focus:ring-blue-300 dark:focus:ring-blue-600" aria-expanded="false" id="user-menu-button">
@@ -50,12 +49,19 @@
                             <p class="text-sm font-medium text-blue-900 truncate dark:text-blue-300">user.email@example.com</p>
                         </div>
                         <ul class="py-1" role="none">
-                            <li>
-                                <a href="profile.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem"> <i class="fas fa-user mr-4"></i>Profile</a>
+                        <li>
+                            <a href="profile.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
+                                    <svg data-feather="user" class="w-5 h-5 text-blue-500 mr-4"></svg>
+                                    Profile
+                                </a> <!-- Feather User Icon -->
                             </li>
                             <li>
-                                <a href="../authentication/logout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem"> <i class="fas fa-sign-out-alt mr-4"></i>Logout</a>
+                                <a href="../authentication/logout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
+                                    <svg data-feather="log-out" class="w-5 h-5 text-blue-500 mr-4"></svg>
+                                    Logout
+                                </a> <!-- Feather Log-out Icon -->
                             </li>
+
                         </ul>
                     </div>
 
@@ -78,6 +84,15 @@
         </div>
     </div>
 </nav>
+
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+
+<script>
+    // Initialize Feather icons
+    document.addEventListener('DOMContentLoaded', function() {
+        feather.replace(); // This will replace all data-feather attributes with corresponding SVGs
+    });
+</script>
 
 <script>
     // Toggle dropdown visibility

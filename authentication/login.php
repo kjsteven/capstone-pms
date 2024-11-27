@@ -1,4 +1,5 @@
 <?php
+
 require '../session/db.php'; 
 require '../vendor/autoload.php'; 
 require '../config/config.php';
@@ -27,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
     }
-
 
     // Prepare and execute the SQL statement with lockout check
     $stmt = $conn->prepare(
@@ -64,20 +64,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (password_verify($password, $hashedPassword)) {
             if ($isVerified) {
                 // Successful login, reset login attempts and redirect
-                $resetStmt = $conn->prepare("UPDATE users SET login_attempts = 0, last_attempt = NOW() WHERE user_id = ?");
+                $resetStmt = $conn->prepare("UPDATE users SET login_attempts = 0, last_attempt = NOW(), status = 'active' WHERE user_id = ?");
                 $resetStmt->bind_param("i", $userId);
                 $resetStmt->execute();
                 $resetStmt->close();
+                
 
-                // Redirect user based on role
-                $_SESSION['user_id'] = $userId;
-                $_SESSION["role"] = getUserRole($userId);
-                if ($_SESSION["role"] == "Admin") {
-                    header("Location: ../admin/dashboardAdmin.php");
+                // Check if OTP has been used for verification
+                if ($otpUsed == 0) {
+                    // Generate a new OTP since it has not been used
+                    $otp = mt_rand(100000, 999999); // Generate a 6-digit OTP
+                    $otpExpiration = date('Y-m-d H:i:s', strtotime('+10 minutes')); // OTP expiration time (10 minutes from now)
+
+                    // Update the OTP and set OTP_used to 0 (indicating it needs to be verified)
+                    $updateOtpStmt = $conn->prepare("UPDATE users SET OTP = ?, OTP_used = 0, OTP_expiration = ? WHERE user_id = ?");
+                    $updateOtpStmt->bind_param("ssi", $otp, $otpExpiration, $userId);
+                    $updateOtpStmt->execute();
+                    $updateOtpStmt->close();
+
+                    // Send OTP email
+                    $otpSent = sendOtpEmail($email, $otp);
+                    if ($otpSent === true) {
+                        // Store the user ID and username for OTP verification page
+                        $_SESSION['user_id'] = $userId;
+                        $_SESSION['username'] = $username;
+                        header("Location: otp.php"); // Redirect to OTP verification page
+                        exit;
+                    } else {
+                        $_SESSION['error_message'] = "Error sending OTP. Please try again.";
+                        header("Location: " . $_SERVER['PHP_SELF']);
+                        exit;
+                    }
                 } else {
-                    header("Location: ../users/dashboard.php");
+                    // OTP has already been used, proceed to dashboard based on role
+                    $_SESSION['user_id'] = $userId;
+                    $_SESSION["role"] = getUserRole($userId);
+                    if ($_SESSION["role"] == "Admin") {
+                        header("Location: ../admin/dashboardAdmin.php");
+
+                       
+
+
+                    } else {
+                        header("Location: ../users/dashboard.php");
+
+                      
+                    }
+                    exit;
                 }
-                exit;
             } else {
                 $_SESSION['error_message'] = "You must verify your email before logging in.";
                 header("Location: " . $_SERVER['PHP_SELF']);
@@ -95,6 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: " . $_SERVER['PHP_SELF']);
             exit;
         }
+
     } else {
         $_SESSION['error_message'] = "User not found.";
         header("Location: " . $_SERVER['PHP_SELF']);
@@ -123,7 +158,7 @@ function getUserRole($userId) {
     return $role;
 }
 
-// Function to send OTP email (if necessary)
+// Function to send OTP email 
 function sendOtpEmail($email, $otp) {
     $mail = new PHPMailer(true);
     try {
@@ -135,7 +170,7 @@ function sendOtpEmail($email, $otp) {
         $mail->Port = 587;
         $mail->Username = SMTP_USERNAME; // Use the constant
         $mail->Password = SMTP_PASSWORD; // Use the constant
-        $mail->setFrom(SMTP_USERNAME, 'RentEase | OTP Verification');
+        $mail->setFrom(SMTP_USERNAME, 'PropertyWise | OTP Verification');
         $mail->addAddress($email);
 
         // Email content
@@ -149,7 +184,9 @@ function sendOtpEmail($email, $otp) {
         return false;
     }
 }
+
 ?>
+
 
 
 <!DOCTYPE html>
@@ -160,6 +197,7 @@ function sendOtpEmail($email, $otp) {
     <title>Login</title>
     <link rel="icon" href="../images/logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons/css/boxicons.min.css' rel='stylesheet'>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
@@ -175,6 +213,8 @@ function sendOtpEmail($email, $otp) {
     <div class="min-h-screen bg-cover bg-center flex items-center justify-center py-6 px-4" style="background-image: url('../images/bg3.jpg');">
         <div class="max-w-md w-full" style="background-color: #1f2937; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
             <h2 class="text-white text-center text-2xl font-bold">Sign in</h2>
+
+            
             <form method="POST" class="mt-8 space-y-4">
                 <div>
                     <label class="text-white text-sm mb-2 block">Email</label>
@@ -212,6 +252,14 @@ function sendOtpEmail($email, $otp) {
                 </div>
 
                 <p class="text-white text-sm !mt-8 text-center">Don't have an account? <a href="signup.php" class="text-blue-600 hover:underline ml-1 whitespace-nowrap font-semibold">Register here</a></p>
+               
+                <div class="text-sm text-center mt-4">
+                    <a href="stafflogin.php" class="text-blue-600 hover:underline font-semibold">
+                        Login as Staff <i class="fa fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+
+
             </form>
 
             <!-- Error message handling -->

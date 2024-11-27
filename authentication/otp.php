@@ -2,45 +2,26 @@
 
 session_start();
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-
-require_once '../session/session_manager.php';
+require '../vendor/autoload.php'; 
 require '../session/db.php';
 require '../config/config.php';
 
-start_secure_session();
-
-if (!isset($_SESSION["user_id"])) {
-    header("Location: ../authentication/login.php");
-    exit;
-}
-
-if (isset($_SESSION["otp_verified"]) && $_SESSION["otp_verified"] === true) {
-    $userId = $_SESSION["user_id"];
-    $query = "SELECT role FROM users WHERE user_id = $userId";
-    $result = mysqli_query($conn, $query);
-    
-    if ($result) {
-        $row = mysqli_fetch_assoc($result);
-        $dashboardURL = ($row["role"] == "Admin") ? "../admin/admin-dashboard.php" : "dashboard.php";
-        header("Location: $dashboardURL");
-        exit;
-    }
-}
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 // OTP Verification logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["verify"])) {
     $userId = $_SESSION["user_id"];
     $enteredOTP = '';
-    
+
     // Collect the OTP from all input fields
     for ($i = 0; $i < 6; $i++) {
         if (isset($_POST["otp$i"])) {
             $enteredOTP .= $_POST["otp$i"];
         }
     }
+     
+    $userId = $_SESSION['user_id'];
 
     $query = "SELECT OTP, OTP_used, OTP_expiration, role FROM users WHERE user_id = $userId";
     $result = mysqli_query($conn, $query);
@@ -52,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["verify"])) {
 
         if ($otpExpiration > time()) {
             if ($enteredOTP === $storedOTP) {
+                // OTP matched, update the user's OTP_used status
                 $updateQuery = "UPDATE users SET OTP_used = 1 WHERE user_id = $userId";
                 $updateResult = mysqli_query($conn, $updateQuery);
 
@@ -79,8 +61,13 @@ if (isset($_POST["resendOTP"])) {
     $newOTP = mt_rand(100000, 999999);
     $userId = $_SESSION["user_id"];
 
-    $updateQuery = "UPDATE users SET OTP = $newOTP, OTP_used = 0 WHERE user_id = $userId";
-    $updateResult = mysqli_query($conn, $updateQuery);
+    // Set new expiration date for OTP (e.g., 10 minutes from now)
+    $otpExpiration = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+    $updateQuery = "UPDATE users SET OTP = ?, OTP_used = 0, OTP_expiration = ? WHERE user_id = $userId";
+    $updateResult = mysqli_prepare($conn, $updateQuery);
+    mysqli_stmt_bind_param($updateResult, "is", $newOTP, $otpExpiration);
+    mysqli_stmt_execute($updateResult);
 
     if (!$updateResult) {
         die("Database query error: " . mysqli_error($conn));
@@ -105,7 +92,7 @@ if (isset($_POST["resendOTP"])) {
         $mail->Username = SMTP_USERNAME;
         $mail->Password = SMTP_PASSWORD;
 
-        $mail->setFrom(SMTP_USERNAME, 'RentEase | OTP Verification');
+        $mail->setFrom(SMTP_USERNAME, 'PropertyWise | OTP Verification');
         $mail->addAddress($to);
         $mail->isHTML(true);
         $mail->Subject = $subject;
@@ -117,6 +104,7 @@ if (isset($_POST["resendOTP"])) {
         echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -141,13 +129,13 @@ if (isset($_POST["resendOTP"])) {
 
     <div class="max-w-md w-full" style="background-color: #1f2937; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
         <header class="mb-8 text-center">
-            <h1 class="text-2xl font-bold mb-1 text-white">Email Verification</h1>
+            <h1 class="text-2xl font-bold mb-1 text-white">OTP Verification</h1>
             <p class="text-[15px] text-slate-300">Enter the 6-digit verification code that was sent to your email.</p>
         </header>
         <form id="otp-form" method="POST" action="">
             <div class="flex items-center justify-center gap-3">
                 <?php for ($i = 0; $i < 6; $i++): ?>
-                    <input type="text" name="otp<?php echo $i; ?>" class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" maxlength="1" required />
+                    <input type="text" name="otp<?php echo $i; ?>" class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" maxlength="1" />
                 <?php endfor; ?>
             </div>
             <input type="hidden" name="verify" value="true" />

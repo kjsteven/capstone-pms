@@ -58,8 +58,7 @@ if (!isset($_SESSION['user_id'])) {
         <!-- Forms Section -->
         <div class="grid grid-cols-1">
             <!-- Submit a Maintenance Request Form -->
-            <div id="request-content" class="bg-white shadow-lg rounded-lg p-6 mb-8">
-                <h2 class="text-xl font-semibold mb-6 text-center">Submit a Maintenance Request</h2>
+            <div id="request-content" class="bg-white shadow-lg rounded-lg p-6 mb-8" style="min-height: 600px;>
                 <form id="maintenance-form">
                     <!-- Unit Selection -->
                     <div class="mb-4">
@@ -88,7 +87,7 @@ if (!isset($_SESSION['user_id'])) {
                     <!-- Issue Description -->
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="issue-description">Describe the issue</label>
-                        <textarea id="issue-description" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none" placeholder="Describe the issue you're experiencing..."></textarea>
+                        <input id="issue-description" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none" placeholder="Describe the issue you're experiencing..." style="max-height: 200px; overflow-y: auto;"></textarea>
                     </div>
 
                     <!-- Preferred Service Date -->
@@ -110,8 +109,8 @@ if (!isset($_SESSION['user_id'])) {
 
                     <!-- Submit Button -->
                     <div class="flex justify-between">
-                        <button type="button" class="text-gray-700 border border-gray-400 rounded-lg px-4 py-2">Cancel</button>
-                        <button type="button" id="submit-request" class="bg-blue-600 text-white rounded-lg px-4 py-2">Submit Request</button>
+                        <button type="reset" class="text-gray-700 border border-gray-400 rounded-lg px-4 py-2">Cancel</button>
+                        <button type="submit" id="submit-request" class="bg-blue-600 text-white rounded-lg px-4 py-2">Submit Request</button>
                     </div>
                 </form>
             </div>

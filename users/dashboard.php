@@ -16,7 +16,6 @@ if (!isset($_SESSION['user_id'])) {
 
 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,7 +24,6 @@ if (!isset($_SESSION['user_id'])) {
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <title>Dashboard</title>
     <link rel="icon" href="../images/logo.png" type="image/png">
     <style>
@@ -54,24 +52,26 @@ if (!isset($_SESSION['user_id'])) {
         <!-- Property and Financial Cards (Left Column, Spanning 3 Columns in Total) -->
         <div class="col-span-1 md:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-             <!-- Total Properties Card -->
-        <a href="unitinfo.php" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
-            <div class="flex items-center justify-between">
-                <div class="text-blue-500">
-                    <i class="fas fa-building fa-3x"></i>
+            <!-- Total Properties Card -->
+            <a href="unitinfo.php" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
+                <div class="flex items-center justify-between">
+                    <div class="text-blue-500">
+                        <!-- Replace FontAwesome Icon with Feather Icon -->
+                        <svg data-feather="home" class="w-8 h-8 text-blue-500"></svg>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Properties</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-2">10</h3>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Properties</p>
-                    <h3 class="text-xl font-bold text-gray-800 mt-2">10</h3>
-                </div>
-            </div>
-        </a>
+            </a>
 
-        <!-- Maintenance Card -->
+          <!-- Maintenance Card -->
         <a href="maintenance.php" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
             <div class="flex items-center justify-between">
                 <div class="text-green-500">
-                    <i class="fas fa-tools fa-3x"></i>
+                   
+                    <svg data-feather="tool" class="w-8 h-8 text-green-500"></svg>
                 </div>
                 <div class="text-right">
                     <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Maintenance</p>
@@ -80,32 +80,33 @@ if (!isset($_SESSION['user_id'])) {
             </div>
         </a>
 
-        <!-- Payment Status Card -->
-        <a href="payment.php?tab=paymentHistory" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
-            <div class="flex items-center justify-between">
-                <div class="text-yellow-500">
-                    <i class="fas fa-money-bill-wave fa-3x"></i>
+            <!-- Payment Status Card -->
+            <a href="payment.php?tab=paymentHistory" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
+                <div class="flex items-center justify-between">
+                    <div class="text-yellow-500">
+                       
+                        <svg data-feather="credit-card" class="w-8 h-8 text-yellow-500"></svg>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-medium text-blue-600  hover:text-blue-800">Track Payment</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">Track Payment</p>
-                    <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
-                </div>
-            </div>
-        </a>
+            </a>
 
-        <!-- View Agreement Card -->
-        <a href="contract.php" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
-            <div class="flex items-center justify-between">
-                <div class="text-red-500">
-                    <i class="fas fa-file-contract fa-3x"></i>
+            <!-- View Agreement Card -->
+            <a href="contract.php" class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 block">
+                <div class="flex items-center justify-between">
+                    <div class="text-red-500">
+                        <!-- Replace FontAwesome Icon with Feather Icon -->
+                        <svg data-feather="file" class="w-8 h-8 text-red-500"></svg>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Agreements</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Agreements</p>
-                    <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
-                </div>
-            </div>
-        </a>
-
+            </a>
 
         </div>
 
@@ -138,6 +139,17 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 
 </div>
+
+<!-- Add Feather Icon Script -->
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+
+<script>
+    // Initialize Feather icons
+    document.addEventListener('DOMContentLoaded', function () {
+        feather.replace(); // This makes sure Feather icons are rendered
+    });
+</script>
+
 
 <script>
     // Calendar Functionality

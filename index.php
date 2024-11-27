@@ -52,8 +52,8 @@
 
             <nav class="space-x-6 hidden md:block !hidden md:!block">
                 <a href="#features" class="text-gray-700 hover:text-blue-600">Features</a>
-                <a href="#how-it-works" class="text-gray-700 hover:text-blue-600">How It Works</a>
                 <a href="#services" class="text-gray-700 hover:text-blue-600">Services</a>
+                <a href="#how-it-works" class="text-gray-700 hover:text-blue-600">How It Works</a>
                 <a href="#contact" class="text-gray-700 hover:text-blue-600">Contact</a>
             </nav>
 
@@ -66,8 +66,8 @@
         <!-- Mobile Menu (hidden by default) -->
         <div class="mobile-menu md:hidden px-4 py-4 bg-blue-50">
             <a href="#features" class="block text-gray-700 py-2 hover:text-blue-600">Features</a>
-            <a href="#how-it-works" class="block text-gray-700 py-2 hover:text-blue-600">How It Works</a>
             <a href="#services" class="block text-gray-700 py-2 hover:text-blue-600">Services</a>
+            <a href="#how-it-works" class="block text-gray-700 py-2 hover:text-blue-600">How It Works</a>
             <a href="#contact" class="block text-gray-700 py-2 hover:text-blue-600">Contact</a>
             <a href="./authentication/signup.php" class="bg-blue-600 text-white px-4 py-2 mt-4 block text-center rounded-lg shadow-md hover:bg-blue-500">
                 Signup now
@@ -229,7 +229,7 @@
         <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Ready to Enhance Your Rental Experience?</h2>
         <p class="text-gray-600 mt-4">Join our community of tenants and experience hassle-free property management.</p>
 
-        <a href="./authentication/login.php" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500 mt-4 inline-block">Sign Up Now</a>
+        <a href="./authentication/signup.php" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500 mt-4 inline-block">Sign Up Now</a>
     </div>
 </section>
 

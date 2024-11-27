@@ -126,7 +126,7 @@ function sendVerificationEmail($email, $token, $name) {
         $mail->Port = 587;
         $mail->Username = SMTP_USERNAME; // Use the constant
         $mail->Password = SMTP_PASSWORD; // Use the constant
-        $mail->setFrom(SMTP_USERNAME, 'RentEase | Email Account Verification');
+        $mail->setFrom(SMTP_USERNAME, 'PropertyWise | Email Account Verification');
         $mail->addAddress($email); // Use the email address passed in
 
         // Email content
@@ -135,7 +135,7 @@ function sendVerificationEmail($email, $token, $name) {
         $mail->Body = 'Hi ' . $name . ',' . "\n\n" .
                       'We just need to verify your email address before you can access our website.' . "\n\n" .
                       'To verify your email, please click this link: (' . $verificationLink . ').' . "\n\n" .
-                      'Thanks! - The RentEase Team';
+                      'Thanks! - The PropertyWise Team';
 
         // Send the email
         $mail->send();
@@ -243,8 +243,8 @@ $conn->close();
 
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md">Sign Up</button>
 
-                <p class="mt-4 text-center text-white">
-                    Already have an account? <a href="login.php" class="text-blue-700">Login here</a>
+                <p class="mt-4 text-sm text-center text-white">
+                    Already have an account? <a href="login.php" class="text-blue-600 hover:underline ml-1 whitespace-nowrap font-semibold">Login here</a>
                 </p>
             </form>
         </div>

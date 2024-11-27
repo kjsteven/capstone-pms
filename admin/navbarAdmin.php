@@ -37,15 +37,14 @@ echo '<script>
 
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <title>Navbar</title>
 </head>
 <body>
@@ -61,21 +60,20 @@ echo '<script>
                     </svg>
                 </button>
                 <a href="#" class="flex items-center ms-2 md:me-24">
-                    <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white flex items-center">
-                        <!-- Key Icon -->
-                        <i class="fas fa-key text-inherit mr-2"></i> 
+                    <span class="self-center text-lg font-semibold sm:text-2xl whitespace-nowrap dark:text-white flex items-center">
                         <!-- PropertyWise Text -->
+                        <i class="fas fa-key text-inherit mr-2"></i> 
                         PropertyWise
                     </span>
                 </a>
-
             </div>
             <div class="flex items-center">
                 <div class="flex items-center ms-3 relative">
                     <!-- Notification Icon -->
                     <button type="button" class="flex items-center justify-center w-10 h-10 bg-blue-700 rounded-full text-white" id="notification-button">
                         <span class="sr-only">Open notifications</span>
-                        <i class="fas fa-bell fa-lg text-blue-800 dark:text-white"></i>
+                        <!-- Feather Bell Icon -->
+                        <svg data-feather="bell" class="text-blue-800 dark:text-white icon-size"></svg>
                     </button>
 
                     <button type="button" class="flex text-sm bg-blue-600 rounded-full focus:ring-4 ms-6 focus:ring-blue-300 dark:focus:ring-blue-600" aria-expanded="false" id="user-menu-button">
@@ -91,11 +89,12 @@ echo '<script>
                         </div>
                         <ul class="py-1" role="none">
                             <li>
-                                <a href="profile.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem"> <i class="fas fa-user mr-4"></i>Profile</a>
+                                <a href="../authentication/logout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
+                                    <svg data-feather="log-out" class="w-5 h-5 text-blue-500 mr-4"></svg>
+                                    Logout
+                                </a> <!-- Feather Log-out Icon -->
                             </li>
-                            <li>
-                                <a href="../authentication/logout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem"> <i class="fas fa-sign-out-alt mr-4"></i>Logout</a>
-                            </li>
+                          
                         </ul>
                     </div>
 
@@ -118,6 +117,15 @@ echo '<script>
         </div>
     </div>
 </nav>
+
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+
+<script>
+    // Initialize Feather Icons
+    feather.replace();
+</script>
+
+
 
 <script>
     // Toggle dropdown visibility

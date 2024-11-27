@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <title>Sidebar</title>
     <style>
         /* Optional: Custom styles for smooth transitions */
@@ -22,68 +21,77 @@
 <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-blue-200 sm:translate-x-0 dark:bg-blue-800 dark:border-blue-700" aria-label="Sidebar">
     <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-blue-800">
         <ul class="space-y-2 font-medium">
-
-            <!-- Dashboard -->
+            <!-- Overview Section -->
+            <li>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Overview</h3>
+            </li>
             <li>
                 <a href="dashboard.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                    <i class="fas fa-tachometer-alt w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white"></i>
-                    <span class="ms-3">Dashboard</span>
+                    <svg data-feather="activity" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="ms-3 text-white text-sm dark:text-white">Dashboard</span>
                 </a>
             </li>
-
-            <!-- Profile Management -->
             <li>
                 <a href="profile.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                    <i class="fas fa-user w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white"></i>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Profile Management</span>
+                    <svg data-feather="user" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="flex-1 ms-3 text-sm text-white dark:text-white">Profile</span>
                 </a>
             </li>
 
-            <!-- Reserve a Unit -->
+            <!-- Property Section -->
+            <li>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold  text-blue-950 dark:text-white uppercase tracking-wide">Property</h3>
+            </li>
             <li>
                 <a href="bookunit.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                    <i class="fas fa-building w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white"></i>
-                    <span class="ms-3">Reserve a Unit</span>
+                    <svg data-feather="home" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="ms-3 text-white text-sm dark:text-white">Reserve a Unit</span>
                 </a>
             </li>
-
-            <!-- View Unit Information -->
             <li>
                 <a href="unitinfo.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                    <i class="fas fa-info-circle w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white"></i>
-                    <span class="flex-1 ms-3 whitespace-nowrap">View Unit Information</span>
+                    <svg data-feather="info" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="flex-1 ms-3 text-sm text-white dark:text-white">View Unit</span>
                 </a>
             </li>
 
-            <!-- Maintenance Requests -->
+            <!-- Services Section -->
+            <li>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Services</h3>
+            </li>
             <li>
                 <a href="maintenance.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                    <i class="fas fa-wrench w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white"></i>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Maintenance Requests</span>
+                    <svg data-feather="tool" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="flex-1 ms-3 text-sm text-white dark:text-white">Maintenance Requests</span>
                 </a>
             </li>
 
-            <!-- Rent Contract -->
+            <!-- Documents & Payments Section -->
+            <li>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold  text-blue-950 dark:text-white uppercase tracking-wide">Documents & Payments</h3>
+            </li>
             <li>
                 <a href="contract.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                    <i class="fas fa-file-contract w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white"></i>
-                    <span class="ms-3">Rent Agreement</span>
+                    <svg data-feather="file" class="w-5 h-5 text-blue-500 transition duration-75 text-sm dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="ms-3 text-white text-sm dark:text-white">Rent Agreement</span>
                 </a>
             </li>
-
-            <!-- Online Payment -->
             <li>
                 <a href="payment.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                    <i class="fas fa-credit-card w-5 h-5 text-blue-500 transition duration-75 dark:text-blue-400 group-hover:text-blue-900 dark:group-hover:text-white"></i>
-                    <span class="ms-3">Pay Online</span>
+                    <svg data-feather="credit-card" class="w-5 h-5 text-blue-500 transition duration-75 text-sm dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="ms-3 text-white text-sm  dark:text-white">Pay Online</span>
                 </a>
             </li>
-
         </ul>
     </div>
 </aside>
 
+
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script> <!-- Local path to Feather Icons -->
 <script>
+    // Initialize Feather Icons
+    feather.replace();
+
     // Sidebar toggle script
     const toggleBtn = document.getElementById('sidebar-toggle');
     const sidebar = document.getElementById('logo-sidebar');

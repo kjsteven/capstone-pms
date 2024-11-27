@@ -19,7 +19,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Query to fetch user details
-$query = "SELECT user_id, name, email, phone, role FROM users";
+$query = "SELECT user_id, name, email, phone, role, status FROM users";
 $result = mysqli_query($conn, $query);
 
 // Check if the query was successful
@@ -27,13 +27,14 @@ if (!$result) {
     die('Error: ' . mysqli_error($conn));
 }
 
-// Query to fetch staff details (you can adjust as needed)
+// Query to fetch staff details 
 $query_staff = "SELECT staff_id, Name, Email, Specialty, Phone_Number FROM staff";
 $result_staff = mysqli_query($conn, $query_staff);
 
 if (!$result_staff) {
     die('Error: ' . mysqli_error($conn));
 }
+
 
 
 // Check if a role change is requested
@@ -74,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
 }
 
 
-
 ?>
 
 <!DOCTYPE html>
@@ -84,7 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
     <title>Manage Users</title>
     <link rel="icon" href="../images/logo.png" type="image/png">
     <style>
@@ -119,57 +122,75 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                 <div class="relative w-full sm:w-1/4">
                     <input type="text" id="search-keyword" placeholder="Search..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
                     <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
-                        <i class="fas fa-search"></i>
+                    <svg data-feather="search" class="w-4 h-4"></svg>
                     </button>
                 </div>
 
                 <!-- Print Button -->
-                <button id="print-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Print</button>
+                 <button id="print-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+                 <svg data-feather="printer" class="w-4 h-4"></svg>
+                Print
+            </button>
+            
             </div>
         
             <div id="roleUpdateNotification" class="hidden fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-all duration-500">
                 Role updated successfully!
             </div>
+                <!-- Table Form -->
+                <div class="overflow-x-auto shadow-lg rounded-lg">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">User ID</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">
 
-            <!-- Table Form -->
-            <div class="overflow-x-auto shadow-lg rounded-lg">
-                <table class="min-w-full bg-white">
-                    <thead>
-                        <tr>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">User ID</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Email</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Role</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white">
                         <?php
-                        // Display fetched user data
-                        while ($row = mysqli_fetch_assoc($result)) :
-                        ?>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['user_id']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['name']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['email']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['phone']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['role']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <form action="manageUsers.php" method="POST" class="inline-block">
-                                <input type="hidden" name="user_id" value="<?php echo $row['user_id']; ?>" />
-                                <select name="role" class="border px-2 py-1 rounded">
-                                    <option value="Admin" <?php if ($row['role'] == 'Admin') echo 'selected'; ?>>Admin</option>
-                                    <option value="User" <?php if ($row['role'] == 'User') echo 'selected'; ?>>User</option>
-                                </select>
-                                <button type="submit" class="px-2 py-1 ml-2 bg-blue-600 text-white rounded">Update</button>
-                            </form>
-                        </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
+                            while ($row = mysqli_fetch_assoc($result)) :
+                                // Set status based on the database value
+                                $status = $row['status']; 
+
+                                // Determine the class and icon based on the status
+                                $status_class = ($status == 'active') ? 'bg-green-500' : 'bg-red-500';
+                                $icon = ($status == 'active') ? 'check-circle' : 'x-circle';
+                            ?>  
+        
+                               <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['user_id']); ?></td>
+                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['name']); ?></td>
+                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['email']); ?></td>
+                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['phone']); ?></td>
+                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['role']); ?></td>
+                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                                    <form action="manageUsers.php" method="POST" class="inline-block">
+                                        <input type="hidden" name="user_id" value="<?php echo $row['user_id']; ?>" />
+                                        <select name="role" class="border px-2 py-1 rounded">
+                                            <option value="Admin" <?php if ($row['role'] == 'Admin') echo 'selected'; ?>>Admin</option>
+                                            <option value="User" <?php if ($row['role'] == 'User') echo 'selected'; ?>>User</option>
+                                        </select>
+                                        <button type="submit" class="px-2 py-1 ml-2 bg-blue-600 text-white rounded">Update</button>
+                                    </form>
+                                </td>
+                                <td class="px-4 py-4 whitespace-no-wrap border-b border-gray-200">
+                                    <button class="flex items-center justify-center px-4 py-2 rounded-full text-white text-xs <?php echo $status_class; ?>">
+                                        <i data-feather="<?php echo $icon; ?>" class="w-4 h-4"></i> <!-- Feather icon for status -->
+                                        <?php echo ucfirst($status); ?>
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+
         </form>
     </div>
 
@@ -182,95 +203,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                         <div class="relative w-full sm:w-1/4">
                             <input type="text" id="search-keyword-staff" placeholder="Search..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
                             <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
-                                <i class="fas fa-search"></i>
+                            <svg data-feather="search" class="w-4 h-4"></svg>
                             </button>
                         </div>
-                        
-                        <!-- Add Staff Button aligned to the right -->
-                        <button id="add-staff-btn" type="button" class="px-4 ml-4 py-2 bg-blue-600 text-white rounded-lg">
-                            Add Account
-                        </button>
+        
+                       
+                        <a href="staff_form.php" class="px-4 py-2 ml-4 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+                        <svg data-feather="plus" class="w-4 h-4"></svg>
+                        Add Account
+                        </a>
+        
                     </div>
 
                 <!-- Table Form for displaying staff list -->
                 <div class="overflow-x-auto shadow-lg rounded-lg mt-4">
-                    <table class="min-w-full bg-white">
-                        <thead>
-                            <tr>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Staff ID</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Specialty</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white">
-                            <?php
-                            // Display fetched staff data
-                            while ($row_staff = mysqli_fetch_assoc($result_staff)) :
-                            ?>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['staff_id']); ?></td>
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Name']); ?></td>
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Specialty']); ?></td>
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Phone_Number']); ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </form>
-        </div>
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Staff ID</th>
+                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Specialty</th>
+                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
+                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
+                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        <?php
+                        // Display fetched staff data
+                        while ($row_staff = mysqli_fetch_assoc($result_staff)) :
+                        ?>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['staff_id']); ?></td>
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Name']); ?></td>
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Email']); ?></td>
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Specialty']); ?></td>
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Phone_Number']); ?></td>
+                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                                <form method="POST" action="manageUsers.php" onsubmit="return confirm('Edit staff?');">
+                                    <input type="hidden" name="staff_id" value="<?php echo htmlspecialchars($row_staff['staff_id']); ?>">
+                                    <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-red-600">Edit</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
 
-            
-        <!-- Modal for Adding Staff -->
-    <div id="add-staff-modal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex justify-center items-center">
-        <div class="modal-content bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
-            <h3 class="text-xl font-semibold mb-4">Add Staff</h3>
-            <form id="staff-form" class="space-y-4">
-                <div>
-                    <label for="staff-name" class="block text-sm font-medium text-gray-700">Name</label>
-                    <input type="text" id="staff-name" name="staff-name" class="mt-1 block w-full border-2 border-gray-300 rounded-md p-2 focus:border-blue-500 focus:outline-none" required>
-                </div>
 
-                <div>
-                    <label for="staff-email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="staff-email" name="staff-email" class="mt-1 block w-full border-2 border-gray-300 rounded-md p-2 focus:border-blue-500 focus:outline-none" required>
-                </div>
-
-                <div>
-                <label for="staff-specialty" class="block text-sm font-medium text-gray-700">Specialty</label>
-                <select id="staff-specialty" name="staff-specialty" class="mt-1 block w-full border-2 border-gray-300 rounded-md p-2 focus:border-blue-500 focus:outline-none" required>
-                    <option value="">Select a specialty</option>
-                    <option value="general-maintenance">General Maintenance</option>
-                    <option value="electrical-specialist">Electrical Specialist</option>
-                    <option value="plumbing-specialist">Plumbing Specialist</option>
-                    <option value="hvac-technician">HVAC Technician</option>
-                    <option value="carpentry-structural-repairs">Carpentry and Structural Repairs</option>
-                    <option value="groundskeeper-landscaping">Groundskeeper/Landscaping Specialist</option>
-                    <option value="appliance-technician">Appliance Technician</option>
-                    <option value="painting-finishing-specialist">Painting and Finishing Specialist</option>
-                    <option value="pest-control-specialist">Pest Control Specialist</option>
-                    <option value="security-systems-technician">Security Systems Technician</option>
-                </select>
-               </div>
-
-                <div>
-                    <label for="staff-phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="text" id="staff-phone" name="staff-phone" class="mt-1 block w-full border-2 border-gray-300 rounded-md p-2 focus:border-blue-500 focus:outline-none" required>
-                </div>
-
-                <div class="mt-4 flex justify-between">
-                    <button type="button" id="close-modal" class="px-4 py-2 bg-gray-400 text-white rounded-md">Cancel</button>
-                    <button type="submit" id="submit-staff" class="px-4 py-2 bg-blue-600 text-white rounded-md">Add Staff</button>
-                </div>
-
-            </form>
-        </div>
-    </div>
-
-  
 </div>
+
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+
+<script>
+    // Initialize Feather Icons
+    feather.replace();
+</script>
 
 <script>
     // Tab Navigation Functionality
@@ -390,7 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
 </script>
 
 <script>
-    // Function to show notification
+    // Function to show notification for Updating role
     function showNotification() {
         const notification = document.getElementById('roleUpdateNotification');
         notification.classList.remove('hidden');
@@ -411,64 +401,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
 </script>
 
 <script>
-// Open Modal when 'Add Staff' Button is Clicked
-document.getElementById('add-staff-btn').addEventListener('click', function() {
-    document.getElementById('add-staff-modal').classList.remove('hidden');
-});
 
-// Close Modal when 'Cancel' Button is Clicked
-document.getElementById('close-modal').addEventListener('click', function() {
-    document.getElementById('add-staff-modal').classList.add('hidden');
-});
 
-// Prevent modal from closing if clicking inside the modal content (important fix for the closing issue)
-document.getElementById('add-staff-modal').querySelector('.modal-content').addEventListener('click', function(e) {
-    e.stopPropagation();  // This prevents the click from reaching the backdrop
-});
-
-// Close Modal when clicking outside of the modal content (on the backdrop)
-document.getElementById('add-staff-modal').addEventListener('click', function(e) {
-    if (e.target === document.getElementById('add-staff-modal')) {
-        document.getElementById('add-staff-modal').classList.add('hidden');
-    }
-});
-
-// Handle staff form submission
-document.getElementById('staff-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    // Collect form data
-    const staffName = document.getElementById('staff-name').value;
-    const staffEmail = document.getElementById('staff-email').value;
-    const staffSpecialty = document.getElementById('staff-specialty').value;
-    const staffExperience = document.getElementById('staff-experience').value;
-    const staffFee = document.getElementById('staff-fee').value;
-    const staffPhone = document.getElementById('staff-phone').value;
-
-    // Simulate sending staff info to the server and email
-    fetch('add_staff.php', {
-        method: 'POST',
-        body: JSON.stringify({
-            name: staffName,
-            email: staffEmail,
-            specialty: staffSpecialty,
-            phone: staffPhone
-        }),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert('Staff added successfully!');
-        document.getElementById('add-staff-modal').classList.add('hidden');
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while adding the staff.');
-    });
-});
-</script>
 
 </body>
 </html>

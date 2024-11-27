@@ -33,7 +33,6 @@ echo '<script>
 </script>';
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,7 +40,6 @@ echo '<script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Admin Sidebar</title>
     <style>
         .transition-transform {
@@ -50,90 +48,108 @@ echo '<script>
         body {
             font-family: 'Poppins', sans-serif;
         }
+
+        .icon-size {
+            width: 20px; /* Adjust the size as needed */
+            height: 20px;
+        }
     </style>
 </head>
 <body>
 
 <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-blue-200 sm:translate-x-0 dark:bg-blue-800 dark:border-blue-700" aria-label="Sidebar">
     <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-blue-800">
-        <ul class="space-y-2 font-medium">
-
-            <!-- Dashboard -->
+        <ul class="space-y-2">
+            <!-- Overview Section -->
             <li>
-                <a href="dashboardAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fas fa-tachometer-alt text-blue-500"></i>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Overview</h3>
+            </li>
+            <li>
+                <a href="dashboardAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="activity" class="text-white icon-size"></svg>
                     <span>Dashboard</span>
                 </a>
             </li>
 
-            <!-- Property Management -->
+            <!-- Property Management Section -->
             <li>
-                <a href="propertyAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fas fa-building text-blue-500"></i>
-                    <span>Manage Property</span>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Administration</h3>
+            </li>
+            <li>
+                <a href="propertyAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="home" class="text-white icon-size"></svg>
+                    <span>Manage Properties</span>
                 </a>
             </li>
-
-            <!-- Tenant Management -->
             <li>
-                <a href="tenantAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fas fa-user-friends text-blue-500"></i>
+                <a href="tenantAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="user-plus" class="text-white icon-size"></svg>
                     <span>Manage Tenants</span>
                 </a>
             </li>
-
-            <!-- Booking -->
             <li>
-                <a href="bookingAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fas fa-calendar-alt text-blue-500"></i>
-                    <span>Booking</span>
-                </a>
-            </li>
-
-            <!-- Maintenance Requests -->
-            <li>
-                <a href="maintenanceAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fas fa-tools text-blue-500"></i>
-                    <span>Maintenance Requests</span>
-                </a>
-            </li>
-            
-            <!-- Invoice -->
-            <li>
-                <a href="invoiceAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fas fa-file-invoice text-blue-500"></i> <!-- Updated icon -->
-                    <span>Invoice</span>
-                </a>
-            </li>
-
-            <!-- Rental Payments -->
-            <li>
-                <a href="paymentAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fas fa-file-invoice-dollar text-blue-500"></i>
-                    <span>Rental Payments</span>
-                </a>
-            </li>
-
-             <!-- Manage Users -->
-             <li>
-                <a href="manageUsers.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fa-solid fa-users text-blue-500"></i>
+                <a href="manageUsers.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="users" class="text-white icon-size"></svg>
                     <span>Manage Users</span>
                 </a>
             </li>
 
-
-            <!-- Reports and Analytics -->
+            <!-- Operations Section -->
             <li>
-                <a href="reports_analytics.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <i class="fas fa-chart-line text-blue-500"></i>
-                    <span>Reports and Analytics</span>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Operations</h3>
+            </li>
+            <li>
+                <a href="bookingAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="calendar" class="text-white icon-size"></svg>
+                    <span>Booking</span>
+                </a>
+            </li>
+            <li>
+                <a href="maintenanceAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="tool" class="text-white icon-size"></svg>
+                    <span>Maintenance</span>
                 </a>
             </li>
 
+            <!-- Financial Section -->
+            <li>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold  text-blue-950 dark:text-white uppercase tracking-wide">Financial</h3>
+            </li>
+            <li>
+                <a href="invoiceAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="file-text" class="text-white icon-size"></svg>
+                    <span>Invoice</span>
+                </a>
+            </li>
+            <li>
+                <a href="paymentAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="dollar-sign" class="text-white icon-size"></svg>
+                    <span>Payments</span>
+                </a>
+            </li>
+
+            <!-- Admin Section -->
+            <li>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Reports</h3>
+            </li>
+            <li>
+                <a href="reports_analytics.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="bar-chart" class="text-white icon-size"></svg>
+                    <span>Reports & Analytics</span>
+                </a>
+            </li>
         </ul>
     </div>
 </aside>
+
+
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+
+<script>
+    // Initialize Feather Icons
+    feather.replace();
+</script>
+
 
 <script>
     const toggleBtn = document.getElementById('sidebar-toggle');

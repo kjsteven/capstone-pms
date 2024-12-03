@@ -1,3 +1,15 @@
+<?php
+
+require './session/db.php';
+
+
+// Fetch all properties from the database
+$properties_query = "SELECT * FROM property WHERE status = 'Available'";
+$properties_result = mysqli_query($conn, $properties_query);
+$properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,6 +38,8 @@
         section {
         scroll-margin-top: 80px; /* Adjust this value based on your header height */
         }
+    
+         
     </style>
 </head>
 <body class="bg-gray-100">
@@ -52,13 +66,13 @@
 
             <nav class="space-x-6 hidden md:block !hidden md:!block">
                 <a href="#features" class="text-gray-700 hover:text-blue-600">Features</a>
-                <a href="#services" class="text-gray-700 hover:text-blue-600">Services</a>
+                <a href="#services" class="text-gray-700 hover:text-blue-600">Properties</a>
                 <a href="#how-it-works" class="text-gray-700 hover:text-blue-600">How It Works</a>
-                <a href="#contact" class="text-gray-700 hover:text-blue-600">Contact</a>
+                <a href="#contact" class="text-gray-700 hover:text-blue-600">Contact Us</a>
             </nav>
 
             <a href="./authentication/signup.php" class="bg-blue-600 text-white px-4 py-2 mt-4 block text-center hidden md:block !hidden mb-2 rounded-lg shadow-md hover:bg-blue-500 md:!block">
-                Signup now
+                Register now
             </a>
 
         </div>
@@ -66,11 +80,11 @@
         <!-- Mobile Menu (hidden by default) -->
         <div class="mobile-menu md:hidden px-4 py-4 bg-blue-50">
             <a href="#features" class="block text-gray-700 py-2 hover:text-blue-600">Features</a>
-            <a href="#services" class="block text-gray-700 py-2 hover:text-blue-600">Services</a>
+            <a href="#services" class="block text-gray-700 py-2 hover:text-blue-600">Properties</a>
             <a href="#how-it-works" class="block text-gray-700 py-2 hover:text-blue-600">How It Works</a>
-            <a href="#contact" class="block text-gray-700 py-2 hover:text-blue-600">Contact</a>
+            <a href="#contact" class="block text-gray-700 py-2 hover:text-blue-600">Contact Us</a>
             <a href="./authentication/signup.php" class="bg-blue-600 text-white px-4 py-2 mt-4 block text-center rounded-lg shadow-md hover:bg-blue-500">
-                Signup now
+                Register now
             </a>
         </div>
     </header>
@@ -137,36 +151,86 @@
     </div>
 </section>
 
-<!-- Services Section -->
+ <!-- List of Properties Section -->
 <section id="services" class="py-16 bg-gray-50">
-    <div class="container mx-auto px-6 text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Our Services</h2>
+    <div class="container mx-auto text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Our Properties</h2>
+        <p class="text-gray-600 mt-4">Explore a variety of properties curated just for you.</p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 px-6 md:px-10 lg:px-48 mx-auto">
+    <!-- Property Cards Container -->
+    <div class="relative flex items-center justify-center">
+        <!-- Left Arrow -->
+        <button id="prevButton" 
+                class=" left-2 z-10 bg-blue-600 text-white p-3 md:p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none transform -translate-y-1/2 top-1/2">
+            <i class="fas fa-chevron-left"></i>
+        </button>
 
-        <!-- Service 1: Warehouse Space -->
-        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center text-gray-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white mb-6">
-            <i class="fas fa-box-open fa-3x mb-4"></i> <!-- Warehouse Icon -->
-            <h3 class="text-lg font-bold">Warehouse Space</h3>
+        <div id="propertyCardWrapper" 
+             class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 px-4 md:px-10 lg:px-20 overflow-hidden">
+            <!-- PHP will populate this section -->
+            <?php if (!empty($properties)): ?>
+                <?php 
+                $displayedProperties = array_slice($properties, 0, 3);
+                foreach ($displayedProperties as $property): 
+                ?>
+                <div class="flex-shrink-0 w-full md:w-80 bg-white shadow-lg hover:shadow-2xl rounded-lg overflow-hidden transition-transform duration-300 transform hover:scale-105 mx-auto">
+                    <figure class="relative h-48 w-full overflow-hidden">
+                        <?php
+                        $image_path = !empty($property['images']) 
+                            ? './admin/' . $property['images']
+                            : './images/bg2.jpg';
+                        ?>
+                        <img class="w-full h-full object-cover" src="<?php echo htmlspecialchars($image_path); ?>" alt="Property Image" />
+                    </figure>
+                    <div class="p-4">
+                        <h2 class="text-lg font-semibold mb-2"><?php echo htmlspecialchars($property['unit_type']); ?></h2>
+                        <p class="text-sm"><span class="font-medium">Unit No:</span> <?php echo htmlspecialchars($property['unit_no']); ?></p>
+                        <p class="text-sm"><span class="font-medium">Monthly Rent:</span> ₱<?php echo number_format($property['monthly_rent'], 2); ?></p>
+                        <p class="text-sm"><span class="font-medium">Area:</span> <?php echo htmlspecialchars($property['square_meter']); ?> sqm</p>
+                        <div class="mt-4 text-center">
+                            <button class="reserve-button bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition duration-300">Reserve Now</button>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="w-full text-center py-8 col-span-3">
+                    <p class="text-gray-500">No available properties at the moment.</p>
+                </div>
+            <?php endif; ?>
         </div>
 
-        <!-- Service 2: Office Space -->
-        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center text-gray-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white mb-6">
-            <i class="fas fa-briefcase fa-3x mb-4"></i> <!-- Office Icon -->
-            <h3 class="text-lg font-bold">Office Space</h3>
-        </div>
+        <!-- Right Arrow -->
+        <button id="nextButton" 
+                class=" right-2 z-10 bg-blue-600 text-white p-3 md:p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none transform -translate-y-1/2 top-1/2">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
 
-        <!-- Service 3: Commercial Space -->
-        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center text-gray-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white mb-6">
-            <i class="fas fa-store fa-3x mb-4"></i> <!-- Commercial Icon -->
-            <h3 class="text-lg font-bold">Commercial Space</h3>
+    <!-- Pagination Dots -->
+    <div class="flex justify-center mt-6">
+        <div id="paginationDots" class="flex space-x-2">
+            <button class="w-3 h-3 bg-blue-600 rounded-full active-dot"></button>
+            <button class="w-3 h-3 bg-gray-300 hover:bg-blue-600 rounded-full"></button>
         </div>
     </div>
 </section>
 
 
-    <!-- How It Works Section -->
+     <!-- Modal -->
+     <div id="reserveModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-80">
+            <h2 class="text-lg font-semibold mb-4">Are you interested in renting?</h2>
+            <p class="text-sm text-gray-600 mb-6">Register now to proceed with your reservation.</p>
+            <div class="flex justify-end gap-4">
+                <button id="closeModal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
+                <button id="signupButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Register Now</button>
+            </div>
+        </div>
+    </div>
+
+ <!-- How It Works Section -->
 <section id="how-it-works" class="py-16 bg-blue-50">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
@@ -229,7 +293,7 @@
         <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Ready to Enhance Your Rental Experience?</h2>
         <p class="text-gray-600 mt-4">Join our community of tenants and experience hassle-free property management.</p>
 
-        <a href="./authentication/signup.php" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500 mt-4 inline-block">Sign Up Now</a>
+        <a href="./authentication/signup.php" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500 mt-4 inline-block">Register Now</a>
     </div>
 </section>
 
@@ -247,7 +311,128 @@
 
         </div>
     </footer>
+    
 
+
+        <script>
+
+                document.addEventListener("DOMContentLoaded", () => {
+                const properties = <?php echo json_encode($properties); ?>; // PHP array to JavaScript
+                const propertyContainer = document.getElementById("propertyCardWrapper");
+                const prevButton = document.getElementById("prevButton");
+                const nextButton = document.getElementById("nextButton");
+                const paginationDots = document.getElementById("paginationDots");
+                const modal = document.getElementById("reserveModal");
+
+                let currentIndex = 0;
+                let cardsPerPage = 3;
+
+                // Determine cards per page based on screen size
+                const updateCardsPerPage = () => {
+                    if (window.innerWidth < 768) {
+                        cardsPerPage = 1; // Small screens
+                    } else if (window.innerWidth < 1024) {
+                        cardsPerPage = 2; // Medium screens
+                    } else {
+                        cardsPerPage = 3; // Large screens
+                    }
+                    renderCards(currentIndex);
+                };
+
+                // Render cards
+                const renderCards = (startIndex) => {
+                    propertyContainer.innerHTML = ""; // Clear current cards
+                    const endIndex = startIndex + cardsPerPage;
+                    const visibleProperties = properties.slice(startIndex, endIndex);
+
+                    visibleProperties.forEach(property => {
+                        const imagePath = property.images 
+                            ? `./admin/${property.images}`
+                            : `./images/bg2.jpg`;
+                        const card = `
+                            <div class="w-full bg-white shadow-lg hover:shadow-2xl rounded-lg overflow-hidden transition-transform duration-300 transform hover:scale-105">
+                                <figure>
+                                    <img class="w-full h-48 object-cover" src="${imagePath}" alt="Property Image" />
+                                </figure>
+                                <div class="p-4">
+                                    <h2 class="text-lg font-semibold mb-2">${property.unit_type}</h2>
+                                    <p class="text-sm"><span class="font-medium">Unit No:</span> ${property.unit_no}</p>
+                                    <p class="text-sm"><span class="font-medium">Monthly Rent:</span> ₱${parseFloat(property.monthly_rent).toFixed(2)}</p>
+                                    <p class="text-sm"><span class="font-medium">Area:</span> ${property.square_meter} sqm</p>
+                                    <div class="mt-4 text-center">
+                                        <button class="reserve-button bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition duration-300">Reserve Now</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        propertyContainer.innerHTML += card;
+                    });
+
+                    // Update pagination dots
+                    updatePaginationDots(Math.ceil(properties.length / cardsPerPage), Math.floor(startIndex / cardsPerPage));
+                };
+
+                // Update pagination dots
+                const updatePaginationDots = (totalDots, activeIndex) => {
+                    paginationDots.innerHTML = ""; // Clear current dots
+                    for (let i = 0; i < totalDots; i++) {
+                        const dot = document.createElement("button");
+                        dot.className = `w-3 h-3 rounded-full ${i === activeIndex ? "bg-blue-600" : "bg-gray-300 hover:bg-blue-600"}`;
+                        dot.addEventListener("click", () => {
+                            currentIndex = i * cardsPerPage;
+                            renderCards(currentIndex);
+                        });
+                        paginationDots.appendChild(dot);
+                    }
+                };
+
+                // Event listeners for arrows
+                prevButton.addEventListener("click", () => {
+                    if (currentIndex - cardsPerPage >= 0) {
+                        currentIndex -= cardsPerPage;
+                        renderCards(currentIndex);
+                    }
+                });
+
+                nextButton.addEventListener("click", () => {
+                    if (currentIndex + cardsPerPage < properties.length) {
+                        currentIndex += cardsPerPage;
+                        renderCards(currentIndex);
+                    }
+                });
+
+                // Handle screen resizing
+                window.addEventListener("resize", updateCardsPerPage);
+
+                // Event delegation for "Reserve Now" buttons
+                document.addEventListener("click", (event) => {
+                    if (event.target.classList.contains("reserve-button")) {
+                        console.log("Reserve button clicked!");
+                        modal.classList.remove("hidden");  // Show the modal
+                    }
+                });
+
+                // Close modal event listener
+                const closeModal = document.getElementById("closeModal");
+                if (closeModal) {
+                    closeModal.addEventListener("click", () => {
+                        modal.classList.add("hidden"); // Hide the modal
+                    });
+                }
+
+                // Signup button event listener
+                const signupButton = document.getElementById("signupButton");
+                if (signupButton) {
+                    signupButton.addEventListener("click", () => {
+                        window.location.href = './authentication/signup.php';
+                    });
+                }
+
+                // Initial setup
+                updateCardsPerPage();
+            });
+
+    </script>
 
     <script>
         const menuBtn = document.getElementById('menu-btn');

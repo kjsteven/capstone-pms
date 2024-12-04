@@ -1,3 +1,35 @@
+<?php
+require '../session/db.php';
+
+
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Assuming you have a session started and the user is logged in, get the user ID
+$user_id = $_SESSION['user_id']; // or fetch user ID from session if already set
+
+// Query to get the user details (name and email) from the database
+$query = "SELECT name, email, profile_image  FROM users WHERE user_id = ?";
+$stmt = $conn->prepare($query);
+
+// Check for query errors
+if (!$stmt) {
+    die('Query failed: ' . $conn->error);
+}
+
+$stmt->bind_param("i", $user_id); // Bind the user_id to the query
+$stmt->execute();
+$stmt->bind_result($user_name, $user_email, $profile_image); // Bind the results to variables
+$stmt->fetch();
+$stmt->close();
+
+// if no image is found, set a default image
+$profile_image_path = !empty($profile_image) ? $profile_image : "https://flowbite.com/docs/images/people/profile-picture-5.jpg";
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,41 +61,44 @@
                 </a>
 
             </div>
+          
             <div class="flex items-center">
-                <div class="flex items-center ms-3 relative">
-                    <!-- Notification Icon -->
-                    <button type="button" class="flex items-center justify-center w-10 h-10 bg-blue-700 rounded-full text-white" id="notification-button">
-                        <span class="sr-only">Open notifications</span>
-                        <svg data-feather="bell" class="w-6 h-6 text-blue-800 dark:text-white"></svg> <!-- Feather Bell Icon -->
-                    </button>
+                    <div class="flex items-center ms-3 relative">
+                        <!-- Notification Icon -->
+                        <button type="button" class="flex items-center justify-center w-10 h-10 bg-blue-700 rounded-full text-white" id="notification-button">
+                            <span class="sr-only">Open notifications</span>
+                            <svg data-feather="bell" class="w-6 h-6 text-blue-800 dark:text-white"></svg> <!-- Feather Bell Icon -->
+                        </button>
 
-                    <button type="button" class="flex text-sm bg-blue-600 rounded-full focus:ring-4 ms-6 focus:ring-blue-300 dark:focus:ring-blue-600" aria-expanded="false" id="user-menu-button">
-                        <span class="sr-only">Open user menu</span>
-                        <img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo">
-                    </button>
+                        <button type="button" class="flex text-sm bg-blue-600 rounded-full focus:ring-4 ms-6 focus:ring-blue-300 dark:focus:ring-blue-600" aria-expanded="false" id="user-menu-button">
+                            <span class="sr-only">Open user menu</span>
+                            <!-- Displaying profile image dynamically -->
+                            <img class="w-8 h-8 rounded-full" src="<?php echo htmlspecialchars($profile_image_path); ?>" alt="user photo">
+                        </button>
 
-                    <!-- Dropdown menu -->
-                    <div class="absolute right-0 z-50 hidden w-48 top-[45px] origin-top-right shadow-lg bg-white dark:bg-blue-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" id="dropdown-user">
-                        <div class="px-4 py-3">
-                            <p class="text-sm text-blue-900 dark:text-white">User Name</p>
-                            <p class="text-sm font-medium text-blue-900 truncate dark:text-blue-300">user.email@example.com</p>
+                        <!-- Dropdown menu -->
+                        <div class="absolute right-0 z-50 hidden w-48 top-[45px] origin-top-right shadow-lg bg-white dark:bg-blue-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" id="dropdown-user">
+                            <div class="px-4 py-3">
+                                <p class="text-sm text-blue-900 dark:text-white"><?php echo htmlspecialchars($user_name); ?></p>
+                                <p class="text-sm font-medium text-blue-900 truncate dark:text-blue-300"><?php echo htmlspecialchars($user_email); ?></p>
+                            </div>
+                            <ul class="py-1" role="none">
+                                <li>
+                                    <a href="profile.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
+                                        <svg data-feather="user" class="w-5 h-5 text-blue-500 mr-4"></svg>
+                                        Profile
+                                    </a> <!-- Feather User Icon -->
+                                </li>
+                                <li>
+                                    <a href="../authentication/logout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
+                                        <svg data-feather="log-out" class="w-5 h-5 text-blue-500 mr-4"></svg>
+                                        Logout
+                                    </a> <!-- Feather Log-out Icon -->
+                                </li>
+                            </ul>
                         </div>
-                        <ul class="py-1" role="none">
-                        <li>
-                            <a href="profile.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
-                                    <svg data-feather="user" class="w-5 h-5 text-blue-500 mr-4"></svg>
-                                    Profile
-                                </a> <!-- Feather User Icon -->
-                            </li>
-                            <li>
-                                <a href="../authentication/logout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
-                                    <svg data-feather="log-out" class="w-5 h-5 text-blue-500 mr-4"></svg>
-                                    Logout
-                                </a> <!-- Feather Log-out Icon -->
-                            </li>
-
-                        </ul>
                     </div>
+                </div>
 
                     <!-- Notifications menu -->
                     <div class="absolute right-0 z-40 hidden w-48 top-[45px] origin-top-right shadow-lg bg-white dark:bg-blue-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="notification-button" id="dropdown-notifications">

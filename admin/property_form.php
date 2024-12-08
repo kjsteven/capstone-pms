@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <i data-feather="x" class="close-icon w-6 h-6 text-gray-500 hover:text-gray-700"></i>
             </div>
 
-            <h3 class="text-xl font-semibold mb-4">Add Property</h3>
+            <h3 class="text-xl font-semibold mb-4">Add Unit</h3>
             <form action="property_form.php" method="POST" enctype="multipart/form-data" class="space-y-4">
                 <!-- Unit Number -->
                 <div>

@@ -230,7 +230,7 @@ $conn->close();
                     <input type="checkbox" id="termsAccepted" name="termsAccepted" required class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                     <label for="termsAccepted" class="text-white text-sm ml-2">
                         I accept the 
-                        <a href="terms-and-conditions.html" class="text-blue-500 hover:text-blue-700">terms and conditions</a>
+                        <a href="../asset/terms_condition.php" class="text-blue-500 hover:text-blue-700">terms and conditions</a>
                     </label>
                 </div>      
 

@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status']) && isset($_
             <!-- Add Property Button -->
             <a href="property_form.php" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 justify-center">
                 <svg data-feather="plus" class="w-4 h-4"></svg>
-                Add Property
+                Add Unit
             </a>
         </div>
     

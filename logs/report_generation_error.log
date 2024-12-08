@@ -1,0 +1,32 @@
+[2024-12-08 16:48:26] Report Generation Error
+Context: {"message":"Unknown column 'u.first_name' in 'field list'","file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":46,"trace":"#0 C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php(46): mysqli_query(Object(mysqli), '\\r\\n            S...')\n#1 C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php(65): UnitOccupancyReport->generateReport('2024-12-08', 'December 2024')\n#2 {main}"}
+[2024-12-08 16:48:39] Report Generation Error
+Context: {"message":"Unknown column 'u.first_name' in 'field list'","file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":46,"trace":"#0 C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php(46): mysqli_query(Object(mysqli), '\\r\\n            S...')\n#1 C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php(65): UnitOccupancyReport->generateReport('2024-12-08', 'December 2024')\n#2 {main}"}
+[2024-12-08 16:48:39] Report Generation Error
+Context: {"message":"Unknown column 'u.first_name' in 'field list'","file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":46,"trace":"#0 C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php(46): mysqli_query(Object(mysqli), '\\r\\n            S...')\n#1 C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php(65): UnitOccupancyReport->generateReport('2024-12-08', 'December 2024')\n#2 {main}"}
+[2024-12-08 16:48:40] Report Generation Error
+Context: {"message":"Unknown column 'u.first_name' in 'field list'","file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":46,"trace":"#0 C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php(46): mysqli_query(Object(mysqli), '\\r\\n            S...')\n#1 C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php(65): UnitOccupancyReport->generateReport('2024-12-08', 'December 2024')\n#2 {main}"}
+[2024-12-08 16:48:40] Report Generation Error
+Context: {"message":"Unknown column 'u.first_name' in 'field list'","file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":46,"trace":"#0 C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php(46): mysqli_query(Object(mysqli), '\\r\\n            S...')\n#1 C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php(65): UnitOccupancyReport->generateReport('2024-12-08', 'December 2024')\n#2 {main}"}
+[2024-12-08 16:48:40] Report Generation Error
+Context: {"message":"Unknown column 'u.first_name' in 'field list'","file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":46,"trace":"#0 C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php(46): mysqli_query(Object(mysqli), '\\r\\n            S...')\n#1 C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php(65): UnitOccupancyReport->generateReport('2024-12-08', 'December 2024')\n#2 {main}"}
+[2024-12-08 16:48:49] Report Generation Error
+Context: {"message":"Unknown column 'u.first_name' in 'field list'","file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":46,"trace":"#0 C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php(46): mysqli_query(Object(mysqli), '\\r\\n            S...')\n#1 C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php(65): UnitOccupancyReport->generateReport('2024-12-08', 'December 2024')\n#2 {main}"}
+[2024-12-08 16:59:20] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-08 16:59:31] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-08 16:59:37] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-08 16:59:42] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-08 16:59:46] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-08 16:59:47] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-08 16:59:47] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-08 16:59:47] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-08 16:59:47] Unknown column 'u.first_name' in 'field list'
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}

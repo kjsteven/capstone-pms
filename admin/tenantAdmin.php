@@ -19,7 +19,10 @@ $usersResult = $conn->query("SELECT * FROM users WHERE role = 'user'");
 $users = $usersResult->fetch_all(MYSQLI_ASSOC);
 
 // Fetch tenants along with their user name and tenant id
-$tenantsResult = $conn->query("SELECT tenants.*, users.name AS user_name FROM tenants LEFT JOIN users ON tenants.user_id = users.user_id");
+$tenantsResult = $conn->query("SELECT tenants.*, users.name AS user_name, property.unit_no FROM tenants 
+                                LEFT JOIN users ON tenants.user_id = users.user_id
+                                LEFT JOIN property ON tenants.unit_rented = property.unit_id");
+
 $tenants = $tenantsResult->fetch_all(MYSQLI_ASSOC);
 
 // Create an array of user IDs that are already tenants
@@ -31,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $unit_rented = $_POST['unit_rented'];
     $rent_from = $_POST['rent_from'];
     $rent_until = $_POST['rent_until'];
-    $monthly_rate = $_POST['monthly_rate'];
-    $downpayment_amount = $_POST['downpayment_amount'];
+    $monthly_rate = (float) $_POST['monthly_rate']; // Cast to float
+    $downpayment_amount = (float) $_POST['downpayment_amount']; // Cast to float
     $registration_date = $_POST['registration_date'];
 
     // Calculate the rent period (months between rent_from and rent_until)
@@ -50,15 +53,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if we are updating an existing tenant
     if (isset($_POST['tenant_id']) && !empty($_POST['tenant_id'])) {
         $tenant_id = $_POST['tenant_id'];
-        $stmt = $conn->prepare("UPDATE tenants SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, outstanding_balance = ?, registration_date = ?, downpayment_amount = ?, updated_at = NOW() WHERE tenant_id = ?");
-        $stmt->bind_param("issssssdi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $registration_date, $downpayment_amount, $tenant_id);
+        $stmt = $conn->prepare("UPDATE tenants SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, outstanding_balance = ?, downpayment_amount = ?, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ?");
+        $stmt->bind_param("issssssdi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $tenant_id); 
         $stmt->execute();
+
+        // Update the status of the rented unit to 'Occupied'
+        $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Occupied' WHERE unit_id = ?");
+        $updateUnitStatus->bind_param("i", $unit_rented);
+        if (!$updateUnitStatus) {
+            die("Prepare failed: " . $conn->error);
+        }
+        $updateUnitStatus->bind_param("i", $unit_rented);
+        if (!$updateUnitStatus->execute()) {
+            die("Execute failed: " . $updateUnitStatus->error);
+        }
         $message = 'Tenant successfully updated!';
+
     } else {
         // Insert a new tenant
-        $stmt = $conn->prepare("INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, outstanding_balance, registration_date, downpayment_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
-        $stmt->bind_param("issssssd", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $registration_date, $downpayment_amount);
+        $stmt = $conn->prepare("INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, outstanding_balance, downpayment_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+        $stmt->bind_param("isssssd", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount);
         $stmt->execute();
+
+        // Update the status of the rented unit to 'Occupied'
+        $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Occupied' WHERE unit_id = ?");
+        $updateUnitStatus->bind_param("i", $unit_rented);
+        $updateUnitStatus->execute();
+
+        if (!$updateUnitStatus) {
+            die("Prepare failed: " . $conn->error);
+        }
+        $updateUnitStatus->bind_param("i", $unit_rented);
+        if (!$updateUnitStatus->execute()) {
+            die("Execute failed: " . $updateUnitStatus->error);
+        }
+
         $message = 'Tenant successfully added!';
     }
 
@@ -66,13 +95,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo $message;
     exit();
 }
-
+// delete tenant
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
         $tenant_id = $_GET['id'];
-        $stmt = $conn->prepare("DELETE FROM tenants WHERE tenant_id = ?");
+        
+        // First, retrieve the unit_rented for this tenant
+        $stmt = $conn->prepare("SELECT unit_rented FROM tenants WHERE tenant_id = ?");
         $stmt->bind_param("i", $tenant_id);
         $stmt->execute();
+        $result = $stmt->get_result();
+        $tenant = $result->fetch_assoc();
+        $unit_rented = $tenant['unit_rented'];
+
+        // Delete the tenant
+        $deleteStmt = $conn->prepare("DELETE FROM tenants WHERE tenant_id = ?");
+        $deleteStmt->bind_param("i", $tenant_id);
+        $deleteStmt->execute();
+
+        // Update the unit status to 'Available'
+        $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Available' WHERE unit_id = ?");
+        $updateUnitStatus->bind_param("i", $unit_rented);
+        $updateUnitStatus->execute();
 
         echo 'Tenant successfully deleted.';
         exit();
@@ -80,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         $tenant_id = $_GET['id'];
         $stmt = $conn->prepare("SELECT * FROM tenants WHERE tenant_id = ?");
         $stmt->bind_param("i", $tenant_id);
-        $stmt->execute();
+        $stmt->execute();   
         $result = $stmt->get_result();
         $tenant = $result->fetch_assoc();
 
@@ -88,7 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         exit();
     }
 }
-
 ?>
 
 
@@ -144,34 +187,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     </div>
 
         
-        <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+            <div class="overflow-x-auto bg-white shadow-md rounded-lg">
             <table class="min-w-full table-auto border-collapse border border-gray-300">
                 <thead class="bg-gray-200">
                     <tr>
                         <th class="px-4 py-2 text-left border border-gray-300">Tenant ID</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Name</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Unit</th>
+                        <th class="px-4 py-2 text-left border border-gray-300">Unit No</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Rent From</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Rent Until</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Monthly Rate</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Downpayment Amount</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Outstanding Balance</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Registration Date</th>
+                        <th class="px-4 py-2 text-left border border-gray-300">Registration Date    </th>
                         <th class="px-4 py-2 text-left border border-gray-300">Action</th>
                     </tr>
                 </thead>
                 <tbody id="tenantTableBody">
                     <?php foreach ($tenants as $index => $tenant) : ?>
                     <tr>
-                        <td class="px-4 py-2 text left border border-gray-300"><?= $tenant['tenant_id'] ?></td>
-                        <td class="px-4 py-2 text left border border-gray-300"><?= isset($tenant['user_name']) ? $tenant['user_name'] : 'N/A' ?></td>
-                        <td class="px-4 py-2 text left border border-gray-300"><?= $tenant['unit_rented'] ?></td>
-                        <td class="px-4 py-2 text left border border-gray-300"><?= $tenant['rent_from'] ?></td>
-                        <td class="px-4 py-2 text left border border-gray-300"><?= $tenant['rent_until'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['monthly_rate'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['downpayment_amount'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['outstanding_balance'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['registration_date'] ?></td>
+                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['tenant_id'] ?></td>
+                        <td class="px-4 py-2 text-left border border-gray-300"><?= isset($tenant['user_name']) ? $tenant['user_name'] : 'N/A' ?></td>
+                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['unit_no'] ?></td>
+                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['rent_from'] ?></td>
+                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['rent_until'] ?></td>
+                        <td class="px-4 py-2 text-left border border-gray-300">
+                            <?= isset($tenant['monthly_rate']) ? '₱' . number_format($tenant['monthly_rate'], 2) : '₱0.00' ?>
+                        </td>
+                        <td class="px-4 py-2 text-left border border-gray-300">
+                            <?= isset($tenant['downpayment_amount']) ? '₱' . number_format($tenant['downpayment_amount'], 2) : '₱0.00' ?>
+                        </td>
+                        <td class="px-4 py-2 text-left border border-gray-300">
+                            <?= isset($tenant['outstanding_balance']) ? '₱' . number_format($tenant['outstanding_balance'], 2) : '₱0.00' ?>
+                        </td>
+                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['created_at'] ?></td>
                         <td class="px-4 py-2 text-left border border-gray-300">
                             <button class="text-blue-500 hover:text-blue-700" onclick="editTenant(<?= $tenant['tenant_id'] ?>)">Edit</button>
                             <button class="text-red-500 hover:text-red-700" onclick="deleteTenant(<?= $tenant['tenant_id'] ?>)">Delete</button>
@@ -181,63 +230,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 </tbody>
             </table>
         </div>
+
+
+   <!-- Modal for Adding/Editing Tenant -->
+<div id="tenantModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
+        <h2 id="modalTitle" class="text-xl font-semibold mb-4">New Tenant</h2>
+        <form id="tenantForm" method="POST">
+            <input type="hidden" id="tenant_id" name="tenant_id">
+            
+            <div class="mb-4">
+                <label for="user_id" class="block text-sm font-semibold text-gray-700">Select User</label>
+                <select name="user_id" id="user_id" class="w-full border border-gray-300 rounded px-4 py-2">
+                    <?php foreach ($users as $user) : ?>
+                        <?php if (!in_array($user['user_id'], $tenantUserIds)) : ?>
+                            <option value="<?= $user['user_id'] ?>"><?= $user['name'] ?></option>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label for="unit_rented" class="block text-sm font-semibold">Unit Rented</label>
+                <select name="unit_rented" id="unit_rented" class="w-full border border-gray-300 rounded px-4 py-2" required>
+                    <option value="" disabled selected>Select a unit</option>
+                    <?php
+                    // Fetch available units from the database
+                    $unitsResult = $conn->query("SELECT unit_id, unit_no, monthly_rent FROM property WHERE status = 'Available'");
+                    while ($unit = $unitsResult->fetch_assoc()) {
+                        echo "<option value='{$unit['unit_id']}' data-rent='{$unit['monthly_rent']}'>{$unit['unit_no']}</option>";
+                    }
+                    ?>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="monthly_rate" class="block text-sm font-semibold">Monthly Rate</label>
+                <input type="text" id="monthly_rate" name="monthly_rate" readonly class="w-full px-4 py-2 border border-gray-300 rounded-md">
+            </div>
+
+            <div class="mb-4">
+                <label for="rent_from" class="block text-sm font-semibold">Rent From</label>
+                <input type="date" id="rent_from" name="rent_from" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
+            </div>
+
+            <div class="mb-4">
+                <label for="rent_until" class="block text-sm font-semibold">Rent Until</label>
+                <input type="date" id="rent_until" name="rent_until" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
+            </div>
+
+            <div class="mb-4">
+                <label for="downpayment_amount" class="block text-sm font-semibold">Downpayment Amount</label>
+                <input type="number" id="downpayment_amount" name="downpayment_amount" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
+            </div>
+
+           
+
+            <div class="flex justify-end">
+                <button type="button" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md mr-2" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="px-4 py-2 text-white bg-blue-600 rounded-md">Save</button>
+            </div>
+        </form>
     </div>
-
-    <!-- Modal for Adding/Editing Tenant -->
-    <div id="tenantModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
-            <h2 id="modalTitle" class="text-xl font-semibold mb-4">New Tenant</h2>
-            <form id="tenantForm" method="POST">
-                <input type="hidden" id="tenant_id" name="tenant_id">
-                
-                <div class="mb-4">
-                    <label for="user_id" class="block text-sm font-semibold text-gray-700">Select User</label>
-                    <select name="user_id" id="user_id" class="w-full border border-gray-300 rounded px-4 py-2">
-                        <?php foreach ($users as $user) : ?>
-                            <?php if (!in_array($user['user_id'], $tenantUserIds)) : ?>
-                                <option value="<?= $user['user_id'] ?>"><?= $user['name'] ?></option>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="mb-4">
-                    <label for="unit_rented" class="block text-sm font-semibold">Unit Rented</label>
-                    <input type="text" id="unit_rented" name="unit_rented" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
-                </div>
-
-                <div class="mb-4">
-                    <label for="rent_from" class="block text-sm font-semibold">Rent From</label>
-                    <input type="date" id="rent_from" name="rent_from" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
-                </div>
-
-                <div class="mb-4">
-                    <label for="rent_until" class="block text-sm font-semibold">Rent Until</label>
-                    <input type="date" id="rent_until" name="rent_until" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
-                </div>
-
-                <div class="mb-4">
-                    <label for="monthly_rate" class="block text-sm font-semibold">Monthly Rate</label>
-                    <input type="number" id="monthly_rate" name="monthly_rate" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
-                </div>
-
-                <div class="mb-4">
-                    <label for="downpayment_amount" class="block text-sm font-semibold">Downpayment Amount</label>
-                    <input type="number" id="downpayment_amount" name="downpayment_amount" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
-                </div>
-
-                <div class="mb-4">
-                    <label for="registration_date" class="block text-sm font-semibold">Registration Date</label>
-                    <input type="date" id="registration_date" name="registration_date" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
-                </div>
-
-                <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancelButton" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
-                    <button type="submit" id="saveButton" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
+</div>
 
 
     <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
@@ -258,10 +313,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             document.getElementById('tenantForm').reset();
         });
 
-        // Close the modal when cancel button is clicked
-        document.getElementById('cancelButton').addEventListener('click', function () {
-            document.getElementById('tenantModal').classList.add('hidden');
+        
+
+        document.getElementById('unit_rented').addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const rent = selectedOption.getAttribute('data-rent'); // Retrieve the rent for the selected unit
+            document.getElementById('monthly_rate').value = rent || '';
+
+            // You can store the unit_id in a hidden field if necessary, or directly in the form submission
+            const unitId = selectedOption.value; // unit_id
         });
+
+
+        // Close the modal (Reusable function)
+        function closeModal() {
+            document.getElementById('tenantModal').classList.add('hidden');
+        }
 
          // Handle form submission
         document.getElementById('tenantForm').addEventListener('submit', function (event) {

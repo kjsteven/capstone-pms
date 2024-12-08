@@ -298,19 +298,20 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 </section>
 
 
-
-    <!-- Footer Section -->
-    <footer class="bg-white py-6">
-        <div class="container mx-auto text-center">
-            <div class="mt-4">
-            <a href="/privacy" class="text-blue-600 hover:underline">Privacy Policy</a> |
-            <a href="/terms" class="text-blue-600 hover:underline">Terms of Service</a> |
-            <a href="/social" class="text-blue-600 hover:underline">Follow Us</a>
+<!-- Footer Section -->
+<footer class="bg-gray-50 mx-auto w-full max-w-container px-4 sm:px-6 lg:px-8">
+    <div class="border-t border-slate-900/5 py-10">
+        <p class="mt-5 text-center text-sm leading-6 text-slate-500">&copy; 2024 PropertyWise. All Rights Reserved.</p>
+        <div class="mt-8 flex items-center justify-center space-x-4 text-sm font-semibold leading-6 text-slate-700">
+            <a href="./asset/privacy_policy.php" class="text-blue-600 hover:underline">Privacy Policy</a>
+            <div class="h-4 w-px bg-slate-500/20"></div>
+            <a href="./asset/terms_condition.php" class="text-blue-600 hover:underline">Terms of Service</a>
+            <div class="h-4 w-px bg-slate-500/20"></div>
+            <a href="./asset/team.php" class="text-blue-600 hover:underline">Meet Our Team</a>
         </div>
-        <p class="text-gray-600 mt-5">&copy; 2024 RentEase. All Rights Reserved.</p>
+    </div>
+</footer>
 
-        </div>
-    </footer>
     
 
 

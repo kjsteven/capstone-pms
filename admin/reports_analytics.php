@@ -83,23 +83,68 @@ mysqli_close($conn);
         <button id="tab-analytics" class="py-2 px-4 text-gray-700 focus:outline-none ml-4 border-b-4 border-transparent hover:border-blue-600">Analytics</button>
     </div>
 
-   <!-- Generate Reports Tab Content -->
+
+<!-- Generate Reports Tab Content -->
 <div id="content-reports" class="tab-content">
     <h2 class="text-lg md:text-md font-semibold mt-8 md:mt-12 mb-4 md:mb-6">Generate Reports</h2>
     <div class="bg-gray-50 p-4 md:p-6 border border-gray-200 rounded-lg shadow-md">
-        <form class="space-y-4">
+        <form id="report-form" class="space-y-4">
+            <!-- Row for Report Type, Report Month, and Report Year -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Report Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700" for="report-type">
+                        Report Type
+                    </label>
+                    <select class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="report-type" name="report-type">
+                        <option>Unit Occupancy Report</option>
+                        <option>Property Availability Report</option>
+                        <option>Property Maintenance Report</option>
+                        <option>Monthly Payments Report</option>
+                        <option>Rental Balance Report</option>
+                    </select>
+                </div>
+
+                <!-- Report Month -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700" for="report-month">
+                        Report Month
+                    </label>
+                    <select class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="report-month" name="report-month">
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+
+              <!-- Report Year -->
             <div>
-                <label class="block text-sm font-medium text-gray-700" for="report-type">
-                    Report Type
+                <label class="block text-sm font-medium text-gray-700" for="report-year">
+                    Report Year
                 </label>
-                <select class="mt-1 block w-full py-2 px-3 mt-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="report-type">
-                    <option>Unit Occupancy Report</option>
-                    <option>Property Availability Report</option>
-                    <option>Property Maintenance Report</option>
-                    <option>Monthly Payments Report</option>
-                    <option>Rental Balance Report</option>
+                <select class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="report-year" name="report-year">
+                    <?php
+                    // Generate year options starting from 2024
+                    $start_year = 2024;
+                    $current_year = date('Y');
+                    for ($year = $start_year; $year >= $start_year - 10; $year--) {
+                        echo "<option value=\"$year\">$year</option>";
+                    }
+                    ?>
                 </select>
             </div>
+        </div>
+
+            <!-- Submit Button -->
             <div>
                 <button class="bg-indigo-600 text-white py-2 px-4 rounded-md shadow-md hover:bg-indigo-700 transition duration-200" type="submit">
                     Generate Report
@@ -108,31 +153,18 @@ mysqli_close($conn);
         </form>
     </div>
 
-    <h2 class="text-lg md:text-md font-semibold mt-8 md:mt-12 mb-4 md:mb-6">Generated Reports</h2>
-    <div class="bg-gray-50 p-4 md:p-6 border border-gray-200 rounded-lg shadow-md overflow-x-auto">
-        <table class="w-full bg-white">
+    <!-- Table for generated reports -->
+    <div class="mt-8">
+        <table class="min-w-full text-sm">
             <thead>
-                <tr class="bg-gray-100">
-                    <th class="py-2 px-2 md:px-4 text-left text-xs md:text-sm font-medium text-gray-600 uppercase tracking-wider">Report Name</th>
-                    <th class="py-2 px-2 md:px-4 text-left text-xs md:text-sm font-medium text-gray-600 uppercase tracking-wider">Date Generated</th>
-                    <th class="py-2 px-2 md:px-4 text-center text-xs md:text-sm font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                <tr>
+                    <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Report Type</th>
+                    <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Date Generated</th>
+                    <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-center">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-2 md:px-4 border-b border-gray-200">
-                        <span class="block text-sm md:text-base text-gray-900">Sample Report</span>
-                    </td>
-                    <td class="py-3 px-2 md:px-4 border-b border-gray-200">
-                        <span class="block text-sm md:text-base text-gray-600">Sample Date</span>
-                    </td>
-                    <td class="py-3 px-2 md:px-4 border-b border-gray-200 text-center">
-                        <div class="flex justify-center space-x-2">
-                            <button class="bg-green-600 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-blue-600 transition duration-200">Download</button>
-                            <button class="bg-red-500 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-red-600 transition duration-200">Delete</button>
-                        </div>
-                    </td>
-                </tr>
+            <tbody id="generated-reports-table">
+                <!-- Generated reports will appear here -->
             </tbody>
         </table>
     </div>
@@ -180,30 +212,41 @@ mysqli_close($conn);
 
 
 
- <!-- SCRIPT FOR REPORT GENERATION -->   
-<script>
+  <!-- Report Generation -->
 
+<script>
 document.addEventListener('DOMContentLoaded', function() {
-    const reportForm = document.querySelector('#content-reports form');
-    const generatedReportsTable = document.querySelector('#content-reports tbody');
+    const reportForm = document.querySelector('#report-form');
+    const generatedReportsTable = document.querySelector('#generated-reports-table');
+    const progressSpinner = document.createElement('div');
+    progressSpinner.innerHTML = `
+        <div class="fixed inset-0 bg-black bg-opacity-25 flex justify-center items-center z-50">
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    `;
+    progressSpinner.style.display = 'none'; // Initially hidden
+    document.body.appendChild(progressSpinner);
 
     reportForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Get selected report type
         const reportType = document.getElementById('report-type').value;
+        const reportMonth = document.getElementById('report-month').value;
+        const reportYear = document.getElementById('report-year').value;
 
-        // Disable submit button and show loading state
         const submitButton = e.target.querySelector('button[type="submit"]');
         submitButton.disabled = true;
-        submitButton.innerHTML = 'Generating Report...';
+        submitButton.textContent = 'Generating Report...';
 
-        // Create FormData to send report type and other potential parameters
+        // Show the progress spinner
+        progressSpinner.style.display = 'flex';
+
         const formData = new FormData();
         formData.append('report_type', reportType);
+        formData.append('report_month', reportMonth);
+        formData.append('report_year', reportYear);
         formData.append('action', 'generate_report');
 
-        // Send AJAX request to generate report
         fetch('generate_report.php', {
             method: 'POST',
             body: formData
@@ -211,35 +254,20 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Add new report to the generated reports table
                 const newReportRow = `
                     <tr class="hover:bg-gray-50">
-                        <td class="py-3 px-2 md:px-4 border-b border-gray-200">
-                            <span class="block text-sm md:text-base text-gray-900">${reportType}</span>
-                        </td>
-                        <td class="py-3 px-2 md:px-4 border-b border-gray-200">
-                            <span class="block text-sm md:text-base text-gray-600">${new Date().toLocaleDateString()}</span>
-                        </td>
+                        <td class="py-3 px-2 md:px-4 border-b border-gray-200">${reportType}</td>
+                        <td class="py-3 px-2 md:px-4 border-b border-gray-200">${new Date().toLocaleDateString()}</td>
                         <td class="py-3 px-2 md:px-4 border-b border-gray-200 text-center">
-                            <div class="flex justify-center space-x-2">
-                                <button onclick="downloadReport('${data.filename}')" class="bg-green-600 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-blue-600 transition duration-200">Download</button>
-                                <button onclick="deleteReport(this, ${data.report_id})" class="bg-red-500 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-red-600 transition duration-200">Delete</button>
-                            </div>
+                            <button onclick="downloadReport('${data.filename}')" class="bg-green-600 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-blue-600 transition duration-200">Download</button>
+                            <button onclick="deleteReport(this, ${data.report_id})" class="bg-red-500 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-red-600 transition duration-200">Delete</button>
                         </td>
                     </tr>
                 `;
                 generatedReportsTable.insertAdjacentHTML('afterbegin', newReportRow);
 
-                // Show success notification
                 showNotification('Report generated successfully', 'success');
-
-
-                 // Refresh the page after report generation
-                 setTimeout(() => {
-                    location.reload();
-                }, 1000); // 1000 ms = 1 second
             } else {
-                // Show error notification
                 showNotification(data.message || 'Failed to generate report', 'error');
             }
         })
@@ -248,38 +276,43 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('An unexpected error occurred', 'error');
         })
         .finally(() => {
-            // Re-enable submit button
             submitButton.disabled = false;
-            submitButton.innerHTML = 'Generate Report';
+            submitButton.textContent = 'Generate Report';
+            progressSpinner.style.display = 'none'; // Hide the spinner
         });
     });
 
-    // Function to download report
     window.downloadReport = function(filename) {
-        // Create a temporary link to trigger download
         const link = document.createElement('a');
-        link.href = `../reports/${filename}`;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const filePath = `../reports/${encodeURIComponent(filename)}`;
+        fetch(filePath, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    link.href = filePath;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    showNotification('File not found!', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('An error occurred while checking the file', 'error');
+            });
     };
 
-    // Function to delete report
     window.deleteReport = function(buttonElement, reportId) {
         const row = buttonElement.closest('tr');
 
         fetch('delete_report.php', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `report_id=${reportId}`
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Remove row from table
                 row.remove();
                 showNotification('Report deleted successfully', 'success');
             } else {
@@ -292,29 +325,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    // Notification function
     function showNotification(message, type) {
-        // Create notification element
         const notification = document.createElement('div');
         notification.classList.add(
-            'fixed', 'top-4', 'right-4', 'z-50', 'px-4', 'py-2', 'rounded-md', 
-            type === 'success' ? 'bg-green-500' : 'bg-red-500', 
+            'fixed', 'top-4', 'right-4', 'z-50', 'px-4', 'py-2', 'rounded-md',
+            type === 'success' ? 'bg-green-500' : 'bg-red-500',
             'text-white', 'transition-all', 'duration-300', 'ease-in-out'
         );
         notification.textContent = message;
-
-        // Add to body
         document.body.appendChild(notification);
 
-        // Remove after 3 seconds
         setTimeout(() => {
             notification.classList.add('opacity-0', 'translate-x-full');
             setTimeout(() => document.body.removeChild(notification), 300);
         }, 3000);
     }
 });
-
 </script>
+
 
 
 

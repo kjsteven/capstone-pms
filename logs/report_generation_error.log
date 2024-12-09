@@ -30,3 +30,99 @@ Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.ph
 Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
 [2024-12-08 16:59:47] Unknown column 'u.first_name' in 'field list'
 Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":22}
+[2024-12-09 14:59:26] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 14:59:31] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 14:59:35] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 14:59:49] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 14:59:49] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:01] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:01] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:01] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:01] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:01] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:01] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:02] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:02] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:06] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:06] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:00:06] You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM property p
+            LEFT JOIN tenants t ON p.unit_id = t.unit_rented...' at line 11
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\UnitOccupancyReport.php","line":28}
+[2024-12-09 15:46:45] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:47:27] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:47:29] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:47:31] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:48:13] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:49:43] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:51:12] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:53:01] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:53:02] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:53:02] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:53:03] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:22] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:23] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:24] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:24] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:47] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:48] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:49] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:49] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:49] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:49] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 15:54:49] Invalid request method
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":39}
+[2024-12-09 16:27:40] Invalid or missing report type
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":47}
+[2024-12-09 16:33:00] Invalid or missing report type
+Context: {"file":"C:\\xampp\\htdocs\\capstone-pms\\admin\\generate_report.php","line":47}

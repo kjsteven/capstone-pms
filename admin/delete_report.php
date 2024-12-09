@@ -1,90 +1,74 @@
 <?php
 require '../session/db.php';
 
-header('Content-Type: application/json');
-header('X-Content-Type-Options: nosniff');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_id'])) {
+    $reportId = $_POST['report_id'];
 
-// Enable error reporting for detailed debugging
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        throw new Exception("Invalid request method");
-    }
-
-    $report_id = $_POST['report_id'] ?? null;
-    if (!$report_id) {
-        http_response_code(400);
-        throw new Exception("Missing or invalid report ID");
-    }
-
-    // Fetch the report to get the file path from the database
-    $query = "SELECT file_path FROM generated_reports WHERE report_id = ?";
+    // Get the report details from the database
+    $query = "SELECT report_data FROM generated_reports WHERE report_id = ?";
     $stmt = mysqli_prepare($conn, $query);
-    if (!$stmt) {
-        throw new Exception("Failed to prepare statement for fetching file path");
-    }
-
-    mysqli_stmt_bind_param($stmt, 'i', $report_id);
-    if (!mysqli_stmt_execute($stmt)) {
-        throw new Exception("Failed to execute query to fetch file path");
-    }
-
+    mysqli_stmt_bind_param($stmt, 'i', $reportId);
+    mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $report = mysqli_fetch_assoc($result);
 
-    if (!$report) {
-        throw new Exception("Report not found in database");
-    }
+    if ($report) {
+        $reportData = json_decode($report['report_data'], true);
+        $filename = 'unit_occupancy_report_' . $reportData['overview']['report_period'] . '.csv';
+        $filePath = '../reports/' . $filename;
 
-    // Get the relative file path from the database
-    $file_path = $report['file_path'];
-
-    // Debugging: Check the value of the file path
-    error_log("Report File Path from DB: " . $file_path);
-
-    // Define the base directory where the reports are stored
-    $base_dir = realpath('../reports');  // Use your actual base directory path
-
-    // Combine the base directory and file path to get the full absolute file path
-    $full_file_path = $base_dir . DIRECTORY_SEPARATOR . $file_path;
-
-    // Debugging: Check the full resolved file path
-    error_log("Full File Path: " . $full_file_path);
-
-    // Validate if the file exists
-    if (file_exists($full_file_path)) {
-        // Attempt to delete the file
-        if (!unlink($full_file_path)) {
-            throw new Exception("Failed to delete file: " . $full_file_path);
+        // Delete the file from the file system if it exists
+        if (file_exists($filePath)) {
+            if (unlink($filePath)) {
+                // Successfully deleted the file
+                $fileDeleted = true;
+            } else {
+                // Failed to delete the file
+                $fileDeleted = false;
+                echo json_encode(['status' => 'error', 'message' => 'Failed to delete the report file']);
+                exit;
+            }
+        } else {
+            $fileDeleted = false;  // File not found, no need to delete
         }
-        error_log("File deleted successfully: " . $full_file_path); // Confirm file deletion
+
+        // Delete the report from the database
+        $query = "DELETE FROM generated_reports WHERE report_id = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, 'i', $reportId);
+
+        if (mysqli_stmt_execute($stmt)) {
+            $status = 'success';
+            $message = 'Report deleted successfully';
+
+            // Check if the directory is empty and delete it
+            $directoryPath = '../reports';
+            if (is_dir($directoryPath)) {
+                $files = array_diff(scandir($directoryPath), array('.', '..'));
+
+                if (empty($files)) {
+                    // If the directory is empty, remove it
+                    if (rmdir($directoryPath)) {
+                        $message .= ' and directory removed';
+                    } else {
+                        $message .= ' but failed to remove directory';
+                    }
+                }
+            }
+
+            if (!$fileDeleted) {
+                // Add a message if the file was not found or failed to delete
+                $message .= ' (File not found or failed to delete)';
+            }
+        } else {
+            $status = 'error';
+            $message = 'Failed to delete report from the database';
+        }
+
+        // Return the response as JSON
+        echo json_encode(['status' => $status, 'message' => $message]);
     } else {
-        throw new Exception("File does not exist at the path: " . $full_file_path);
+        echo json_encode(['status' => 'error', 'message' => 'Report not found']);
     }
-
-    // Delete the report from the database
-    $delete_query = "DELETE FROM generated_reports WHERE report_id = ?";
-    $delete_stmt = mysqli_prepare($conn, $delete_query);
-    if (!$delete_stmt) {
-        throw new Exception("Failed to prepare statement for deleting the report");
-    }
-
-    mysqli_stmt_bind_param($delete_stmt, 'i', $report_id);
-    if (!mysqli_stmt_execute($delete_stmt)) {
-        throw new Exception("Failed to delete report from database");
-    }
-
-    echo json_encode(['status' => 'success', 'message' => 'Report deleted successfully']);
-
-} catch (Exception $e) {
-    // Log the exception message
-    error_log("Error: " . $e->getMessage());
-
-    // Return a more detailed error response
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 ?>

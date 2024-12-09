@@ -34,15 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $unit_rented = $_POST['unit_rented'];
     $rent_from = $_POST['rent_from'];
     $rent_until = $_POST['rent_until'];
-    $monthly_rate = (float) $_POST['monthly_rate']; // Cast to float
-    $downpayment_amount = (float) $_POST['downpayment_amount']; // Cast to float
+    $monthly_rate = (float) $_POST['monthly_rate'];
+    $downpayment_amount = (float) $_POST['downpayment_amount'];
     $registration_date = $_POST['registration_date'];
 
     // Calculate the rent period (months between rent_from and rent_until)
     $date1 = new DateTime($rent_from);
     $date2 = new DateTime($rent_until);
     $interval = $date1->diff($date2);
-    $months = $interval->m + ($interval->y * 12);  // Add years to months
+    $months = $interval->m + ($interval->y * 12);
 
     // Calculate the total rent
     $total_rent = $months * $monthly_rate;
@@ -50,29 +50,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Calculate the outstanding balance (total rent - downpayment)
     $outstanding_balance = $total_rent - $downpayment_amount;
 
+    // Calculate payable months (outstanding balance / monthly rate)
+    $payable_months = ceil($outstanding_balance / $monthly_rate);
+
     // Check if we are updating an existing tenant
     if (isset($_POST['tenant_id']) && !empty($_POST['tenant_id'])) {
         $tenant_id = $_POST['tenant_id'];
-        $stmt = $conn->prepare("UPDATE tenants SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, outstanding_balance = ?, downpayment_amount = ?, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ?");
-        $stmt->bind_param("issssssdi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $tenant_id); 
-        $stmt->execute();
-
-        // Update the status of the rented unit to 'Occupied'
-        $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Occupied' WHERE unit_id = ?");
-        $updateUnitStatus->bind_param("i", $unit_rented);
-        if (!$updateUnitStatus) {
-            die("Prepare failed: " . $conn->error);
-        }
-        $updateUnitStatus->bind_param("i", $unit_rented);
-        if (!$updateUnitStatus->execute()) {
-            die("Execute failed: " . $updateUnitStatus->error);
-        }
-        $message = 'Tenant successfully updated!';
-
-    } else {
-        // Insert a new tenant
-        $stmt = $conn->prepare("INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, outstanding_balance, downpayment_amount, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
-        $stmt->bind_param("isssssd", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount);
+        $stmt = $conn->prepare(
+            "UPDATE tenants 
+             SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, outstanding_balance = ?, downpayment_amount = ?, payable_months = ?, updated_at = CURRENT_TIMESTAMP 
+             WHERE tenant_id = ?"
+        );
+        $stmt->bind_param("isssssidi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $payable_months, $tenant_id);
         $stmt->execute();
 
         // Update the status of the rented unit to 'Occupied'
@@ -80,22 +69,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $updateUnitStatus->bind_param("i", $unit_rented);
         $updateUnitStatus->execute();
 
-        if (!$updateUnitStatus) {
-            die("Prepare failed: " . $conn->error);
-        }
+        $message = 'Tenant successfully updated!';
+    } else {
+        // Insert a new tenant
+        $stmt = $conn->prepare(
+            "INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, outstanding_balance, downpayment_amount, payable_months, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
+        );
+        $stmt->bind_param("isssssid", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $payable_months);
+        $stmt->execute();
+
+        // Update the status of the rented unit to 'Occupied'
+        $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Occupied' WHERE unit_id = ?");
         $updateUnitStatus->bind_param("i", $unit_rented);
-        if (!$updateUnitStatus->execute()) {
-            die("Execute failed: " . $updateUnitStatus->error);
-        }
+        $updateUnitStatus->execute();
 
         $message = 'Tenant successfully added!';
     }
 
-    // Return plain text response
     echo $message;
     exit();
 }
-// delete tenant
+
+// Delete tenant
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
         $tenant_id = $_GET['id'];
@@ -133,6 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     }
 }
 ?>
+
 
 
 <!DOCTYPE html>
@@ -199,6 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                         <th class="px-4 py-2 text-left border border-gray-300">Monthly Rate</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Downpayment Amount</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Outstanding Balance</th>
+                        <th class="px-4 py-2 text-left border border-gray-300">Payable Months</th>
                         <th class="px-4 py-2 text-left border border-gray-300">Registration Date    </th>
                         <th class="px-4 py-2 text-left border border-gray-300">Action</th>
                     </tr>
@@ -220,6 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                         <td class="px-4 py-2 text-left border border-gray-300">
                             <?= isset($tenant['outstanding_balance']) ? '₱' . number_format($tenant['outstanding_balance'], 2) : '₱0.00' ?>
                         </td>
+                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['payable_months'] ?></td>
                         <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['created_at'] ?></td>
                         <td class="px-4 py-2 text-left border border-gray-300">
                             <button class="text-blue-500 hover:text-blue-700" onclick="editTenant(<?= $tenant['tenant_id'] ?>)">Edit</button>

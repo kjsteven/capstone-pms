@@ -1,0 +1,18 @@
+[2024-12-10 03:32:11] Received POST request: Array
+(
+    [name] => KJ STEVEN PALMA
+    [email] => kjstevenpalma09@gmail.com
+    [specialty] => Plumbing Specialist
+    [phone] => 09510974884
+)
+
+[2024-12-10 03:32:14] Email sent successfully to kjstevenpalma09@gmail.com
+[2024-12-10 05:30:55] Received POST request: Array
+(
+    [name] => KJ STEVEN PALMA
+    [email] => kjstevenpalma09@gmail.com
+    [specialty] => General Maintenance
+    [phone] => 09510975884
+)
+
+[2024-12-10 05:30:58] Email sent successfully to kjstevenpalma09@gmail.com

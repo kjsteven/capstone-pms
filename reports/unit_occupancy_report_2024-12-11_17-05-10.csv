@@ -6,9 +6,11 @@
 107,Commercial,Available,N/A,N/A,N/A,67500.00,0,0,0,N/A
 115,Warehouse,Available,N/A,N/A,N/A,49500.00,0,0,0,N/A
 116,Office,Available,N/A,N/A,N/A,36000.00,0,0,0,N/A
+201,Commercial,Available,N/A,N/A,N/A,22500.00,0,0,0,N/A
+205,Office,Available,"Conrad Palma",2024-12-10,2026-12-20,22500.00,440000.00,20,100000.00,"2024-12-10 12:27:46"
 
 "Summary Statistics"
-"Total Units",7
+"Total Units",9
 "Occupied Units",1
-"Available Units",6
-"Occupancy Rate",14.29%
+"Available Units",8
+"Occupancy Rate",11.11%

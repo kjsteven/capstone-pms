@@ -160,6 +160,7 @@ mysqli_close($conn);
                 <tr>
                     <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Report Type</th>
                     <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Date Generated</th>
+                    <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Date Period</th>
                     <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-center">Actions</th>
                 </tr>
             </thead>
@@ -267,6 +268,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 generatedReportsTable.insertAdjacentHTML('afterbegin', newReportRow);
 
                 showNotification('Report generated successfully', 'success');
+
+                // Reload the current page
+                window.location.reload();
+
             } else {
                 showNotification(data.message || 'Failed to generate report', 'error');
             }
@@ -346,51 +351,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-<!-- SCRIPT TO FETCH AND DISPLAY THE REPORTS -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-    fetch('fetch_reports.php')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                populateGeneratedReports(data.reports);
-            } else {
-                showNotification('Failed to load reports', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching reports:', error);
-            showNotification('An error occurred while loading reports.', 'error');
-        });
-});
-
-// Display reports
-function populateGeneratedReports(reports) {
-    const tableBody = document.querySelector('#content-reports tbody');
-    tableBody.innerHTML = ''; // Clear existing rows
-
-    reports.forEach(report => {
-        const row = `
-            <tr class="hover:bg-gray-50">
-                <td class="py-3 px-2 md:px-4 border-b border-gray-200">
-                    <span class="block text-sm md:text-base text-gray-900">${report.type}</span>
-                </td>
-                <td class="py-3 px-2 md:px-4 border-b border-gray-200">
-                    <span class="block text-sm md:text-base text-gray-600">${report.date}</span>
-                </td>
-                <td class="py-3 px-2 md:px-4 border-b border-gray-200 text-center">
-                    <div class="flex justify-center space-x-2">
-                        <button onclick="downloadReport('${report.filename}')" class="bg-green-600 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-blue-600 transition duration-200">Download</button>
-                        <button onclick="deleteReport(this, ${report.id})" class="bg-red-500 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-red-600 transition duration-200">Delete</button>
-                    </div>
-                </td>
-            </tr>
-        `;
-        tableBody.insertAdjacentHTML('beforeend', row);
+    <!-- SCRIPT TO FETCH AND DISPLAY THE REPORTS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        fetch('fetch_reports.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    populateGeneratedReports(data.reports);
+                } else {
+                    showNotification('Failed to load reports', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching reports:', error);
+                showNotification('An error occurred while loading reports.', 'error');
+            });
     });
-}
 
-</script>
+    // Display reports
+    function populateGeneratedReports(reports) {
+        const tableBody = document.querySelector('#content-reports tbody');
+        tableBody.innerHTML = ''; // Clear existing rows
+
+        reports.forEach(report => {
+            const row = `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-2 md:px-4 border-b border-gray-200">
+                        <span class="block text-sm md:text-base text-gray-900">${report.type}</span>
+                    </td>
+                    <td class="py-3 px-2 md:px-4 border-b border-gray-200">
+                        <span class="block text-sm md:text-base text-gray-600">${report.date}</span>
+                    </td>
+                        <td class="py-3 px-2 md:px-4 border-b border-gray-200">
+                        <span class="block text-sm md:text-base text-gray-600">${report.period}</span>
+                    </td>
+                    <td class="py-3 px-2 md:px-4 border-b border-gray-200 text-center">
+                        <div class="flex justify-center space-x-2">
+                            <button onclick="downloadReport('${report.filename}')" class="bg-green-600 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-blue-600 transition duration-200">Download</button>
+                            <button onclick="deleteReport(this, ${report.id})" class="bg-red-500 text-white text-xs md:text-sm py-1 px-2 md:px-3 rounded-md shadow-md hover:bg-red-600 transition duration-200">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    </script>
 
 
 

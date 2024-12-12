@@ -5,7 +5,7 @@ header('Content-Type: application/json');
 
 try {
     // Fetch saved reports
-    $query = "SELECT report_id, report_type, report_date, file_path FROM generated_reports ORDER BY created_at DESC";
+    $query = "SELECT report_id, report_type, report_date, report_period, file_path FROM generated_reports ORDER BY created_at DESC";
     $result = mysqli_query($conn, $query);
 
     if (!$result) {
@@ -17,6 +17,7 @@ try {
         $reports[] = [
             'id' => $row['report_id'],
             'type' => $row['report_type'],
+            'period' => $row['report_period'],
             'date' => $row['report_date'],
             'filename' => basename($row['file_path']) // Extract only the file name
         ];

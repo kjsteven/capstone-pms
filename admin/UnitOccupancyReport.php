@@ -91,16 +91,31 @@ class UnitOccupancyReport {
         return $report;
     }
 
-    public function saveReportToDatabase($report) {
+    public function saveReportToDatabase($report, $filePath) {
+        // Convert the report array to JSON for storage
         $json_data = json_encode($report);
+    
+        // Prepare the SQL query to insert the report data along with the file path
         $query = "
-            INSERT INTO generated_reports (report_type, report_date, report_period, report_data, created_at)
-            VALUES ('Unit Occupancy Report', ?, ?, ?, NOW())
+            INSERT INTO generated_reports (report_type, report_date, report_period, report_data, file_path, created_at)
+            VALUES ('Unit Occupancy Report', ?, ?, ?, ?, NOW())
         ";
+    
+        // Prepare the statement
         $stmt = mysqli_prepare($this->conn, $query);
-        mysqli_stmt_bind_param($stmt, 'sss', $report['overview']['report_date'], $report['overview']['report_period'], $json_data);
+    
+        // Bind the parameters
+        mysqli_stmt_bind_param($stmt, 'ssss', 
+            $report['overview']['report_date'], 
+            $report['overview']['report_period'], 
+            $json_data, 
+            $filePath
+        );
+    
+        // Execute the statement
         return mysqli_stmt_execute($stmt);
     }
+    
 
     public function exportReportToCSV($report) {
         $filename = 'unit_occupancy_report_' . date('Y-m-d_H-i-s') . '.csv';

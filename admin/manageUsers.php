@@ -28,7 +28,7 @@ if (!$result) {
 }
 
 // Query to fetch staff details 
-$query_staff = "SELECT staff_id, Name, Email, Specialty, Phone_Number FROM staff";
+$query_staff = "SELECT staff_id, Name, Email, Specialty, Phone_Number, status FROM staff";
 $result_staff = mysqli_query($conn, $query_staff);
 
 if (!$result_staff) {
@@ -74,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
     mysqli_stmt_close($stmt);
 }
 
-
 ?>
 
 <!DOCTYPE html>
@@ -94,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
         body {
             font-family: 'Poppins', sans-serif;
         }
+        
     </style>
 </head>
 <body class="bg-gray-100">
@@ -107,153 +107,156 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
 
 
 <div class="sm:ml-64 p-8 mt-20 mx-auto">
-<h1 class="text-xl font-semibold text-gray-800 mb-6">Manage Users and Staff</h1>
+<h1 class="text-xl font-semibold text-gray-800 mb-6">List of Users and Staff</h1>
     <!-- Tabs Navigation (Placed at the top) -->
     <div class="flex mb-6 border-b">
         <button id="tab-users" class="py-2 px-4 text-gray-700 focus:outline-none border-b-4 border-blue-600">Users</button>
         <button id="tab-staff" class="py-2 px-4 text-gray-700 focus:outline-none ml-4 border-b-4 border-transparent hover:border-blue-600">Staff</button>
     </div>
 
-     <!-- Users Tab Content -->
-     <div id="tab-content-users" class="tab-content block">
-        <form class="space-y-6">
-            <!-- Search Bar and Print Button Form -->
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="relative w-full sm:w-1/4">
-                    <input type="text" id="search-keyword" placeholder="Search..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-                    <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
-                    <svg data-feather="search" class="w-4 h-4"></svg>
-                    </button>
-                </div>
 
-                <!-- Print Button -->
-                 <button id="print-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
-                 <svg data-feather="printer" class="w-4 h-4"></svg>
+   <!-- Users Tab Content -->
+<div id="tab-content-users" class="tab-content block">
+    <form class="space-y-6">
+        <!-- Search Bar and Print Button Form -->
+        <div class="flex items-center space-x-4 mb-4">
+            <div class="relative w-full sm:w-1/4">
+                <input type="text" id="search-keyword" placeholder="Search by Name..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
+                <button type="button" id="search-button" class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+                    <svg data-feather="search" class="w-4 h-4"></svg>
+                </button>
+            </div>
+
+            <!-- Print Button -->
+            <button id="print-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+                <svg data-feather="printer" class="w-4 h-4"></svg>
                 Print
             </button>
-            
-            </div>
-        
-            <div id="roleUpdateNotification" class="hidden fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg opacity-0 transition-all duration-500">
-                Role updated successfully!
-            </div>
-                <!-- Table Form -->
-                <div class="overflow-x-auto shadow-lg rounded-lg">
-                    <table class="min-w-full bg-white">
-                        <thead>
-                            <tr>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">User ID</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Email</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
-                                <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white">
+        </div>
 
-                        <?php
-                            while ($row = mysqli_fetch_assoc($result)) :
-                                // Set status based on the database value
-                                $status = $row['status']; 
+        <!-- Table Form -->
+        <div class="overflow-x-auto shadow-lg rounded-lg">
+            <table class="min-w-full bg-white" id="users-table">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">User ID</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
+                        <!-- Hidden columns -->
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    <?php
+                    while ($row = mysqli_fetch_assoc($result)) :
+                        // Set status based on the database value
+                        $status = $row['status']; 
 
-                                // Determine the class and icon based on the status
-                                $status_class = ($status == 'active') ? 'bg-green-500' : 'bg-red-500';
-                                $icon = ($status == 'active') ? 'check-circle' : 'x-circle';
-                            ?>  
-        
-                               <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['user_id']); ?></td>
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['name']); ?></td>
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['email']); ?></td>
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['phone']); ?></td>
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['role']); ?></td>
-                                <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                    <form action="manageUsers.php" method="POST" class="inline-block">
-                                        <input type="hidden" name="user_id" value="<?php echo $row['user_id']; ?>" />
-                                        <select name="role" class="border px-2 py-1 rounded">
-                                            <option value="Admin" <?php if ($row['role'] == 'Admin') echo 'selected'; ?>>Admin</option>
-                                            <option value="User" <?php if ($row['role'] == 'User') echo 'selected'; ?>>User</option>
-                                        </select>
-                                        <button type="submit" class="px-2 py-1 ml-2 bg-blue-600 text-white rounded">Update</button>
-                                    </form>
-                                </td>
-                                <td class="px-4 py-4 whitespace-no-wrap border-b border-gray-200">
-                                    <button class="flex items-center justify-center px-4 py-2 rounded-full text-white text-xs <?php echo $status_class; ?>">
-                                        <i data-feather="<?php echo $icon; ?>" class="w-4 h-4"></i> <!-- Feather icon for status -->
-                                        <?php echo ucfirst($status); ?>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-        </form>
-    </div>
-
-           <!-- Staff Tab Content -->
-            <div id="tab-content-staff" class="tab-content hidden">
-                <form class="space-y-6">
-                    <!-- Search Bar and Add Staff Button -->
-                    <div class="relative flex items-center w-full">
-                        <!-- Search Bar -->
-                        <div class="relative w-full sm:w-1/4">
-                            <input type="text" id="search-keyword-staff" placeholder="Search..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-                            <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
-                            <svg data-feather="search" class="w-4 h-4"></svg>
+                        // Determine the class and icon based on the status
+                        $status_class = ($status == 'active') ? 'bg-green-500' : 'bg-red-500';
+                        $icon = ($status == 'active') ? 'check-circle' : 'x-circle';
+                    ?>
+                    <tr class="user-row hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['user_id']); ?></td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['name']); ?></td>
+                        <!-- Hidden columns -->
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 email-column"><?php echo htmlspecialchars($row['email']); ?></td>
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 phone-column"><?php echo htmlspecialchars($row['phone']); ?></td>
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 role-column"><?php echo htmlspecialchars($row['role']); ?></td>
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 role-column">
+                            <form action="manageUsers.php" method="POST" class="flex items-center  mt-3">
+                                <select name="role" class="border px-2 py-1 rounded mr-2">
+                                    <option value="Admin" <?php if ($row['role'] == 'Admin') echo 'selected'; ?>>Admin</option>
+                                    <option value="User" <?php if ($row['role'] == 'User') echo 'selected'; ?>>User</option>
+                                </select>
+                                <button type="submit" class="px-2 py-1 bg-blue-600 text-white rounded ">Update</button>
+                            </form>
+                        </td>
+                            <td class="hidden additional-info px-4 py-4 whitespace-no-wrap border-b border-gray-200">
+                            <button class="flex items-center justify-center px-4 py-2 rounded text-white text-xs <?php echo $status_class; ?>">
+                                <i data-feather="<?php echo $icon; ?>" class="w-4 h-4"></i>
+                                <?php echo ucfirst($status); ?>
                             </button>
-                        </div>
-        
-                       
-                        <a href="staff_form.php" class="px-4 py-2 ml-4 bg-blue-600 text-white rounded-lg flex items-center gap-2">
-                        <svg data-feather="plus" class="w-4 h-4"></svg>
-                        Add Account
-                        </a>
-        
-                    </div>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </form>
+</div>
 
-                <!-- Table Form for displaying staff list -->
-                <div class="overflow-x-auto shadow-lg rounded-lg mt-4">
-                <table class="min-w-full bg-white">
-                    <thead>
-                        <tr>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Staff ID</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Email</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Specialty</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
-                            <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white">
-                        <?php
-                        // Display fetched staff data
-                        while ($row_staff = mysqli_fetch_assoc($result_staff)) :
-                        ?>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['staff_id']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Name']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Email']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Specialty']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Phone_Number']); ?></td>
-                            <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                                <form method="POST" action="manageUsers.php" onsubmit="return confirm('Edit staff?');">
-                                    <input type="hidden" name="staff_id" value="<?php echo htmlspecialchars($row_staff['staff_id']); ?>">
-                                    <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-red-600">Edit</button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
+<!-- Staff Tab Content -->
+<div id="tab-content-staff" class="tab-content hidden">
+    <form class="space-y-6">
+        <!-- Search Bar and Add Staff Button -->
+        <div class="relative flex items-center w-full">
+            <!-- Search Bar -->
+            <div class="relative w-full sm:w-1/4">
+                <input type="text" id="search-keyword-staff" placeholder="Search by Name..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
+                <button type="button" id="search-button-staff" class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+                    <svg data-feather="search" class="w-4 h-4"></svg>
+                </button>
             </div>
 
+            <a href="staff_form.php" class="px-4 py-2 ml-4 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+                <svg data-feather="plus" class="w-4 h-4"></svg>
+                Add Account
+            </a>
+        </div>
 
+        <!-- Table Form for displaying staff list -->
+        <div class="overflow-x-auto shadow-lg rounded-lg mt-4">
+            <table class="min-w-full bg-white" id="staff-table">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Staff ID</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
+                        <!-- Hidden columns -->
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Specialty</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    <?php
+                    // Display fetched staff data
+                    while ($row_staff = mysqli_fetch_assoc($result_staff)) :
+                    ?>
+                    <tr class="staff-row hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['staff_id']); ?></td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Name']); ?></td>
+                        <!-- Hidden columns -->
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Email']); ?></td>
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Specialty']); ?></td>
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Phone_Number']); ?></td>
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['status']); ?></td>
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                             <div class="action-buttons flex items-center gap-2">
+                                <!-- Edit Button -->
+                                <button class="px-2 py-2 bg-green-600 text-white rounded flex items-center text-sm" onclick="editStaff(<?php echo $row_staff['staff_id']; ?>)">
+                                    <i data-feather="edit" class="mr-2 w-4 h-4"></i> Edit
+                                </button>
+
+                                <!-- Archive Button -->
+                                <button class="px-2 py-2 bg-red-600 text-white rounded flex items-center text-sm" onclick="archiveStaff(<?php echo $row_staff['staff_id']; ?>)">
+                                    <i data-feather="archive" class="mr-2 w-4 h-4"></i> Archive
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </form>
 </div>
+
 
 <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
 
@@ -292,45 +295,77 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
     }
 </script>
 
+
 <script>
-    // Search function for Users
-    document.getElementById('search-keyword').addEventListener('input', function() {
-        const keyword = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#tab-content-users tbody tr');
-        
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Users Table Search
+    const userSearchInput = document.getElementById('search-keyword');
+    const userSearchButton = document.getElementById('search-button');
+    const usersTable = document.getElementById('users-table');
+
+    // Staff Table Search
+    const staffSearchInput = document.getElementById('search-keyword-staff');
+    const staffSearchButton = document.getElementById('search-button-staff');
+    const staffTable = document.getElementById('staff-table');
+
+    // Function to toggle additional info columns
+    function toggleAdditionalColumns(table, show = false) {
+        const additionalColumns = table.querySelectorAll('.additional-info');
+        additionalColumns.forEach(column => {
+            column.classList.toggle('hidden', !show);
+        });
+    }
+
+    // Function to perform search
+    function performSearch(searchInput, table, rowClass) {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const rows = table.querySelectorAll(`.${rowClass}`);
+
         rows.forEach(row => {
-            const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            const email = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-            const phone = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-            const role = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-            
-            if (name.includes(keyword) || email.includes(keyword) || phone.includes(keyword) || role.includes(keyword)) {
-                row.style.display = '';  // Show row
+            // Find the name cell (second column)
+            const nameCell = row.children[1];
+            const name = nameCell.textContent.toLowerCase();
+
+            // If search term is empty, reset to initial state
+            if (searchTerm === '') {
+                row.style.display = '';
+                toggleAdditionalColumns(table, false);
+                return;
+            }
+
+            // Show/hide rows based on search
+            if (name.includes(searchTerm)) {
+                row.style.display = '';
+                toggleAdditionalColumns(table, true);
             } else {
-                row.style.display = 'none';  // Hide row
+                row.style.display = 'none';
             }
         });
+    }
+
+    // Event listeners for users table search
+    userSearchInput.addEventListener('input', function() {
+        performSearch(userSearchInput, usersTable, 'user-row');
     });
 
-    // Search function for Staff
-    document.getElementById('search-keyword-staff').addEventListener('input', function() {
-        const keyword = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#tab-content-staff tbody tr');
-        
-        rows.forEach(row => {
-            const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            const email = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-            const phone = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-            const role = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-            
-            if (name.includes(keyword) || email.includes(keyword) || phone.includes(keyword) || role.includes(keyword)) {
-                row.style.display = '';  // Show row
-            } else {
-                row.style.display = 'none';  // Hide row
-            }
-        });
+    userSearchButton.addEventListener('click', function() {
+        performSearch(userSearchInput, usersTable, 'user-row');
     });
+
+    // Event listeners for staff table search
+    staffSearchInput.addEventListener('input', function() {
+        performSearch(staffSearchInput, staffTable, 'staff-row');
+    });
+
+    staffSearchButton.addEventListener('click', function() {
+        performSearch(staffSearchInput, staffTable, 'staff-row');
+    });
+});
+
 </script>
+
+
 
 <script>
     // Print Function
@@ -380,6 +415,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
 </script>
 
 <script>
+    
     // Function to show notification for Updating role
     function showNotification() {
         const notification = document.getElementById('roleUpdateNotification');
@@ -398,9 +434,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
     <?php if (isset($message) && $message == "Role updated successfully.") : ?>
         showNotification();
     <?php endif; ?>
+
 </script>
 
-<script>
+
 
 
 

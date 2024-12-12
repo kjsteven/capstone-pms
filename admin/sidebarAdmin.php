@@ -78,19 +78,19 @@ echo '<script>
             <li>
                 <a href="propertyAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
                     <svg data-feather="home" class="text-white icon-size"></svg>
-                    <span>Manage Properties</span>
+                    <span>Properties</span>
                 </a>
             </li>
             <li>
                 <a href="tenantAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
                     <svg data-feather="user-plus" class="text-white icon-size"></svg>
-                    <span>Manage Tenants</span>
+                    <span>Tenants</span>
                 </a>
             </li>
             <li>
                 <a href="manageUsers.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
                     <svg data-feather="users" class="text-white icon-size"></svg>
-                    <span>Manage Users</span>
+                    <span>Users</span>
                 </a>
             </li>
 

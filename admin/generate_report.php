@@ -14,13 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $report = new UnitOccupancyReport($conn);
             $generatedReport = $report->generateReport($reportDate, $reportYear, $reportMonth);
 
+            // Export the report to a CSV file
+            $filename = $report->exportReportToCSV($generatedReport);
+            $filePath = '../reports/' . $filename; // Construct the file path
+
             // Save the report to the database
-            $reportSaved = $report->saveReportToDatabase($generatedReport);
+            $reportSaved = $report->saveReportToDatabase($generatedReport, $filePath);
 
             if ($reportSaved) {
-                // Export the report to a CSV file
-                $filename = $report->exportReportToCSV($generatedReport);
-
                 // Return success response with the filename and report ID
                 echo json_encode([
                     'status' => 'success',

@@ -18,10 +18,12 @@ $message = '';
 $usersResult = $conn->query("SELECT * FROM users WHERE role = 'user'");
 $users = $usersResult->fetch_all(MYSQLI_ASSOC);
 
-// Fetch tenants along with their user name and tenant id
-$tenantsResult = $conn->query("SELECT tenants.*, users.name AS user_name, property.unit_no FROM tenants 
+// Fetch active tenants along with their user name and tenant id
+$tenantsResult = $conn->query("SELECT tenants.*, users.name AS user_name, property.unit_no 
+                                FROM tenants 
                                 LEFT JOIN users ON tenants.user_id = users.user_id
-                                LEFT JOIN property ON tenants.unit_rented = property.unit_id");
+                                LEFT JOIN property ON tenants.unit_rented = property.unit_id
+                                WHERE tenants.status = 'active'");
 
 $tenants = $tenantsResult->fetch_all(MYSQLI_ASSOC);
 
@@ -91,11 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
 }
 
-// Delete tenant
+// Archive tenant
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
-    if ($_GET['action'] === 'delete' && isset($_GET['id'])) {
+    if ($_GET['action'] === 'archive' && isset($_GET['id'])) {
         $tenant_id = $_GET['id'];
-        
+
         // First, retrieve the unit_rented for this tenant
         $stmt = $conn->prepare("SELECT unit_rented FROM tenants WHERE tenant_id = ?");
         $stmt->bind_param("i", $tenant_id);
@@ -104,17 +106,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         $tenant = $result->fetch_assoc();
         $unit_rented = $tenant['unit_rented'];
 
-        // Delete the tenant
-        $deleteStmt = $conn->prepare("DELETE FROM tenants WHERE tenant_id = ?");
-        $deleteStmt->bind_param("i", $tenant_id);
-        $deleteStmt->execute();
+        // Archive the tenant (set status to 'archived')
+        $archiveStmt = $conn->prepare("UPDATE tenants SET status = 'archived' WHERE tenant_id = ?");
+        $archiveStmt->bind_param("i", $tenant_id);
+        $archiveStmt->execute();
 
         // Update the unit status to 'Available'
         $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Available' WHERE unit_id = ?");
         $updateUnitStatus->bind_param("i", $unit_rented);
         $updateUnitStatus->execute();
 
-        echo 'Tenant successfully deleted.';
+        echo 'Tenant successfully archived.';
         exit();
     } elseif ($_GET['action'] === 'edit' && isset($_GET['id'])) {
         $tenant_id = $_GET['id'];
@@ -128,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         exit();
     }
 }
+
 ?>
 
 
@@ -154,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
     <div class="sm:ml-64 p-8 mt-20 mx-auto">
         <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">List of Tenants</h1>
+            <h1 class="text-xl font-bold text-gray-800">List of Tenants</h1>
         </div>
 
         <div class="flex flex-wrap items-center gap-4 sm:gap-6 mb-4">
@@ -182,53 +185,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
         </div>
     </div>
+  
 
-        
-            <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-            <table class="min-w-full table-auto border-collapse border border-gray-300">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="px-4 py-2 text-left border border-gray-300">Tenant ID</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Name</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Unit No</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Rent From</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Rent Until</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Monthly Rate</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Downpayment Amount</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Outstanding Balance</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Payable Months</th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Registration Date    </th>
-                        <th class="px-4 py-2 text-left border border-gray-300">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="tenantTableBody">
-                    <?php foreach ($tenants as $index => $tenant) : ?>
-                    <tr>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['tenant_id'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= isset($tenant['user_name']) ? $tenant['user_name'] : 'N/A' ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['unit_no'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['rent_from'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['rent_until'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300">
-                            <?= isset($tenant['monthly_rate']) ? '₱' . number_format($tenant['monthly_rate'], 2) : '₱0.00' ?>
-                        </td>
-                        <td class="px-4 py-2 text-left border border-gray-300">
-                            <?= isset($tenant['downpayment_amount']) ? '₱' . number_format($tenant['downpayment_amount'], 2) : '₱0.00' ?>
-                        </td>
-                        <td class="px-4 py-2 text-left border border-gray-300">
-                            <?= isset($tenant['outstanding_balance']) ? '₱' . number_format($tenant['outstanding_balance'], 2) : '₱0.00' ?>
-                        </td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['payable_months'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['created_at'] ?></td>
-                        <td class="px-4 py-2 text-left border border-gray-300">
-                            <button class="text-blue-500 hover:text-blue-700" onclick="editTenant(<?= $tenant['tenant_id'] ?>)">Edit</button>
-                            <button class="text-red-500 hover:text-red-700" onclick="deleteTenant(<?= $tenant['tenant_id'] ?>)">Delete</button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+    <table class="min-w-full table-auto border-collapse border border-gray-300">
+        <thead class="bg-gray-200">
+            <tr>
+                <th class="px-4 py-2 text-left border border-gray-300">Tenant ID</th>
+                <th class="px-4 py-2 text-left border border-gray-300">Name</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Unit No</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Rent From</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Rent Until</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Monthly Rate</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Downpayment Amount</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Outstanding Balance</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Payable Months</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Registration Date</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Action</th>
+            </tr>
+        </thead>
+        <tbody id="tenantTableBody">
+            <?php foreach ($tenants as $index => $tenant) : ?>
+            <tr>
+                <td class="px-4 py-2 text-left border border-gray-300"><?= $tenant['tenant_id'] ?></td>
+                <td class="px-4 py-2 text-left border border-gray-300"><?= isset($tenant['user_name']) ? $tenant['user_name'] : 'N/A' ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['unit_no'] ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['rent_from'] ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['rent_until'] ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= isset($tenant['monthly_rate']) ? '₱' . number_format($tenant['monthly_rate'], 2) : '₱0.00' ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= isset($tenant['downpayment_amount']) ? '₱' . number_format($tenant['downpayment_amount'], 2) : '₱0.00' ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= isset($tenant['outstanding_balance']) ? '₱' . number_format($tenant['outstanding_balance'], 2) : '₱0.00' ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['payable_months'] ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['created_at'] ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column">
+                    <button class="text-blue-500 hover:text-blue-700" onclick="editTenant(<?= $tenant['tenant_id'] ?>)">Edit</button>
+                    <button class="text-red-500 hover:text-red-700" onclick="archiveTenant(<?= $tenant['tenant_id'] ?>)">Archive</button>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+
 
 
    <!-- Modal for Adding/Editing Tenant -->
@@ -436,59 +434,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 });
         }
 
-        // Delete tenant
-        function deleteTenant(tenantId) {
-            if (confirm('Are you sure you want to delete this tenant?')) {
-                fetch(`?action=delete&id=${tenantId}`, {
+      // Archive tenant
+        function archiveTenant(tenantId) {
+            if (confirm('Are you sure you want to archive this tenant?')) {
+                fetch(`?action=archive&id=${tenantId}`, {
                     method: 'GET'
                 })
                 .then(response => response.text())
                 .then(message => {
-                    // Show a success notification for tenant deletion
+                    // Show a success notification for tenant archiving
                     Toastify({
-                        text: "Tenant Deleted Successfully",  // The success message
-                        backgroundColor: "green",  // Green background for success
-                        duration: 2000,  // Duration of 3 seconds
-                        close: true  // Show close button for manual dismissal
+                        text: "Tenant Archived Successfully", // The success message
+                        backgroundColor: "green", // Green background for success
+                        duration: 2000, // Duration of 2 seconds
+                        close: true // Show close button for manual dismissal
                     }).showToast();
 
                     // Delay the page reload to ensure the toast is visible
                     setTimeout(() => {
                         window.location.reload(); // Reload the page after showing notification
-                    }, 1000);  // Wait a little longer than the toast's duration to reload
+                    }, 1000); // Wait a little longer than the toast's duration to reload
                 })
                 .catch(error => {
                     // Show an error notification in case of failure
                     Toastify({
-                        text: "Error deleting tenant. Please try again.",  // The error message
-                        backgroundColor: "red",  // Red background for error
-                        duration: 3000,  // Duration of 3 seconds
-                        close: true  // Show close button for manual dismissal
+                        text: "Error archiving tenant. Please try again.", // The error message
+                        backgroundColor: "red", // Red background for error
+                        duration: 3000, // Duration of 3 seconds
+                        close: true // Show close button for manual dismissal
                     }).showToast();
                 });
             }
         }
 
-
           // Function to filter tenants based on search input
-          document.getElementById('search-keyword').addEventListener('input', function() {
+
+          document.getElementById('search-keyword').addEventListener('input', function () {
             let searchKeyword = this.value.toLowerCase();
             let tenantRows = document.querySelectorAll('#tenantTableBody tr');
-            
-            tenantRows.forEach(function(row) {
+
+            tenantRows.forEach(function (row) {
                 let name = row.cells[1].textContent.toLowerCase();
-                let unit = row.cells[2].textContent.toLowerCase();
-                let rentFrom = row.cells[3].textContent.toLowerCase();
-                let rentUntil = row.cells[4].textContent.toLowerCase();
-                
-                // Check if any of the row's columns match the search keyword
-                if (name.includes(searchKeyword) || unit.includes(searchKeyword) || rentFrom.includes(searchKeyword) || rentUntil.includes(searchKeyword)) {
-                    row.style.display = '';  // Show row
+
+                if (searchKeyword === '') {
+                    // Reset to default view: hide extra columns for all rows
+                    row.style.display = ''; // Show all rows
+                    row.querySelectorAll('.extra-column').forEach(col => col.classList.add('hidden'));
+                } else if (name.includes(searchKeyword)) {
+                    row.style.display = ''; // Show matching row
+                    row.querySelectorAll('.extra-column').forEach(col => col.classList.remove('hidden')); // Show extra columns
                 } else {
-                    row.style.display = 'none';  // Hide row
+                    row.style.display = 'none'; // Hide non-matching rows
                 }
             });
         });
+
 
     </script>
 </body>

@@ -1,47 +1,75 @@
 <?php
+
+session_start();
+
+date_default_timezone_set('Asia/Manila'); 
+
+
 require '../session/db.php';
-require 'UnitOccupancyReport.php'; // Include your class file
+require 'UnitOccupancyReport.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'generate_report') {
     $reportType = $_POST['report_type'];
     $reportMonth = $_POST['report_month'];
     $reportYear = $_POST['report_year'];
-    $reportDate = date('Y-m-d H:i:s'); // Date when the report is generated
+    $reportDate = date('Y-m-d H:i:s');
+
+    // Fetch the user_id from the session
+    $userId = $_SESSION['user_id'] ?? null;
+
+    if (!$userId) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'User is not logged in.'
+        ]);
+        exit;
+    }
+
+    // Query to get the user's name
+    $userQuery = "SELECT name FROM users WHERE user_id = ?";
+    $stmt = $conn->prepare($userQuery);
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $userResult = $stmt->get_result();
+
+    if ($userResult->num_rows === 0) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'User not found.'
+        ]);
+        exit;
+    }
+
+    $userRow = $userResult->fetch_assoc();
+    $generatedBy = $userRow['name'];
 
     try {
-        // Check the report type and generate accordingly
         if ($reportType === 'Unit Occupancy Report') {
             $report = new UnitOccupancyReport($conn);
-            $generatedReport = $report->generateReport($reportDate, $reportYear, $reportMonth);
+            $generatedReport = $report->generateReport($reportDate, $reportYear, $reportMonth, $generatedBy);
 
-            // Export the report to a CSV file
             $filename = $report->exportReportToCSV($generatedReport);
-            $filePath = '../reports/' . $filename; // Construct the file path
+            $filePath = '../reports/' . $filename;
 
-            // Save the report to the database
             $reportSaved = $report->saveReportToDatabase($generatedReport, $filePath);
 
             if ($reportSaved) {
-                // Return success response with the filename and report ID
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Report generated successfully',
                     'filename' => $filename,
-                    'report_id' => $conn->insert_id // Assuming you have an auto-incrementing ID
+                    'report_id' => $conn->insert_id
                 ]);
             } else {
                 throw new Exception('Failed to save report to the database');
             }
         } else {
-            // Handle other report types (e.g., Property Availability Report, etc.)
             throw new Exception('Unknown report type');
         }
     } catch (Exception $e) {
-        // Catch errors and return failure
         echo json_encode([
             'status' => 'error',
             'message' => $e->getMessage()
         ]);
     }
 }
-?>

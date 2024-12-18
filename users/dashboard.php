@@ -7,6 +7,8 @@ require '../session/db.php';
 start_secure_session();
 
 
+
+
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
     // If not logged in, redirect to login page
@@ -15,7 +17,27 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 
+
+// Prepare the statement
+$query = "SELECT name, email, phone, status FROM users WHERE user_id = ?";
+$stmt = mysqli_prepare($conn, $query);
+
+// Bind the parameter
+mysqli_stmt_bind_param($stmt, "i", $_SESSION['user_id']);
+
+// Execute the statement
+mysqli_stmt_execute($stmt);
+
+// Get the result
+$result = mysqli_stmt_get_result($stmt);
+
+// Fetch the user data
+$user = mysqli_fetch_assoc($result);
+
+
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,9 +66,40 @@ if (!isset($_SESSION['user_id'])) {
 <?php include('sidebar.php'); ?>
 
 <div class="p-4 sm:ml-64">
+
     <div class="mt-20">
-        <h1 class="text-2xl font-semibold text-gray-600">Welcome Back, User</h1>
+            <?php 
+
+             // Set timezone to Manila
+            date_default_timezone_set('Asia/Manila');
+
+            // Determine greeting based on time of day
+            $hour = date('H');
+            if ($hour < 12) {
+                $greeting = "Good Morning";
+            } elseif ($hour < 18) {
+                $greeting = "Good Afternoon";
+            } else {
+                $greeting = "Good Evening";
+            }
+
+            // Capitalize first letter of name or use a fallback
+            $name = isset($user['name']) ? ucwords(strtolower($user['name'])) : 'User';
+            ?>
+            <h1 class="text-2xl font-semibold text-gray-600">
+                <?php echo htmlspecialchars($greeting); ?>, 
+                <span class="text-gray-600"><?php echo htmlspecialchars($name); ?></span>
+            </h1>
+            
+            <?php 
+            // Optional: Add a subtle welcome back message with current date
+            $currentDate = date('l, F j, Y');
+            ?>
+            <p class="text-sm text-gray-500 mt-2">
+                <?php echo htmlspecialchars($currentDate); ?>
+            </p>
     </div>
+
 
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8">
         <!-- Property and Financial Cards (Left Column, Spanning 3 Columns in Total) -->

@@ -15,7 +15,7 @@
     }
 
     // Fetch available properties from the database
-    $properties_query = "SELECT * FROM property WHERE status = 'Available'";
+    $properties_query = "SELECT * FROM property";
     $properties_result = mysqli_query($conn, $properties_query);
     $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 
@@ -120,23 +120,34 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <?php if (!empty($properties)): ?>
                     <?php foreach ($properties as $property): ?>
-                        <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+                        <div class="bg-white shadow-xl rounded-xl overflow-hidden relative">
+                            <!-- Status Badge -->
+                            <?php 
+                            $status = $property['status'] ?? 'Available'; // Default to Available if not set
+                            $statusColors = [
+                                'Available' => 'bg-green-50 text-green-950',
+                                'Occupied' => 'bg-red-50 text-red-950',
+                                'Maintenance' => 'bg-yellow-50 text-yellow-950'
+                            ];
+                            $badgeColor = $statusColors[$status] ?? 'bg-gray-100 text-gray-800';
+                            ?>
+                            <div class="absolute top-4 right-4 z-10">
+                                <span class="<?php echo $badgeColor; ?> px-3 py-1 rounded-full text-xs font-semibold uppercase">
+                                    <?php echo htmlspecialchars($status); ?>
+                                </span>
+                            </div>
+
                             <figure>
                                 <?php
-                               // Fetch the image from the database (assuming $property['images'] contains the relative path)
+                                // Fetch the image from the database (assuming $property['images'] contains the relative path)
                                 if (!empty($property['images'])) {
-                                    // If $property['images'] already includes the 'uploads/' part, use it directly
                                     $image_path = '../admin/' . $property['images']; // Relative path to the image
-                                   
                                 } else {
                                     $image_path = '../images/bg2.jpg'; // Fallback image if no image exists
-                                   
                                 }
-
                                 ?>
                                 <img class="w-full h-48 object-cover" src="<?php echo htmlspecialchars($image_path); ?>" alt="Property Image" />
-
-                              </figure>
+                            </figure>
                             <div class="p-6">
                                 <h2 class="text-xl font-semibold mb-4">Unit Details</h2>
                                 <div class="space-y-2">
@@ -146,23 +157,26 @@
                                     <p><span class="font-semibold">Square Meter:</span> <?php echo htmlspecialchars($property['square_meter']); ?> sqm</p>
                                 </div>
                                 <div class="flex justify-center mt-6">
-                                    <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition duration-300">Reserve Now</button>
+                                    <?php 
+                                    $isDisabled = ($status === 'Occupied' || $status === 'Maintenance');
+                                    ?>
+                                    <button 
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition duration-300 
+                                        <?php echo $isDisabled ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                                        <?php echo $isDisabled ? 'disabled' : ''; ?>
+                                    >
+                                        <?php echo $isDisabled ? 'Not Available' : 'Reserve Now'; ?>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="col-span-full text-center py-8">
-                        <p class="text-gray-500">No available properties at the moment.</p>
+                        <p class="text-gray-500">No properties found.</p>
                     </div>
                 <?php endif; ?>
             </div>
-
-
-
-
-
-
 
 
             </div>
@@ -200,6 +214,124 @@
             }
 
         </script>
+
+
+        <script>
+            // Properties data from PHP
+            const properties = <?php echo json_encode($properties); ?>;
+
+            // Function to filter properties
+            function filterProperties() {
+                const categoryFilter = document.getElementById('dropdown-button').innerText.trim();
+                const searchTerm = document.getElementById('search-dropdown').value.toLowerCase();
+                const propertiesContainer = document.querySelector('.grid');
+
+                // Clear existing properties
+                propertiesContainer.innerHTML = '';
+
+                // Filter properties
+                const filteredProperties = properties.filter(property => {
+                    const matchesCategory = categoryFilter === 'All Categories' || 
+                        property.unit_type.toLowerCase() === categoryFilter.toLowerCase();
+                    
+                    const matchesSearch = searchTerm === '' || 
+                        property.unit_no.toLowerCase().includes(searchTerm) ||
+                        property.unit_type.toLowerCase().includes(searchTerm);
+
+                    return matchesCategory && matchesSearch;
+                });
+
+                // Render filtered properties
+                if (filteredProperties.length > 0) {
+                    filteredProperties.forEach(property => {
+                        // Status determination
+                        const status = property.status || 'Available';
+                        const statusColors = {
+                            'Available': 'bg-green-100 text-green-800',
+                            'Occupied': 'bg-red-100 text-red-800',
+                            'Maintenance': 'bg-yellow-100 text-yellow-800'
+                        };
+                        const badgeColor = statusColors[status] || 'bg-gray-100 text-gray-800';
+                        
+                        // Determine button state
+                        const isDisabled = status === 'Occupied' || status === 'Maintenance';
+                        
+                        // Image path
+                        const imagePath = property.images 
+                            ? `../admin/${property.images}` 
+                            : '../images/bg2.jpg';
+
+                        // Create property card HTML
+                        const propertyCard = `
+                            <div class="bg-white shadow-xl rounded-xl overflow-hidden relative">
+                                <div class="absolute top-4 right-4 z-10">
+                                    <span class="${badgeColor} px-3 py-1 rounded-full text-xs font-semibold uppercase">
+                                        ${status}
+                                    </span>
+                                </div>
+
+                                <figure>
+                                    <img class="w-full h-48 object-cover" src="${imagePath}" alt="Property Image" />
+                                </figure>
+                                <div class="p-6">
+                                    <h2 class="text-xl font-semibold mb-4">Unit Details</h2>
+                                    <div class="space-y-2">
+                                        <p><span class="font-semibold">Unit No:</span> ${property.unit_no}</p>
+                                        <p><span class="font-semibold">Unit Type:</span> ${property.unit_type}</p>
+                                        <p><span class="font-semibold">Monthly Rent:</span> ₱${Number(property.monthly_rent).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                        <p><span class="font-semibold">Square Meter:</span> ${property.square_meter} sqm</p>
+                                    </div>
+                                    <div class="flex justify-center mt-6">
+                                        <button 
+                                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition duration-300 
+                                            ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}"
+                                            ${isDisabled ? 'disabled' : ''}
+                                        >
+                                            ${isDisabled ? 'Not Available' : 'Reserve Now'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        propertiesContainer.innerHTML += propertyCard;
+                    });
+                } else {
+                    // No properties found
+                    propertiesContainer.innerHTML = `
+                        <div class="col-span-full text-center py-8">
+                            <p class="text-gray-500">No properties found.</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Modify existing functions to use filterProperties
+            function selectCategory(category) {
+                document.getElementById('dropdown-button').innerText = category;
+                toggleDropdown(); // Close the dropdown after selection
+                filterProperties(); // Filter properties based on selected category
+            }
+
+            // Add event listener for search input
+            document.getElementById('search-dropdown').addEventListener('input', filterProperties);
+
+            // Modify the form submission to prevent default and trigger filtering
+            document.querySelector('form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                filterProperties();
+            });
+
+            // Original loading script
+            window.onload = function() {
+                showLoading();
+                setTimeout(hideLoading, 1000);
+                
+                // Initial filtering to set up the page
+                filterProperties();
+            };
+        </script>
+
+
     </body>
 
     </html>

@@ -9,6 +9,8 @@ function start_secure_session() {
     $session_timeout = 1800; // 30 minutes in seconds
     $warning_threshold = 300; // 5 minutes in seconds (adjust as needed)
 
+    
+
     // Check if the session has timed out
     if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > $session_timeout)) {
         // Session expired, destroy it

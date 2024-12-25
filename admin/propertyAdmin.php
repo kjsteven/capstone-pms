@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 <div class="sm:ml-64 p-8 mt-20 mx-auto">
-    <h1 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">List of Properties</h1>
+    <h1 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Property Management</h1>
 
     <!-- Search Bar and Buttons -->
     <div class="flex flex-wrap items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4">
@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 while ($row = mysqli_fetch_assoc($result)): 
                 ?>
                 <tr class="unit-row hover:bg-gray-50" data-unit-no="<?php echo htmlspecialchars($row['unit_no']); ?>" data-unit-type="<?php echo htmlspecialchars($row['unit_type']); ?>">
-                    <td class="px-4 sm:px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo $counter++; ?></td>
+                    <td class="px-4 sm:px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['unit_id']); ?></td>
                     <td class="px-4 sm:px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['unit_no']); ?></td>
                     <td class="px-4 sm:px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['unit_type']); ?></td>
                     <td class="px-4 sm:px-6 py-4 whitespace-no-wrap border-b border-gray-200 hidden-content"><?php echo number_format($row['square_meter'], 2); ?></td>
@@ -168,6 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="Available" <?php echo ($row['status'] == 'Available') ? 'selected' : ''; ?>>Available</option>
                                 <option value="Occupied" <?php echo ($row['status'] == 'Occupied') ? 'selected' : ''; ?>>Occupied</option>
                                 <option value="Maintenance" <?php echo ($row['status'] == 'Maintenance') ? 'selected' : ''; ?>>Maintenance</option>
+                                <option value="Reserved" <?php echo ($row['status'] == 'Reserved') ? 'selected' : ''; ?>>Reserved</option>
                             </select>
                             <input type="hidden" name="unit_id" value="<?php echo $row['unit_id']; ?>" />
                             <button type="submit" class="p-1 w-24 h-10 bg-blue-600 text-white rounded text-xs">Update Status</button>
@@ -175,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </td>
                     <td class="px-4 sm:px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                     <div class="action-buttons flex items-center gap-2">
-                        <button class="px-4 py-2 bg-red-600 text-white rounded flex items-center" onclick="archiveUnit(<?php echo $row['unit_id']; ?>)">
+                        <button class="px-4 py-2 bg-red-600 text-white rounded-md flex items-center" onclick="archiveUnit(<?php echo $row['unit_id']; ?>)">
                             <i data-feather="archive" class="mr-2 w-4 h-4"></i> Archive
                         </button>
                     </div>

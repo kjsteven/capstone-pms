@@ -99,9 +99,9 @@ echo '<script>
                 <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Operations</h3>
             </li>
             <li>
-                <a href="bookingAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                <a href="reservationAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
                     <svg data-feather="calendar" class="text-white icon-size"></svg>
-                    <span>Booking</span>
+                    <span>Reservation</span>
                 </a>
             </li>
             <li>

@@ -42,12 +42,32 @@
             <li>
                 <h3 class="px-2 pt-4 pb-2 text-sm font-semibold  text-blue-950 dark:text-white uppercase tracking-wide">Property</h3>
             </li>
-            <li>
-                <a href="bookunit.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+            
+            <li class="relative">
+            <!-- Main Sidebar Item -->
+            <div class="flex items-center justify-between p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                <a href="bookunit.php" class="flex items-center">
                     <svg data-feather="home" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
                     <span class="ms-3 text-white text-sm dark:text-white">Reserve a Unit</span>
                 </a>
-            </li>
+                <!-- Arrow Icon for Dropdown -->
+                <button id="toggle-submenu" class="focus:outline-none">
+                    <svg data-feather="chevron-down" class="w-4 h-4 text-blue-500 transition duration-75 group-hover:text-blue-900 dark:text-white dark:group-hover:text-white"></svg>
+                </button>
+            </div>
+
+            <!-- Sub-sidebar for Reservation History -->
+            <ul class="hidden pl-8 space-y-2" id="reservation-submenu">
+                <li>
+                    <a href="reservation_history.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                        <svg data-feather="file-text" class="w-4 h-4 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                        <span class="ms-3 text-white text-sm dark:text-white">Reservation History</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+
             <li>
                 <a href="unitinfo.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
                     <svg data-feather="info" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
@@ -100,6 +120,19 @@
         sidebar.classList.toggle('-translate-x-full');
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggleButton = document.getElementById('toggle-submenu');
+        const subMenu = document.getElementById('reservation-submenu');
+
+        toggleButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            subMenu.classList.toggle('hidden');
+        });
+    });
+</script>
+
 
 </body>
 </html>

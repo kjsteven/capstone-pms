@@ -131,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <option value="Available">Available</option>
                         <option value="Occupied">Occupied</option>
                         <option value="Maintenance">Maintenance</option>
+                        <option value="Occupied">Reserved</option>
                     </select>
                 </div>
 

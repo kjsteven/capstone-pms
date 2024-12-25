@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
     <div class="sm:ml-64 p-8 mt-20 mx-auto">
         <div class="flex justify-between items-center mb-4">
-            <h1 class="text-xl font-bold text-gray-800">List of Tenants</h1>
+            <h1 class="text-xl font-semibold text-gray-800">Tenants Management</h1>
         </div>
 
         <div class="flex flex-wrap items-center gap-4 sm:gap-6 mb-4">

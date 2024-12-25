@@ -154,8 +154,8 @@ mysqli_close($conn);
     </div>
 
     <!-- Table for generated reports -->
-    <div class="mt-8">
-        <table class="min-w-full text-sm">
+    <div class="mt-8 overflow-x-auto">
+        <table class="min-w-full text-sm table-auto">
             <thead>
                 <tr>
                     <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Report Type</th>

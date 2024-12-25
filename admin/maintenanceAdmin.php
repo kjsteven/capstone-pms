@@ -11,6 +11,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+
+
 // Query to fetch maintenance request details with user name
 $query = "
     SELECT 
@@ -21,11 +23,13 @@ $query = "
         mr.description, 
         mr.service_date, 
         mr.image, 
-        s.name AS staff_name,  -- Get the staff name from the staff table
+        s.name AS staff_name, 
         mr.status
     FROM maintenance_requests mr
-    JOIN users u ON mr.user_id = u.user_id  -- Join with users table on user_id
-    LEFT JOIN staff s ON mr.assigned_to = s.staff_id"; 
+    JOIN users u ON mr.user_id = u.user_id
+    LEFT JOIN staff s ON mr.assigned_to = s.staff_id
+    WHERE mr.archived = 0"; // Exclude archived rows
+
 
 $result = mysqli_query($conn, $query);
 
@@ -104,6 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             font-family: 'Poppins', sans-serif;
         }
     </style>
+
+    
 </head>
 <body>
 
@@ -114,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 <?php include('sidebarAdmin.php'); ?>
 
 <div class="sm:ml-64 p-8 mt-20 mx-auto">
-<h1 class="text-xl font-semibold text-gray-800 mb-6">List of Maintenance Requests</h1>
+<h1 class="text-xl font-semibold text-gray-800 mb-6">Maintenance Requests Management</h1>
 
 <!-- Users Tab Content -->
 <div class="tab-content block">
@@ -169,25 +175,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                             </td>
                             <td class="px-6 py-3 border-b border-gray-200"><?php echo $row['staff_name'] ? $row['staff_name'] : 'Not Assigned'; ?></td>
                             <td class="px-6 py-3 border-b border-gray-200">
-                                <!-- Status and Update Button -->
-                                 <form method="POST" class="update-form">
-                                        <div class="flex items-center space-x-4 text-center">
-                                            <select name="status" class="px-4 py-2 border rounded-md w-full">
-                                                <option value="Pending" <?php echo $row['status'] == 'Pending' ? 'selected' : ''; ?>>Pending</option>
-                                                <option value="In Progress" <?php echo $row['status'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
-                                                <option value="Completed" <?php echo $row['status'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                                            </select>
-                                            <input type="hidden" name="request_id" value="<?php echo $row['id']; ?>">
-                                            <button type="submit" name="update_status" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none">
-                                                Update
-                                            </button>
-                                        </div>
-                                </form>
+                               
+                            <!-- Status and Update Button -->
+                            <form method="POST" class="update-form">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Dropdown for Status -->
+                                    <select name="status" 
+                                            class="px-3 py-1 border border-gray-300 rounded-md w-40 text-center mt-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="Pending" <?php echo $row['status'] == 'Pending' ? 'selected' : ''; ?>>Pending</option>
+                                        <option value="In Progress" <?php echo $row['status'] == 'In Progress' ? 'selected' : ''; ?>>In Progress</option>
+                                        <option value="Completed" <?php echo $row['status'] == 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                                    </select>
+
+                                    <!-- Hidden Input -->
+                                    <input type="hidden" name="request_id" value="<?php echo $row['id']; ?>">
+
+                                    <!-- Update Button -->
+                                    <button type="submit" name="update_status" 
+                                            class="px-3 py-1 bg-blue-500 text-white rounded-md mt-4 hover:bg-blue-600 focus:outline-none">
+                                        Update
+                                    </button>
+                                </div>
+                            </form>
+
+
                             </td>
 
                             <td class="px-6 py-3 border-b border-gray-200">
-                                <button type="submit" name="update_status" value="Update" class="text-blue-600 edit-btn">Edit</button> | 
-                                <a href="archive_request.php?id=<?php echo $row['id']; ?>" class="text-red-600">Archive</a>
+                                <div class="flex space-x-2">
+                                    <button type="submit" name="update_status" value="Update" class="bg-blue-600 text-white edit-btn px-3 py-1 rounded-md inline-flex items-center">
+                                        <i data-feather="edit-2" class="w-4 h-4 mr-1"></i>
+                                        Edit
+                                    </button>
+                                    <a href="archive_request.php?id=<?php echo $row['id']; ?>" class="bg-red-600 text-white px-3 py-1 rounded-md inline-flex items-center">
+                                        <i data-feather="archive" class="w-4 h-4 mr-1"></i>
+                                        Archive
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     <?php } ?>
@@ -289,6 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         });
     });
 </script>
+
 
 <script>
     

@@ -90,7 +90,7 @@
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="unit">Unit No</label>
                         <select id="unit" name="unit" class="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none" required>
-                            <option value="" disabled selected>Select your unit no</option>
+                            <option value="" disabled selected>Select your unit number</option>
                             <?php
                                 // Fetching units rented by the user
                                 $unit_query = "SELECT p.unit_no
@@ -185,12 +185,12 @@
             <div class="relative w-full sm:w-1/4">
                 <input type="text" id="search-keyword" placeholder="Search..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
                 <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
-                    <i class="fas fa-search"></i>
+                    <i data-feather="search" class="w-4 h-4"></i>
                 </button>
             </div>
         </div>
 
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto shadow-md rounded-lg">
         <table class="min-w-full border border-gray-300">
             <thead>
                 <tr class="bg-gray-200">
@@ -234,10 +234,17 @@
                                     No Image
                                 <?php endif; ?>
                             </td>
-                            <td class="px-4 py-2 border-b border-gray-300 text-center">
-                                <!-- Actions Column, you can add edit/delete buttons or other actions here -->
-                                <button class="text-blue-600">Edit</button>
-                                <button class="text-red-600">Archive</button>
+                            <td class="py-2 px-4 text-center border-b flex items-center justify-center gap-4">
+                              
+                                   <!-- Edit Button -->
+                                <button class="bg-blue-500 hover:bg-blue-700 text-white text-sm font-medium py-1 px-2 rounded-md cancel-btn flex items-center gap-2">
+                                    <i data-feather="edit-2" class="w-4 h-4" ></i> Edit
+                                </button>
+
+                                <!-- Archive Button -->
+                                <button class="bg-red-500 hover:bg-red-700 text-white text-sm font-medium py-1 px-2 rounded-md archive-btn flex items-center gap-2">
+                                    <i data-feather="archive" class="w-4 h-4" ></i> Archive
+                                </button>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -251,6 +258,7 @@
         </table>
     </div>
 </div>
+
 
  </div>
 

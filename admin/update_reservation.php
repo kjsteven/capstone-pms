@@ -35,6 +35,20 @@ try {
         throw new Exception('Failed to update status');
     }
 
+     // If status is confirmed, update property status to Reserved
+     if (strtolower($data['status']) === 'confirmed') {
+        $stmt = $conn->prepare("
+            UPDATE property p 
+            JOIN reservations r ON p.unit_id = r.unit_id 
+            SET p.status = 'Reserved' 
+            WHERE r.reservation_id = ?
+        ");
+        $stmt->bind_param("i", $data['reservation_id']);
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to update property status');
+        }
+    }
+
     // Get user details for email
     $stmt = $conn->prepare("
         SELECT u.email, u.name, p.unit_no, r.viewing_date, r.viewing_time 

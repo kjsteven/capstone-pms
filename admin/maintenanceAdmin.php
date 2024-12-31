@@ -247,6 +247,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
 
+
+<!-- Initialize Feather Icons, Update Request Status -->
 <script>
     // Initialize Feather Icons
     feather.replace();
@@ -315,6 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 </script>
 
 
+<!-- Search, Print Functionality, Edit Request -->
 <script>
     
 document.addEventListener("DOMContentLoaded", () => {
@@ -400,6 +403,68 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 </script>
+
+
+
+
+
+<!-- Archive Request -->
+
+<script>
+    
+document.querySelectorAll('a[href^="archive_request.php"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (!confirm('Are you sure you want to archive this request?')) {
+            return;
+        }
+
+        const requestId = this.href.split('?id=')[1];
+        const row = this.closest('tr');
+
+        fetch(`archive_request.php?id=${requestId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                Toastify({
+                    text: data.message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                    stopOnFocus: true
+                }).showToast();
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Toastify({
+                text: error.message || "An error occurred while archiving the request",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                stopOnFocus: true
+            }).showToast();
+        });
+});
+
+});
+
+</script>
+
 
 
 </body>

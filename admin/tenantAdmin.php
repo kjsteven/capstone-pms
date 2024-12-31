@@ -2,7 +2,6 @@
 
 require_once '../session/session_manager.php';
 require '../session/db.php';
-require '../config/config.php';
 
 start_secure_session();
 
@@ -12,126 +11,179 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$message = '';
+// Fetch units that are not yet occupied
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_units'])) {
+    header('Content-Type: application/json');
+    ob_clean();
 
-// Fetch users to populate the select dropdown
-$usersResult = $conn->query("SELECT * FROM users WHERE role = 'user'");
+    try {
+        $userId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : null;
+
+        if (!$userId) {
+            throw new Exception('User ID is required');
+        }
+
+        $query = "
+            SELECT p.unit_id, p.unit_no, p.monthly_rent
+            FROM reservations r
+            JOIN property p ON r.unit_id = p.unit_id
+            WHERE r.user_id = ? 
+            AND r.status = 'confirmed'
+            AND p.status != 'Occupied'
+        ";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $units = [];
+        while ($row = $result->fetch_assoc()) {
+            $units[] = [
+                'unit_id' => $row['unit_id'],
+                'unit_no' => htmlspecialchars($row['unit_no'], ENT_QUOTES, 'UTF-8'),
+                'monthly_rent' => $row['monthly_rent']
+            ];
+        }
+
+        echo json_encode(['success' => true, 'data' => $units]);
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8')
+        ]);
+    }
+    exit();
+}
+
+
+// Fetch users from confirmed reservations who are not yet tenants
+$usersQuery = "
+    SELECT DISTINCT r.user_id, u.name 
+    FROM reservations r
+    JOIN users u ON r.user_id = u.user_id 
+    WHERE r.status = 'confirmed' 
+    AND r.user_id NOT IN (
+        SELECT user_id FROM tenants WHERE status = 'active'
+    )";
+$usersResult = $conn->query($usersQuery);
 $users = $usersResult->fetch_all(MYSQLI_ASSOC);
 
 // Fetch active tenants along with their user name and tenant id
 $tenantsResult = $conn->query("SELECT tenants.*, users.name AS user_name, property.unit_no 
-                                FROM tenants 
-                                LEFT JOIN users ON tenants.user_id = users.user_id
-                                LEFT JOIN property ON tenants.unit_rented = property.unit_id
-                                WHERE tenants.status = 'active'");
+                              FROM tenants 
+                              LEFT JOIN users ON tenants.user_id = users.user_id
+                              LEFT JOIN property ON tenants.unit_rented = property.unit_id
+                              WHERE tenants.status = 'active'");
 
 $tenants = $tenantsResult->fetch_all(MYSQLI_ASSOC);
 
 // Create an array of user IDs that are already tenants
 $tenantUserIds = array_column($tenants, 'user_id');
 
+
+
+
+// Handle POST requests for adding/editing tenants
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  
+
+    $message = '';
     // Handle form submission for adding or editing tenants
-    $user_id = $_POST['user_id'];
-    $unit_rented = $_POST['unit_rented'];
-    $rent_from = $_POST['rent_from'];
-    $rent_until = $_POST['rent_until'];
-    $monthly_rate = (float) $_POST['monthly_rate'];
-    $downpayment_amount = (float) $_POST['downpayment_amount'];
-    $registration_date = $_POST['registration_date'];
+    try {
+        $user_id = (int)$_POST['user_id'];
+        $unit_rented = (int)$_POST['unit_rented'];
+        $rent_from = $_POST['rent_from'];
+        $rent_until = $_POST['rent_until'];
+        $monthly_rate = (float)$_POST['monthly_rate'];
+        $downpayment_amount = (float)$_POST['downpayment_amount'];
 
-    // Calculate the rent period (months between rent_from and rent_until)
-    $date1 = new DateTime($rent_from);
-    $date2 = new DateTime($rent_until);
-    $interval = $date1->diff($date2);
-    $months = $interval->m + ($interval->y * 12);
+        $date1 = new DateTime($rent_from);
+        $date2 = new DateTime($rent_until);
+        $interval = $date1->diff($date2);
+        $months = $interval->m + ($interval->y * 12);
 
-    // Calculate the total rent
-    $total_rent = $months * $monthly_rate;
+        $total_rent = $months * $monthly_rate;
+        $outstanding_balance = $total_rent - $downpayment_amount;
+        $payable_months = ceil($outstanding_balance / $monthly_rate);
 
-    // Calculate the outstanding balance (total rent - downpayment)
-    $outstanding_balance = $total_rent - $downpayment_amount;
+        if (isset($_POST['tenant_id']) && !empty($_POST['tenant_id'])) {
+            $tenant_id = (int)$_POST['tenant_id'];
 
-    // Calculate payable months (outstanding balance / monthly rate)
-    $payable_months = ceil($outstanding_balance / $monthly_rate);
+            $stmt = $conn->prepare(
+                "UPDATE tenants 
+                 SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, outstanding_balance = ?, downpayment_amount = ?, payable_months = ?, updated_at = CURRENT_TIMESTAMP 
+                 WHERE tenant_id = ?"
+            );
+            $stmt->bind_param("isssssidi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $payable_months, $tenant_id);
+            $stmt->execute();
+        } else {
+            $stmt = $conn->prepare(
+                "INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, outstanding_balance, downpayment_amount, payable_months, created_at, updated_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
+            );
+            $stmt->bind_param("isssssid", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $payable_months);
+            $stmt->execute();
+        }
 
-    // Check if we are updating an existing tenant
-    if (isset($_POST['tenant_id']) && !empty($_POST['tenant_id'])) {
-        $tenant_id = $_POST['tenant_id'];
-        $stmt = $conn->prepare(
-            "UPDATE tenants 
-             SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, outstanding_balance = ?, downpayment_amount = ?, payable_months = ?, updated_at = CURRENT_TIMESTAMP 
-             WHERE tenant_id = ?"
-        );
-        $stmt->bind_param("isssssidi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $payable_months, $tenant_id);
-        $stmt->execute();
-
-        // Update the status of the rented unit to 'Occupied'
         $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Occupied' WHERE unit_id = ?");
         $updateUnitStatus->bind_param("i", $unit_rented);
         $updateUnitStatus->execute();
 
-        $message = 'Tenant successfully updated!';
-    } else {
-        // Insert a new tenant
-        $stmt = $conn->prepare(
-            "INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, outstanding_balance, downpayment_amount, payable_months, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
-        );
-        $stmt->bind_param("isssssid", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $payable_months);
-        $stmt->execute();
+        $updateReservation = $conn->prepare("UPDATE reservations SET status = 'completed' WHERE user_id = ? AND unit_id = ? AND status = 'confirmed'");
+        $updateReservation->bind_param("ii", $user_id, $unit_rented);
+        $updateReservation->execute();
 
-        // Update the status of the rented unit to 'Occupied'
-        $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Occupied' WHERE unit_id = ?");
-        $updateUnitStatus->bind_param("i", $unit_rented);
-        $updateUnitStatus->execute();
-
-        $message = 'Tenant successfully added!';
+        echo json_encode(['success' => true, 'message' => 'Operation successful!']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
     }
-
-    echo $message;
     exit();
 }
 
-// Archive tenant
+// Handle GET requests for archiving tenants 
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
-    if ($_GET['action'] === 'archive' && isset($_GET['id'])) {
-        $tenant_id = $_GET['id'];
+    try {
+        if ($_GET['action'] === 'archive' && isset($_GET['id'])) {
+            $tenant_id = (int)$_GET['id'];
+            $stmt = $conn->prepare("SELECT unit_rented FROM tenants WHERE tenant_id = ?");
+            $stmt->bind_param("i", $tenant_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $tenant = $result->fetch_assoc();
 
-        // First, retrieve the unit_rented for this tenant
-        $stmt = $conn->prepare("SELECT unit_rented FROM tenants WHERE tenant_id = ?");
-        $stmt->bind_param("i", $tenant_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $tenant = $result->fetch_assoc();
-        $unit_rented = $tenant['unit_rented'];
+            $archiveStmt = $conn->prepare("UPDATE tenants SET status = 'archived' WHERE tenant_id = ?");
+            $archiveStmt->bind_param("i", $tenant_id);
+            $archiveStmt->execute();
 
-        // Archive the tenant (set status to 'archived')
-        $archiveStmt = $conn->prepare("UPDATE tenants SET status = 'archived' WHERE tenant_id = ?");
-        $archiveStmt->bind_param("i", $tenant_id);
-        $archiveStmt->execute();
+            $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Available' WHERE unit_id = ?");
+            $updateUnitStatus->bind_param("i", $tenant['unit_rented']);
+            $updateUnitStatus->execute();
 
-        // Update the unit status to 'Available'
-        $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Available' WHERE unit_id = ?");
-        $updateUnitStatus->bind_param("i", $unit_rented);
-        $updateUnitStatus->execute();
+            echo htmlspecialchars('Tenant successfully archived.', ENT_QUOTES, 'UTF-8');
+        } elseif ($_GET['action'] === 'edit' && isset($_GET['id'])) {
+            $tenant_id = (int)$_GET['id'];
+            $stmt = $conn->prepare("SELECT * FROM tenants WHERE tenant_id = ?");
+            $stmt->bind_param("i", $tenant_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-        echo 'Tenant successfully archived.';
-        exit();
-    } elseif ($_GET['action'] === 'edit' && isset($_GET['id'])) {
-        $tenant_id = $_GET['id'];
-        $stmt = $conn->prepare("SELECT * FROM tenants WHERE tenant_id = ?");
-        $stmt->bind_param("i", $tenant_id);
-        $stmt->execute();   
-        $result = $stmt->get_result();
-        $tenant = $result->fetch_assoc();
-
-        echo json_encode($tenant);
-        exit();
+            $tenant = $result->fetch_assoc();
+            echo json_encode($tenant);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
     }
+    exit();
 }
 
 ?>
+
 
 
 
@@ -229,7 +281,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
 
 
-   <!-- Modal for Adding/Editing Tenant -->
+<!-- Modal for Adding/Editing Tenant -->
 <div id="tenantModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
         <h2 id="modalTitle" class="text-xl font-semibold mb-4">New Tenant</h2>
@@ -237,8 +289,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             <input type="hidden" id="tenant_id" name="tenant_id">
             
             <div class="mb-4">
-                <label for="user_id" class="block text-sm font-semibold text-gray-700">Select User</label>
-                <select name="user_id" id="user_id" class="w-full border border-gray-300 rounded px-4 py-2">
+                <label for="user_id" class="block text-sm font-semibold text-gray-700">Select User with Reservation</label>
+                <select name="user_id" id="user_id" class="w-full border border-gray-300 rounded px-4 py-2" required>
+                    <option value="" disabled selected>Select a user</option>
                     <?php foreach ($users as $user) : ?>
                         <?php if (!in_array($user['user_id'], $tenantUserIds)) : ?>
                             <option value="<?= $user['user_id'] ?>"><?= $user['name'] ?></option>
@@ -248,22 +301,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             </div>
             
             <div class="mb-4">
-                <label for="unit_rented" class="block text-sm font-semibold">Unit Rented</label>
+                <label for="unit_rented" class="block text-sm font-semibold">Reserved Unit</label>
                 <select name="unit_rented" id="unit_rented" class="w-full border border-gray-300 rounded px-4 py-2" required>
-                    <option value="" disabled selected>Select a unit</option>
-                    <?php
-                    // Fetch available units from the database
-                    $unitsResult = $conn->query("SELECT unit_id, unit_no, monthly_rent FROM property WHERE status = 'Available'");
-                    while ($unit = $unitsResult->fetch_assoc()) {
-                        echo "<option value='{$unit['unit_id']}' data-rent='{$unit['monthly_rent']}'>{$unit['unit_no']}</option>";
-                    }
-                    ?>
+                    <option value="" disabled selected>Select a user first</option>
                 </select>
             </div>
 
             <div class="mb-4">
                 <label for="monthly_rate" class="block text-sm font-semibold">Monthly Rate</label>
-                <input type="text" id="monthly_rate" name="monthly_rate" readonly class="w-full px-4 py-2 border border-gray-300 rounded-md">
+                <input type="text" id="monthly_rate" name="monthly_rate" readonly class="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50">
             </div>
 
             <div class="mb-4">
@@ -278,10 +324,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
             <div class="mb-4">
                 <label for="downpayment_amount" class="block text-sm font-semibold">Downpayment Amount</label>
-                <input type="number" id="downpayment_amount" name="downpayment_amount" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
+                <input type="number" id="downpayment_amount" name="downpayment_amount" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md"
+                       step="0.01" min="0">
             </div>
-
-           
 
             <div class="flex justify-end">
                 <button type="button" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md mr-2" onclick="closeModal()">Cancel</button>
@@ -289,6 +335,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             </div>
         </form>
     </div>
+
 </div>
 
 
@@ -304,64 +351,131 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
     <script>
         // Show the modal for creating a new tenant
-        document.getElementById('newTenant').addEventListener('click', function () {
+        document.getElementById('newTenant').addEventListener('click', function() {
             document.getElementById('tenantModal').classList.remove('hidden');
             document.getElementById('modalTitle').textContent = 'New Tenant';
             document.getElementById('tenantForm').reset();
+            document.getElementById('unit_rented').innerHTML = '<option value="" disabled selected>Select a user first</option>';
         });
 
-        
-
-        document.getElementById('unit_rented').addEventListener('change', function () {
+        // Handle unit selection change
+        document.getElementById('unit_rented').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
-            const rent = selectedOption.getAttribute('data-rent'); // Retrieve the rent for the selected unit
+            const rent = selectedOption.getAttribute('data-rent');
             document.getElementById('monthly_rate').value = rent || '';
-
-            // You can store the unit_id in a hidden field if necessary, or directly in the form submission
-            const unitId = selectedOption.value; // unit_id
         });
 
-
-        // Close the modal (Reusable function)
+        // Close the modal
         function closeModal() {
             document.getElementById('tenantModal').classList.add('hidden');
         }
 
-         // Handle form submission
-        document.getElementById('tenantForm').addEventListener('submit', function (event) {
-            event.preventDefault(); // Prevent the default form submission (no page reload)
 
-            const formData = new FormData(this);
-            fetch('', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(message => {
-                // Show a success notification with a specific message
-                Toastify({
-                    text: "Tenant Added Successfully",  // The success message
-                    backgroundColor: "green",  // Green background for success
-                    duration: 2000,  // Duration of 3 seconds
-                    close: true  // Show close button for manual dismissal
-                }).showToast();
+      
+        
+       // Handle form submission for adding/editing tenants
+    document.getElementById('tenantForm').addEventListener('submit', function(event) {
+        event.preventDefault();
 
-                // Delay the page reload to ensure the toast is visible
-                setTimeout(() => {
-                    window.location.reload(); // Reload the page after showing notification
-                }, 1000);  // Wait a little longer than the toast's duration to reload
-            })
-            .catch(error => {
-                // Show an error notification with a custom message
-                Toastify({
-                    text: "Error saving tenant data. Please try again.",  // The error message
-                    backgroundColor: "red",  // Red background for error
-                    duration: 3000,  // Duration of 3 seconds
-                    close: true  // Show close button for manual dismissal
-                }).showToast();
+        const formData = new FormData(this);
+
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.headers.get('content-type')?.includes('application/json')) {
+                return response.json();
+            } else {
+                // If response is not JSON, treat as success since data was saved
+                return { success: true, message: 'Tenant saved successfully!' };
+            }
+        })
+        .then(data => {
+            // Close modal first
+            closeModal();
+            
+            // Show success notification
+            Toastify({
+                text: "Tenant saved successfully!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "#4CAF50"
+                }
+            }).showToast();
+
+            // Reload the page after a delay
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Toastify({
+                text: "An error occurred while saving",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "#f44336"
+                }
+            }).showToast();
+        });
+    });
+
+        
+        // Edit tenant function
+        function editTenant(tenantId) {
+            fetch(`?action=edit&id=${tenantId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('tenantModal').classList.remove('hidden');
+                    document.getElementById('tenant_id').value = data.tenant_id;
+                    document.getElementById('user_id').value = data.user_id;
+                    
+                    // Trigger user selection change to load units
+                    const userChangeEvent = new Event('change');
+                    document.getElementById('user_id').dispatchEvent(userChangeEvent);
+
+                    // Set remaining fields after a brief delay to ensure units are loaded
+                    setTimeout(() => {
+                        document.getElementById('unit_rented').value = data.unit_rented;
+                        document.getElementById('rent_from').value = data.rent_from;
+                        document.getElementById('rent_until').value = data.rent_until;
+                        document.getElementById('monthly_rate').value = data.monthly_rate;
+                        document.getElementById('downpayment_amount').value = data.downpayment_amount;
+                        document.getElementById('modalTitle').textContent = 'Edit Tenant';
+                    }, 500);
+                });
+        }
+
+
+
+        // Search filter functionality
+       document.getElementById('search-keyword').addEventListener('input', function () {
+            let searchKeyword = this.value.toLowerCase();
+            let tenantRows = document.querySelectorAll('#tenantTableBody tr');
+
+            tenantRows.forEach(function (row) {
+                let name = row.cells[1].textContent.toLowerCase();
+
+                if (searchKeyword === '') {
+                    // Reset to default view: hide extra columns for all rows
+                    row.style.display = ''; // Show all rows
+                    row.querySelectorAll('.extra-column').forEach(col => col.classList.add('hidden'));
+                } else if (name.includes(searchKeyword)) {
+                    row.style.display = ''; // Show matching row
+                    row.querySelectorAll('.extra-column').forEach(col => col.classList.remove('hidden')); // Show extra columns
+                } else {
+                    row.style.display = 'none'; // Hide non-matching rows
+                }
             });
         });
-  
+
+
+
         //Print Function
         document.getElementById('printButton').addEventListener('click', function () {
         // Save the current HTML
@@ -416,25 +530,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
       
 
-        // Edit tenant
-        function editTenant(tenantId) {
-            fetch(`?action=edit&id=${tenantId}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('tenantModal').classList.remove('hidden');
-                    document.getElementById('tenant_id').value = data.tenant_id;
-                    document.getElementById('user_id').value = data.user_id;
-                    document.getElementById('unit_rented').value = data.unit_rented;
-                    document.getElementById('rent_from').value = data.rent_from;
-                    document.getElementById('rent_until').value = data.rent_until;
-                    document.getElementById('monthly_rate').value = data.monthly_rate;
-                    document.getElementById('downpayment_amount').value = data.downpayment_amount;
-                    document.getElementById('registration_date').value = data.registration_date;
-                    document.getElementById('modalTitle').textContent = 'Edit Tenant';
-                });
-        }
+       
 
-      // Archive tenant
+  // Archive tenant
         function archiveTenant(tenantId) {
             if (confirm('Are you sure you want to archive this tenant?')) {
                 fetch(`?action=archive&id=${tenantId}`, {
@@ -467,30 +565,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             }
         }
 
-          // Function to filter tenants based on search input
 
-          document.getElementById('search-keyword').addEventListener('input', function () {
-            let searchKeyword = this.value.toLowerCase();
-            let tenantRows = document.querySelectorAll('#tenantTableBody tr');
+        // for fetching units and users where status is confirmed from reservations table
+        document.getElementById('user_id').addEventListener('change', function() {
+            const userId = this.value;
+            const unitSelect = document.getElementById('unit_rented');
+            const monthlyRateInput = document.getElementById('monthly_rate');
 
-            tenantRows.forEach(function (row) {
-                let name = row.cells[1].textContent.toLowerCase();
+            // Reset fields
+            unitSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+            monthlyRateInput.value = '';
 
-                if (searchKeyword === '') {
-                    // Reset to default view: hide extra columns for all rows
-                    row.style.display = ''; // Show all rows
-                    row.querySelectorAll('.extra-column').forEach(col => col.classList.add('hidden'));
-                } else if (name.includes(searchKeyword)) {
-                    row.style.display = ''; // Show matching row
-                    row.querySelectorAll('.extra-column').forEach(col => col.classList.remove('hidden')); // Show extra columns
-                } else {
-                    row.style.display = 'none'; // Hide non-matching rows
-                }
-            });
+            if (!userId) {
+                unitSelect.innerHTML = '<option value="" disabled selected>Please select a user</option>';
+                return;
+            }
+
+            // Debug log
+            console.log('Fetching units for user:', userId);
+
+            fetch(`tenantAdmin.php?get_units&user_id=${userId}`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(response => {
+                    console.log('Received data:', response);
+                    
+                    if (!response.success) {
+                        throw new Error(response.error || 'Unknown error occurred');
+                    }
+
+                    const units = response.data;
+                    unitSelect.innerHTML = '';
+                    
+                    if (units && units.length > 0) {
+                        units.forEach(unit => {
+                            const option = document.createElement('option');
+                            option.value = unit.unit_id;
+                            option.textContent = `Unit ${unit.unit_no}`;
+                            option.setAttribute('data-rent', unit.monthly_rent);
+                            unitSelect.appendChild(option);
+                        });
+                        
+                        // Set first unit as selected and update monthly rate
+                        unitSelect.selectedIndex = 0;
+                        const selectedOption = unitSelect.options[0];
+                        monthlyRateInput.value = selectedOption.getAttribute('data-rent');
+                    } else {
+                        unitSelect.innerHTML = '<option value="" disabled selected>No available units found</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    unitSelect.innerHTML = '<option value="" disabled selected>Error loading units</option>';
+                    Toastify({
+                        text: `Error: ${error.message}`,
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#ff0000"
+                    }).showToast();
+                });
         });
 
-
     </script>
+
+
 </body>
 
 </html>

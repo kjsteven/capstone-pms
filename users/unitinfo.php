@@ -3,9 +3,7 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 
-
 start_secure_session();
-
 
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -14,9 +12,34 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Fetch tenant data
+$query = "
+    SELECT 
+        t.tenant_id,
+        t.rent_from,
+        t.rent_until,
+        t.monthly_rate,
+        t.outstanding_balance,
+        t.downpayment_amount,
+        t.payable_months,
+        p.unit_no,
+        p.unit_type,
+        p.square_meter
+    FROM tenants t
+    JOIN property p ON t.unit_rented = p.unit_id
+    WHERE t.user_id = ? AND t.status = 'active'
+";
 
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+$result = $stmt->get_result();
+$tenants = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Calculate invoice date (30th of current month)
+$invoice_date = date('F d, Y', strtotime(date('Y-m-30')));
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -33,7 +56,6 @@ if (!isset($_SESSION['user_id'])) {
             font-family: 'Poppins', sans-serif;
         }
     </style>
-    
 </head>
 <body class="bg-gray-100">
 
@@ -45,12 +67,33 @@ if (!isset($_SESSION['user_id'])) {
 
 <!-- Main Content -->
 <div class="p-8 mt-20 sm:ml-64">
-    <h2 class="text-2xl font-semibold mb-6">View Unit Information</h2>
+    <h2 class="text-2xl font-semibold mb-6">Rented Unit Information</h2>
     
-    <!-- Search Bar and Print Button -->
-    <div class="mb-4 flex items-center">
-        <input type="text" id="search" placeholder="Search for units..." class="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none mr-4">
-        <button id="printBtn" class="bg-blue-600 text-white rounded-lg px-4 py-2">Print</button>
+    <!-- Filter, Search Bar, and Print Button -->
+    <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <!-- Unit Type Filter -->
+        <div class="relative w-full sm:w-1/4">
+            <select id="status-filter" class="border border-gray-300 rounded-lg px-4 py-2 pr-8 outline-none appearance-none w-full">
+                <option value="">All Unit</option>
+                <option value="Office">Office</option>
+                <option value="Warehouse">Warehouse</option>
+                <option value="Commercial">Commercial</option>
+            </select>
+            <span class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+            <svg data-feather="chevron-down" class="w-4 h-4"></svg>
+            </span>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="relative w-full sm:w-1/4">
+            <input type="text" id="search" placeholder="Search unit..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
+            <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+            <svg data-feather="search" class="w-4 h-4"></svg>
+            </button>
+        </div>
+        
+        <!-- Print Button -->
+        <button id="printBtn" class="bg-blue-600 text-white rounded-lg px-4 py-2 w-full sm:w-auto">Print</button>
     </div>
     
     <!-- Unit Table -->
@@ -70,53 +113,29 @@ if (!isset($_SESSION['user_id'])) {
                 </tr>
             </thead>
             <tbody id="unitTableBody">
-                <tr>
-                    <td class="border px-4 py-2">Warehouse</td>
-                    <td class="border px-4 py-2">101</td>
-                    <td class="border px-4 py-2">Jan 1, 2023</td>
-                    <td class="border px-4 py-2">Dec 31, 2023</td>
-                    <td class="border px-4 py-2">$2,500.00</td>
-                    <td class="border px-4 py-2">Jan 13, 2023</td>
-                    <td class="border px-4 py-2">Oct 6, 2024</td>
-                    <td class="border px-4 py-2">$2,500.00</td> <!-- Outstanding balance after last payment -->
-                    <td class="border px-4 py-2">12</td> <!-- Payable months from Rent From to Rent Until -->
-                </tr>
-                <tr>
-                    <td class="border px-4 py-2">Commercial</td>
-                    <td class="border px-4 py-2">102</td>
-                    <td class="border px-4 py-2">Feb 1, 2023</td>
-                    <td class="border px-4 py-2">Jul 31, 2023</td>
-                    <td class="border px-4 py-2">$2,500.00</td>
-                    <td class="border px-4 py-2">Jan 13, 2023</td>
-                    <td class="border px-4 py-2">N/A</td>
-                    <td class="border px-4 py-2">$5,000.00</td> <!-- Outstanding balance after last payment -->
-                    <td class="border px-4 py-2">6</td> <!-- Payable months from Rent From to Rent Until -->
-                </tr>
-                <tr>
-                    <td class="border px-4 py-2">Office</td>
-                    <td class="border px-4 py-2">201</td>
-                    <td class="border px-4 py-2">Mar 1, 2023</td>
-                    <td class="border px-4 py-2">May 31, 2023</td>
-                    <td class="border px-4 py-2">$1,800.00</td>
-                    <td class="border px-4 py-2">Jan 13, 2023</td>
-                    <td class="border px-4 py-2">May 6, 2023</td>
-                    <td class="border px-4 py-2">$0.00</td> <!-- Outstanding balance after last payment -->
-                    <td class="border px-4 py-2">3</td> <!-- Payable months from Rent From to Rent Until -->
-                </tr>
-                <!-- Add more rows as needed -->
+                <?php foreach ($tenants as $tenant): ?>
+                    <tr>
+                        <td class="text-center border border-gray-300 px-4 py-2"><?php echo htmlspecialchars($tenant['unit_type']); ?></td>
+                        <td class="text-center border border-gray-300 px-4 py-2"><?php echo htmlspecialchars($tenant['unit_no']); ?></td>
+                        <td class="text-center border border-gray-300 px-4 py-2"><?php echo date('F d, Y', strtotime($tenant['rent_from'])); ?></td>
+                        <td class="text-center border border-gray-300 px-4 py-2"><?php echo date('F d, Y', strtotime($tenant['rent_until'])); ?></td>
+                        <td class="text-center border border-gray-300 px-4 py-2"><?php echo htmlspecialchars($tenant['monthly_rate']); ?></td>
+                        <td class="text-center border border-gray-300 px-4 py-2"><?php echo $invoice_date; ?></td>
+                        <td class="text-center border border-gray-300 px-4 py-2"></td> <!-- Last Payment (left blank) -->
+                        <td class="text-center border border-gray-300 px-4 py-2"><?php echo htmlspecialchars($tenant['outstanding_balance']); ?></td>
+                        <td class="text-center border border-gray-300 px-4 py-2"><?php echo htmlspecialchars($tenant['payable_months']); ?></td>
+                    </tr>
+                <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 </div>
 
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+
 <script>
-    // Function to calculate payable months based on Rent From and Rent Until dates
-    function calculatePayableMonths(rentFrom, rentUntil) {
-        const startDate = new Date(rentFrom);
-        const endDate = new Date(rentUntil);
-        const monthsDifference = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
-        return monthsDifference >= 0 ? monthsDifference : 0;
-    }
+    // Feather Icons
+    feather.replace();
 
     // Search Functionality
     const searchInput = document.getElementById('search');
@@ -140,6 +159,25 @@ if (!isset($_SESSION['user_id'])) {
                 }
             }
             rows[i].style.display = found ? "" : "none";
+        }
+    });
+
+    // Unit Type Filter Functionality
+    const statusFilter = document.getElementById('status-filter');
+    statusFilter.addEventListener('change', function() {
+        const filterValue = statusFilter.value.toLowerCase();
+        const rows = unitTableBody.getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+            const unitTypeCell = rows[i].getElementsByTagName('td')[0]; // Unit Type is the first column
+            if (unitTypeCell) {
+                const unitType = unitTypeCell.textContent || unitTypeCell.innerText;
+                if (filterValue === "" || unitType.toLowerCase() === filterValue) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
         }
     });
 
@@ -175,7 +213,7 @@ if (!isset($_SESSION['user_id'])) {
                 </head>
                 <body>
                     <div class="header">
-                        <h1>View Unit Information</h1>
+                        <h2>Unit Information</h2>
                     </div>
                     ${printContent}
                 </body>

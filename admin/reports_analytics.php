@@ -132,14 +132,14 @@ mysqli_close($conn);
                     Report Year
                 </label>
                 <select class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" id="report-year" name="report-year">
-                    <?php
-                    // Generate year options starting from 2024
-                    $start_year = 2024;
-                    $current_year = date('Y');
-                    for ($year = $start_year; $year >= $start_year - 10; $year--) {
-                        echo "<option value=\"$year\">$year</option>";
-                    }
-                    ?>
+                <?php
+                $current_year = date('Y');
+                $start_year = $current_year; // Set the start year to the current year
+
+                for ($year = $start_year; $year >= $start_year - 10; $year--) {
+                    echo "<option value=\"$year\">$year</option>";
+                }
+                ?>
                 </select>
             </div>
         </div>

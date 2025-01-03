@@ -229,11 +229,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 Print
             </button>
             
-            <!-- Add Property Button -->
+            <!-- Add Tenant Button -->
             <button id="newTenant" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 justify-center">
                 <svg data-feather="plus" class="w-4 h-4"></svg>
                 New Tenant
             </button>
+
+             <!-- Add New Unit for Existing Tenant Button -->
+             <button id="newUnitforTenant" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 justify-center">
+                <svg data-feather="plus" class="w-4 h-4"></svg>
+                Add Unit for Existing Tenant
+            </button>
+
 
         </div>
     </div>
@@ -281,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
 
 
-<!-- Modal for Adding/Editing Tenant -->
+<!-- Modal for Adding New Tenant -->
 <div id="tenantModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
         <h2 id="modalTitle" class="text-xl font-semibold mb-4">New Tenant</h2>
@@ -335,7 +342,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             </div>
         </form>
     </div>
+    </div>
 
+
+   <!-- Modal for Adding Unit to Existing Tenant -->
+<div id="existingTenantModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
+        <h2 id="existingModalTitle" class="text-xl font-semibold mb-4">Add Unit for Existing Tenant</h2>
+        <form id="existingTenantForm">
+            <input type="hidden" id="existing_tenant_id" name="tenant_id">
+            
+            <div class="mb-4">
+                <label for="existing_user_id" class="block text-sm font-semibold text-gray-700">Select Tenant</label>
+                <select name="user_id" id="existing_user_id" class="w-full border border-gray-300 rounded px-4 py-2" required>
+                    <option value="" disabled selected>Select a tenant</option>
+                    <?php
+                    $uniqueTenants = array_reduce($tenants, function($carry, $tenant) {
+                        if (!isset($carry[$tenant['user_id']])) {
+                            $carry[$tenant['user_id']] = $tenant;
+                        }
+                        return $carry;
+                    }, []);
+                    
+                    foreach ($uniqueTenants as $tenant) : ?>
+                        <option value="<?= $tenant['user_id'] ?>"><?= $tenant['user_name'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label for="existing_unit_rented" class="block text-sm font-semibold">Reserved Unit</label>
+                <select name="unit_rented" id="existing_unit_rented" class="w-full border border-gray-300 rounded px-4 py-2" required>
+                    <option value="" disabled selected>Select a tenant first</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="existing_monthly_rate" class="block text-sm font-semibold">Monthly Rate</label>
+                <input type="text" id="existing_monthly_rate" name="monthly_rate" readonly class="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50">
+            </div>
+
+            <div class="mb-4">
+                <label for="existing_rent_from" class="block text-sm font-semibold">Rent From</label>
+                <input type="date" id="existing_rent_from" name="rent_from" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
+            </div>
+
+            <div class="mb-4">
+                <label for="existing_rent_until" class="block text-sm font-semibold">Rent Until</label>
+                <input type="date" id="existing_rent_until" name="rent_until" required class="w-full px-4 py-2 border border-gray-300 rounded-md">
+            </div>
+
+            <div class="mb-4">
+                <label for="existing_downpayment_amount" class="block text-sm font-semibold">Downpayment Amount</label>
+                <input type="number" id="existing_downpayment_amount" name="downpayment_amount" required 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md"
+                    step="0.01" min="0">
+            </div>
+
+            <div class="flex justify-end">
+                <button type="button" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md mr-2" onclick="closeExistingModal()">Cancel</button>
+                <button type="submit" class="px-4 py-2 text-white bg-blue-600 rounded-md">Save</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 
@@ -349,6 +418,117 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     <!-- Include Toastify JS -->
     <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
 
+
+    <script>
+        // Show modal
+        document.getElementById('newUnitforTenant').addEventListener('click', function() {
+            document.getElementById('existingTenantModal').classList.remove('hidden');
+            document.getElementById('existingModalTitle').textContent = 'Add Unit for Existing Tenant';
+            document.getElementById('existingTenantForm').reset();
+            document.getElementById('existing_unit_rented').innerHTML = '<option value="" disabled selected>Select a tenant first</option>';
+        });
+
+        // Close modal
+        function closeExistingModal() {
+            document.getElementById('existingTenantModal').classList.add('hidden');
+        }
+
+        // Handle tenant selection
+        document.getElementById('existing_user_id').addEventListener('change', async function() {
+            const userId = this.value;
+            const unitSelect = document.getElementById('existing_unit_rented');
+            const monthlyRateInput = document.getElementById('existing_monthly_rate');
+
+            unitSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+            monthlyRateInput.value = '';
+
+            if (!userId) {
+                unitSelect.innerHTML = '<option value="" disabled selected>Please select a tenant</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`tenantAdmin.php?get_units&user_id=${userId}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to fetch units');
+                }
+
+                unitSelect.innerHTML = '';
+                const units = data.data;
+
+                if (units && units.length > 0) {
+                    units.forEach(unit => {
+                        const option = document.createElement('option');
+                        option.value = unit.unit_id;
+                        option.textContent = `Unit ${unit.unit_no}`;
+                        option.setAttribute('data-rent', unit.monthly_rent);
+                        unitSelect.appendChild(option);
+                    });
+
+                    const selectedOption = unitSelect.options[0];
+                    monthlyRateInput.value = selectedOption.getAttribute('data-rent');
+                } else {
+                    unitSelect.innerHTML = '<option value="" disabled selected>No reserved units found</option>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                unitSelect.innerHTML = '<option value="" disabled selected>Error loading units</option>';
+                showToast(error.message, 'error');
+            }
+        });
+
+        // Form submission
+        document.getElementById('existingTenantForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            try {
+                const response = await fetch('rent_unit.php', {
+                    method: 'POST',
+                    body: new FormData(this)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Invalid response format');
+                }
+
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Operation failed');
+                }
+
+                closeExistingModal();
+                showToast(data.message || 'Unit added successfully!', 'success');
+                setTimeout(() => location.reload(), 1000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast(error.message, 'error');
+            }
+        });
+
+        // Toast utility function
+        function showToast(message, type = 'success') {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: type === 'success' ? "#4CAF50" : "#f44336"
+                }
+            }).showToast();
+        }
+    </script>
+
+        
     <script>
         // Show the modal for creating a new tenant
         document.getElementById('newTenant').addEventListener('click', function() {

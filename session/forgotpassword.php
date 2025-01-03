@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail->Username = SMTP_USERNAME;
             $mail->Password = SMTP_PASSWORD;
 
-            $mail->setFrom(SMTP_USERNAME, 'RentEase | Reset Password');
+            $mail->setFrom(SMTP_USERNAME, 'PropertyWise | Reset Password');
             $mail->addAddress($email, 'Recipient Name');
 
             $mail->isHTML(true);

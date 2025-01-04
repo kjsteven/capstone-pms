@@ -356,7 +356,8 @@
         Toastify({
             text: "Request Submitted Successfully!",
             backgroundColor: "green",
-            position: "top-center",
+            gravity: "top",
+            position: "right",
             duration: 3000,
         }).showToast();
         form.reset();
@@ -370,7 +371,8 @@
         Toastify({
             text: error.message || "An error occurred. Please try again later.",
             backgroundColor: "red",
-            position: "top-center",
+            gravuity: "top",
+            position: "right",
             duration: 3000,
         }).showToast();
     });

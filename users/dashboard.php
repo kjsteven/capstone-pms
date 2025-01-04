@@ -114,7 +114,7 @@ $user = mysqli_fetch_assoc($result);
                     </div>
                     <div class="text-right">
                         <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Properties</p>
-                        <h3 class="text-xl font-bold text-gray-800 mt-2">10</h3>
+                      
                     </div>
                 </div>
             </a>
@@ -127,8 +127,8 @@ $user = mysqli_fetch_assoc($result);
                     <svg data-feather="tool" class="w-8 h-8 text-green-500"></svg>
                 </div>
                 <div class="text-right">
-                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Maintenance</p>
-                    <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
+                    <p class="text-lg font-medium text-blue-600  hover:text-blue-800">Submit Maintenance Request</p>
+                  
                 </div>
             </div>
         </a>
@@ -142,7 +142,7 @@ $user = mysqli_fetch_assoc($result);
                     </div>
                     <div class="text-right">
                         <p class="text-lg font-medium text-blue-600  hover:text-blue-800">Track Payment</p>
-                        <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
+                       
                     </div>
                 </div>
             </a>
@@ -156,7 +156,7 @@ $user = mysqli_fetch_assoc($result);
                     </div>
                     <div class="text-right">
                         <p class="text-lg font-medium text-blue-600  hover:text-blue-800">View Agreements</p>
-                        <h3 class="text-xl font-bold text-gray-800 mt-2">5</h3>
+                       
                     </div>
                 </div>
             </a>

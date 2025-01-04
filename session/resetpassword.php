@@ -175,7 +175,7 @@ function checkPasswordStrength(password) {
     if (password.length < 12) {
         strength = 'Too short';
     } else if (!/[A-Z]/.test(password)) {
-        strength = 'Add at least one uppercase letter';
+        strength = 'Add at least one uppercase letter'; 
     } else if (!/[a-z]/.test(password)) {
         strength = 'Add at least one lowercase letter';
     } else if (!/[0-9]/.test(password)) {

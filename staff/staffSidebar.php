@@ -48,11 +48,20 @@
                 </a>
             </li>
 
+             <!-- Work Orders -->
+             <li>
+                <a href="staffSchedule.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <!-- Feather Icon for Work Orders -->
+                    <svg data-feather="calendar" class="text-white w-5 h-5"></svg>
+                    <span>Maintenance Schedule</span>
+                </a>
+            </li>
+
             <!-- Reports -->
             <li>
                 <a href="staffReports.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
                     <!-- Feather Icon for Reports -->
-                    <svg data-feather="file" class="text-white w-5 h-5"></svg>
+                    <svg data-feather="bar-chart" class="text-white w-5 h-5"></svg>
                     <span>Reports</span>
                 </a>
             </li>

@@ -1,3 +1,34 @@
+<?php
+
+session_start();
+
+// Include the database connection
+require '../session/db.php';
+
+// Check if the staff member is logged in
+if (!isset($_SESSION['staff_id'])) {
+    die("You must be logged in to view this page.");
+}
+
+// Get the logged-in staff member's ID
+$staffId = $_SESSION['staff_id'];
+
+// Fetch staff details from the database
+$query = "SELECT Name, Email FROM staff WHERE staff_id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param('i', $staffId);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
+    die("Staff member not found.");
+}
+
+$staff = $result->fetch_assoc();
+$staffName = $staff['Name'];
+$staffEmail = $staff['Email'];
+?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -47,8 +78,8 @@
                     <!-- Dropdown menu -->
                     <div class="absolute right-0 z-50 hidden w-48 top-[45px] origin-top-right shadow-lg bg-white dark:bg-blue-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" id="dropdown-user">
                         <div class="px-4 py-3">
-                            <p class="text-sm text-blue-900 dark:text-white">User Name</p>
-                            <p class="text-sm font-medium text-blue-900 truncate dark:text-blue-300">user.email@example.com</p>
+                            <p class="text-sm text-blue-900 dark:text-white"><?php echo htmlspecialchars($staffName);?></p>
+                            <p class="text-sm font-medium text-blue-900 truncate dark:text-blue-300"><?php echo htmlspecialchars($staffEmail); ?></p>
                         </div>
                         <ul class="py-1" role="none">
                         <li>

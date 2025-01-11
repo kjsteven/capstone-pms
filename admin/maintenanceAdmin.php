@@ -192,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 
                                     <!-- Update Button -->
                                     <button type="submit" name="update_status" 
-                                            class="px-3 py-1 bg-blue-500 text-white rounded-md mt-4 hover:bg-blue-600 focus:outline-none">
+                                            class="px-3 py-1 bg-green-500 text-white rounded-md mt-4 hover:bg-blue-600 focus:outline-none">
                                         Update
                                     </button>
                                 </div>
@@ -220,27 +220,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         </div>
 
 
-
-        <!-- Modal for Editing -->
-        <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
-            <div class="bg-white rounded-lg p-6 w-1/2">
-                <h2 class="text-xl font-semibold mb-4">Edit Maintenance Request</h2>
-                <form id="edit-form">
-                    <input type="hidden" name="request_id" id="edit-request-id">
-                   
-                    <div class="mb-4">
-                        <label class="block font-medium">Assign to</label>
-                        <select name="staff_id" id="edit-staff" class="block w-full border rounded p-2">
-                            <option value="">Select Staff</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="button" class="px-4 py-2 bg-gray-500 text-white rounded mr-2" id="cancel-btn">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
-                    </div>
-                </form>
-            </div>
+<!-- Modal for Editing -->
+<div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
+    <!-- Modal Container -->
+    <div class="bg-white rounded-lg p-4 sm:p-6 w-11/12 sm:w-5/6 md:w-2/3 lg:w-1/2 xl:w-1/3">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg sm:text-xl font-semibold">Edit Maintenance Request</h2>
+            <button type="button" class="text-gray-500 hover:text-gray-700" id="close-modal">
+                <i data-feather="x" class="w-6 h-6"></i>
+            </button>
         </div>
+
+        <!-- Modal Form -->
+        <form id="edit-form" class="space-y-4">
+            <!-- Hidden Input for Request ID -->
+            <input type="hidden" name="request_id" id="edit-request-id">
+
+            <!-- Priority Selection -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Priority Level</label>
+                <div class="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="priority" value="high" class="form-radio text-red-600">
+                        <span class="ml-2 text-sm text-gray-700">High Priority</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="priority" value="medium" class="form-radio text-yellow-600">
+                        <span class="ml-2 text-sm text-gray-700">Medium Priority</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="priority" value="low" class="form-radio text-green-600">
+                        <span class="ml-2 text-sm text-gray-700">Low Priority</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Staff Assignment -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Assign to Staff Member</label>
+                <select name="staff_id" id="edit-staff" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select Staff</option>
+                </select>
+            </div>
+
+            <!-- Form Buttons -->
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" id="cancel-btn">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 </div>
 
@@ -318,6 +353,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 
 
 <!-- Search, Print Functionality, Edit Request -->
+
+
 <script>
     
 document.addEventListener("DOMContentLoaded", () => {
@@ -365,6 +402,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("cancel-btn").addEventListener("click", () => {
         modal.style.display = "none";
     });
+
+    // Close modal on click outside
+    document.getElementById("close-modal").addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+
 
     // Handle form submission
     editForm.addEventListener("submit", (e) => {

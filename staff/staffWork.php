@@ -147,32 +147,40 @@ while ($row = $result->fetch_assoc()) {
 <script>
     feather.replace();
 
-    
+    // Function to filter tasks based on status and search keyword
     function filterTasks() {
-        const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
-        const searchKeyword = document.getElementById('search-keyword').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value.trim().toLowerCase();
+        const searchKeyword = document.getElementById('search-keyword').value.trim().toLowerCase();
 
         const rows = document.querySelectorAll('#workOrdersTableBody tr');
 
         rows.forEach(row => {
-            const status = row.querySelector('td:nth-child(6) span').textContent.toLowerCase();
-            const issue = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-            const description = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+            const statusElement = row.querySelector('td:nth-child(6) span');
+            const status = statusElement ? statusElement.textContent.trim().toLowerCase() : '';
+            console.log("Row Status:", status); // Debugging: Print the status of each row
 
+            const issue = row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase(); // Issue is in the 2nd column
+            const description = row.querySelector('td:nth-child(3)').textContent.trim().toLowerCase(); // Description is in the 3rd column
+
+            // Check if the row matches the selected status and search keyword
             const matchesStatus = statusFilter === '' || status === statusFilter;
             const matchesKeyword = searchKeyword === '' || issue.includes(searchKeyword) || description.includes(searchKeyword);
 
+            // Show or hide the row based on the filters
             if (matchesStatus && matchesKeyword) {
-                row.style.display = '';
+                row.style.display = ''; // Show the row
             } else {
-                row.style.display = 'none';
+                row.style.display = 'none'; // Hide the row
             }
         });
     }
 
+    // Add event listeners for the status filter and search input
     document.getElementById('statusFilter').addEventListener('change', filterTasks);
     document.getElementById('search-keyword').addEventListener('input', filterTasks);
 
+    // Initial filter to apply any default filters
+    filterTasks();
 </script>
 
 </body>

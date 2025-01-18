@@ -52,8 +52,6 @@ foreach ($requests as $request) {
 
 ?>
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,25 +77,26 @@ foreach ($requests as $request) {
 <!-- Include Sidebar -->
 <?php include('staffSidebar.php'); ?>
 
-<div class="sm:ml-64 p-8 mx-auto">
-    <div class="mt-10">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-semibold text-gray-800">Maintenance Schedule</h1>
-            <div class="flex gap-2">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">
+<div class="sm:ml-64 p-4 sm:p-8 mx-auto">
+    <div class="mt-16 sm:mt-20">
+        <!-- Header and Priority Labels -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+            <h1 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-0">Maintenance Schedule</h1>
+            <div class="flex flex-wrap gap-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm bg-red-100 text-red-800">
                     <span class="w-2 h-2 mr-1 rounded-full bg-red-500"></span>High Priority
                 </span>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm bg-yellow-100 text-yellow-800">
                     <span class="w-2 h-2 mr-1 rounded-full bg-yellow-500"></span>Medium Priority
                 </span>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm bg-green-100 text-green-800">
                     <span class="w-2 h-2 mr-1 rounded-full bg-green-500"></span>Low Priority
                 </span>
             </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <h3 class="text-sm font-semibold text-gray-600">Total Tasks</h3>
                 <p class="text-2xl font-bold text-gray-800"><?php echo $totalTasks; ?></p>
@@ -119,7 +118,7 @@ foreach ($requests as $request) {
         <!-- Filter and Search Section -->
         <div class="mb-6 flex flex-col sm:flex-row gap-4">
             <div class="relative w-full sm:w-48">
-                <select id="statusFilter" class="w-full p-2 border rounded-lg">
+                <select id="statusFilter" class="w-full p-2 border rounded-lg text-sm sm:text-base">
                     <option value="">All Status</option>
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
@@ -127,7 +126,7 @@ foreach ($requests as $request) {
                 </select>
             </div>
             <div class="relative w-full sm:w-48">
-                <select id="priorityFilter" class="w-full p-2 border rounded-lg">
+                <select id="priorityFilter" class="w-full p-2 border rounded-lg text-sm sm:text-base">
                     <option value="">All Priorities</option>
                     <option value="High">High Priority</option>
                     <option value="Medium">Medium Priority</option>
@@ -135,7 +134,7 @@ foreach ($requests as $request) {
                 </select>
             </div>
             <div class="relative w-full sm:w-48">
-                <select id="timeFilter" class="w-full p-2 border rounded-lg">
+                <select id="timeFilter" class="w-full p-2 border rounded-lg text-sm sm:text-base">
                     <option value="">All Time</option>
                     <option value="today">Due Today</option>
                     <option value="week">This Week</option>
@@ -150,62 +149,63 @@ foreach ($requests as $request) {
             </div>
         </div>
 
-      
         <!-- Work Orders Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Priority</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Unit</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Issue</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Description</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Due Date</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Status</th>
-                    </tr>
-                </thead>
-                <tbody id="workOrdersTableBody" class="bg-white divide-y divide-gray-200">
-                    <?php foreach ($requests as $request): ?>
-                        <?php
-                        // Determine priority class
-                        $priorityClass = '';
-                        if ($request['priority'] == 'high') {
-                            $priorityClass = 'priority-high';
-                        } elseif ($request['priority'] == 'medium') {
-                            $priorityClass = 'priority-medium';
-                        } elseif ($request['priority'] == 'low') {
-                            $priorityClass = 'priority-low';
-                        }
-
-                        // Determine due date color
-                        $dueDateColor = '';
-                        if ($request['service_date'] == $today) {
-                            $dueDateColor = 'text-red-600';
-                        } elseif ($request['service_date'] < $today && $request['status'] != 'Completed') {
-                            $dueDateColor = 'text-red-800';
-                        } else {
-                            $dueDateColor = 'text-gray-800';
-                        }
-                        ?>
-                        <tr class="<?php echo $priorityClass; ?>">
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-<?php echo $request['priority'] == 'high' ? 'red' : ($request['priority'] == 'medium' ? 'yellow' : 'green'); ?>-100 text-<?php echo $request['priority'] == 'high' ? 'red' : ($request['priority'] == 'medium' ? 'yellow' : 'green'); ?>-800">
-                                    <?php echo ucfirst($request['priority']); ?>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($request['unit']); ?></td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($request['issue']); ?></td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($request['description']); ?></td>
-                            <td class="px-6 py-4 <?php echo $dueDateColor; ?>"><?php echo htmlspecialchars($request['service_date']); ?></td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-<?php echo $request['status'] == 'Pending' ? 'gray' : ($request['status'] == 'In Progress' ? 'yellow' : 'green'); ?>-100 text-<?php echo $request['status'] == 'Pending' ? 'gray' : ($request['status'] == 'In Progress' ? 'yellow' : 'green'); ?>-800">
-                                    <?php echo $request['status']; ?>
-                                </span>
-                            </td>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Priority</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Unit</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Issue</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Description</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Due Date</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Status</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody id="workOrdersTableBody" class="bg-white divide-y divide-gray-200">
+                        <?php foreach ($requests as $request): ?>
+                            <?php
+                            // Determine priority class
+                            $priorityClass = '';
+                            if ($request['priority'] == 'high') {
+                                $priorityClass = 'priority-high';
+                            } elseif ($request['priority'] == 'medium') {
+                                $priorityClass = 'priority-medium';
+                            } elseif ($request['priority'] == 'low') {
+                                $priorityClass = 'priority-low';
+                            }
+
+                            // Determine due date color
+                            $dueDateColor = '';
+                            if ($request['service_date'] == $today) {
+                                $dueDateColor = 'text-red-600';
+                            } elseif ($request['service_date'] < $today && $request['status'] != 'Completed') {
+                                $dueDateColor = 'text-red-800';
+                            } else {
+                                $dueDateColor = 'text-gray-800';
+                            }
+                            ?>
+                            <tr class="<?php echo $priorityClass; ?>">
+                                <td class="px-4 sm:px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-<?php echo $request['priority'] == 'high' ? 'red' : ($request['priority'] == 'medium' ? 'yellow' : 'green'); ?>-100 text-<?php echo $request['priority'] == 'high' ? 'red' : ($request['priority'] == 'medium' ? 'yellow' : 'green'); ?>-800">
+                                        <?php echo ucfirst($request['priority']); ?>
+                                    </span>
+                                </td>
+                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['unit']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['issue']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['description']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm <?php echo $dueDateColor; ?>"><?php echo htmlspecialchars($request['service_date']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-<?php echo $request['status'] == 'Pending' ? 'gray' : ($request['status'] == 'In Progress' ? 'yellow' : 'green'); ?>-100 text-<?php echo $request['status'] == 'Pending' ? 'gray' : ($request['status'] == 'In Progress' ? 'yellow' : 'green'); ?>-800">
+                                        <?php echo $request['status']; ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -261,9 +261,7 @@ foreach ($requests as $request) {
             row.style.display = showRow ? '' : 'none';
         });
     }
-    
 </script>
-
 
 </body>
 </html>

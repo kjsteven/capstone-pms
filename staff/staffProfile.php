@@ -27,7 +27,7 @@
 <!-- Include Sidebar -->
 <?php include('staffSidebar.php'); ?>
 
-
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
 
 </body>
 </html>

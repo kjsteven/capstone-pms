@@ -62,7 +62,7 @@
                 <a href="staffReports.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
                     <!-- Feather Icon for Reports -->
                     <svg data-feather="bar-chart" class="text-white w-5 h-5"></svg>
-                    <span>Reports</span>
+                    <span>Reports and Analytics</span>
                 </a>
             </li>
 
@@ -73,6 +73,33 @@
 <!-- Include your JavaScript for Feather Icons -->
 <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
 <script>
+    // Initialize Feather Icons
+    feather.replace();
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('logo-sidebar');
+        
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('-translate-x-full');
+            sidebar.classList.toggle('transform-none');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const isMobile = window.innerWidth < 768;
+            const clickedOutsideSidebar = !sidebar.contains(event.target);
+            const clickedOutsideToggle = !sidebarToggle.contains(event.target);
+
+            if (isMobile && clickedOutsideSidebar && clickedOutsideToggle) {
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('transform-none');
+            }
+        });
+    });
+
     // Initialize Feather Icons
     feather.replace();
 </script>

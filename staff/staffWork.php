@@ -33,7 +33,6 @@ while ($row = $result->fetch_assoc()) {
 
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,7 +52,6 @@ while ($row = $result->fetch_assoc()) {
             font-family: 'Poppins', sans-serif;
         }
     </style>
-
 </head>
 <body> 
 
@@ -63,15 +61,15 @@ while ($row = $result->fetch_assoc()) {
 <!-- Include Sidebar -->
 <?php include('staffSidebar.php'); ?>
 
-<div class="sm:ml-64 p-8 mx-auto">
-    <div class="mt-10">
-    <h1 class="text-xl font-semibold text-gray-800 mb-6">Work Orders</h1>
+<div class="sm:ml-64 p-4 sm:p-8 mx-auto">
+    <div class="mt-16 sm:mt-20">
+        <h1 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Work Orders</h1>
 
         <!-- Filter and Search Section -->
         <div class="mb-6 flex flex-col sm:flex-row gap-4">
             <!-- Status Filter -->
             <div class="relative w-full sm:w-48">
-                <select id="statusFilter" class="w-full p-2 border rounded-lg">
+                <select id="statusFilter" class="w-full p-2 border rounded-lg text-sm sm:text-base">
                     <option value="">All Status</option>
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
@@ -90,59 +88,72 @@ while ($row = $result->fetch_assoc()) {
 
         <!-- Work Orders Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Unit</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Issue</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Description</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Service Date</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Image</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="workOrdersTableBody" class="bg-white divide-y divide-gray-200">
-                    <?php foreach ($requests as $request): ?>
-                        <?php
-                        // Determine status color
-                        $statusColor = '';
-                        if ($request['status'] == 'Pending') {
-                            $statusColor = 'bg-gray-100 text-gray-800';
-                        } elseif ($request['status'] == 'In Progress') {
-                            $statusColor = 'bg-yellow-100 text-yellow-800';
-                        } elseif ($request['status'] == 'Completed') {
-                            $statusColor = 'bg-green-100 text-green-800';
-                        }
-                        ?>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($request['unit']); ?></td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($request['issue']); ?></td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($request['description']); ?></td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($request['service_date']); ?></td>
-                            <td class="px-6 py-4">
-                            <?php if ($request['image']) : ?>
-                                    <a href="../users/<?php echo htmlspecialchars($request['image']); ?>" target="_blank" class="text-blue-600">View Image</a>
-                                <?php else : ?>
-                                    No Image
-                                <?php endif; ?>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $statusColor; ?>">
-                                    <?php echo htmlspecialchars($request['status']); ?>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <a href="edit_request.php?id=<?php echo $request['id']; ?>" class="text-blue-600 hover:text-blue-900">Edit</a>
-                                <a href="delete_request.php?id=<?php echo $request['id']; ?>" class="text-red-600 hover:text-red-900 ml-2">Delete</a>
-                            </td>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Unit</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Issue</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Description</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Service Date</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Image</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Status</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200 uppercase">Actions</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody id="workOrdersTableBody" class="bg-white divide-y divide-gray-200">
+                        <?php foreach ($requests as $request): ?>
+                            <?php
+                            // Determine status color
+                            $statusColor = '';
+                            if ($request['status'] == 'Pending') {
+                                $statusColor = 'bg-gray-100 text-gray-800';
+                            } elseif ($request['status'] == 'In Progress') {
+                                $statusColor = 'bg-yellow-100 text-yellow-800';
+                            } elseif ($request['status'] == 'Completed') {
+                                $statusColor = 'bg-green-100 text-green-800';
+                            }
+                            ?>
+                            <tr>
+                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['unit']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['issue']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['description']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['service_date']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm">
+                                    <?php if ($request['image']) : ?>
+                                        <a href="../users/<?php echo htmlspecialchars($request['image']); ?>" target="_blank" class="text-blue-600">View Image</a>
+                                    <?php else : ?>
+                                        No Image
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-4 sm:px-6 py-4 text-sm">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $statusColor; ?>">
+                                        <?php echo htmlspecialchars($request['status']); ?>
+                                    </span>
+                                </td>
+                                <td class="px-4 sm:px-6 py-4 text-sm">
+                                    <a href="submit_report.php?id=<?php echo $request['id']; ?>" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        <!-- Feather icon: file-text -->
+                                        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            <polyline points="10 9 9 9 8 9"></polyline>
+                                        </svg>
+                                        Submit Report
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
 
 <script>
     feather.replace();

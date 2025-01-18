@@ -28,12 +28,13 @@
 <?php include('staffSidebar.php'); ?>
 
 <div class="p-4 sm:ml-64">
-    <div class="mt-14">
+    <div class="mt-20">
         <h1 class="text-2xl font-semibold text-gray-600 dark:text-gray-600">Hi, Welcome </h1>
         <p class="mt-4 text-gray-600 dark:text-gray-400">Overview of your work orders</p>
     </div>
 </div>
 
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
 
 </body>
 </html>

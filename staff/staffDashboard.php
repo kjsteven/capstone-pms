@@ -1,6 +1,17 @@
 <?php
-require_once '../session/session_manager.php';
+// Include the database connection
 require '../session/db.php';
+
+// Start the session (if not already started)
+session_start();
+
+// Check if the staff member is logged in
+if (!isset($_SESSION['staff_id'])) {
+    die("You must be logged in to view this page.");
+}
+
+// Get the logged-in staff member's ID
+$staffId = $_SESSION['staff_id'];
 
 // Stats query
 $stats_query = "SELECT 
@@ -12,7 +23,7 @@ FROM maintenance_requests
 WHERE assigned_to = ? AND archived = 0";
 
 $stmt = $conn->prepare($stats_query);
-$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->bind_param("i", $staffId);
 $stmt->execute();
 $stats = $stmt->get_result()->fetch_assoc();
 
@@ -41,7 +52,7 @@ ORDER BY
 LIMIT 5";
 
 $stmt = $conn->prepare($recent_orders_query);
-$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->bind_param("i", $staffId);
 $stmt->execute();
 $recent_orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -52,15 +63,14 @@ $recent_orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Dashboard</title>
+    <link rel="icon" href="../images/logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
         }
     </style>
-
 </head>
 <body class="bg-gray-100">
 
@@ -68,16 +78,16 @@ $recent_orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 <?php include('staffSidebar.php'); ?>
 
 <div class="p-4 mt-5 sm:ml-64">
-    <div class="mt-14">
+    <div class="mt-20">
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white rounded-lg p-6 shadow-sm">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full bg-blue-100">
-                        <i class="fas fa-tools text-blue-600"></i>
+                        <i data-feather="clipboard" class="text-blue-600"></i>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-gray-500 text-sm">Total Orders</h3>
+                        <h3 class="text-gray-500 text-sm">Total Work Orders</h3>
                         <p class="text-2xl font-semibold"><?= $stats['total_work_orders'] ?></p>
                     </div>
                 </div>
@@ -86,7 +96,7 @@ $recent_orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             <div class="bg-white rounded-lg p-6 shadow-sm">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full bg-yellow-100">
-                        <i class="fas fa-clock text-yellow-600"></i>
+                        <i data-feather="clock" class="text-yellow-600"></i>
                     </div>
                     <div class="ml-4">
                         <h3 class="text-gray-500 text-sm">Pending</h3>
@@ -98,7 +108,7 @@ $recent_orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             <div class="bg-white rounded-lg p-6 shadow-sm">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full bg-indigo-100">
-                        <i class="fas fa-spinner text-indigo-600"></i>
+                        <i data-feather="refresh-cw" class="text-indigo-600"></i>
                     </div>
                     <div class="ml-4">
                         <h3 class="text-gray-500 text-sm">In Progress</h3>
@@ -110,7 +120,7 @@ $recent_orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             <div class="bg-white rounded-lg p-6 shadow-sm">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full bg-green-100">
-                        <i class="fas fa-check text-green-600"></i>
+                        <i data-feather="check-circle" class="text-green-600"></i>
                     </div>
                     <div class="ml-4">
                         <h3 class="text-gray-500 text-sm">Completed</h3>
@@ -120,8 +130,8 @@ $recent_orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             </div>
         </div>
 
-         <!-- Recent Orders Table -->
-         <div class="mt-8 bg-white rounded-lg shadow-sm">
+        <!-- Recent Orders Table -->
+        <div class="mt-8 bg-white rounded-lg shadow-sm">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-lg font-semibold">Recent Work Orders</h2>
             </div>
@@ -163,7 +173,11 @@ $recent_orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     </div>
 </div>
 
-<script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+<script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+<script>
+    // Initialize Feather Icons
+    feather.replace();
+</script>
 
 </body>
 </html>

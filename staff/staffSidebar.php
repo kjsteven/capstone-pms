@@ -39,21 +39,22 @@
                 </a>
             </li>
 
-            <!-- Work Orders -->
-            <li>
-                <a href="staffWork.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
-                    <!-- Feather Icon for Work Orders -->
-                    <svg data-feather="clipboard" class="text-white w-5 h-5"></svg>
-                    <span>Work Orders</span>
-                </a>
-            </li>
 
-             <!-- Work Orders -->
+             <!-- Schedule -->
              <li>
                 <a href="staffSchedule.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
                     <!-- Feather Icon for Work Orders -->
                     <svg data-feather="calendar" class="text-white w-5 h-5"></svg>
                     <span>Maintenance Schedule</span>
+                </a>
+            </li>
+
+            <!-- Work Orders -->
+                <li>
+                <a href="staffWork.php" class="grid grid-cols-[30px_auto] items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <!-- Feather Icon for Work Orders -->
+                    <svg data-feather="clipboard" class="text-white w-5 h-5"></svg>
+                    <span>Work Orders</span>
                 </a>
             </li>
 

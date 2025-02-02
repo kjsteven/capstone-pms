@@ -86,6 +86,81 @@ while ($row = $result->fetch_assoc()) {
             </div>
         </div>
 
+           
+           <!-- Modal -->
+         <div id="reportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 p-4">
+                <div class="relative mx-auto p-4 sm:p-5 border w-full max-w-[95%] sm:max-w-[80%] md:max-w-[600px] shadow-lg rounded-md bg-white my-8">
+                    <div class="mt-2 sm:mt-3">
+                        <h3 class="text-base sm:text-lg leading-6 font-medium text-gray-900 mb-3 sm:mb-4">Submit Maintenance Report</h3>
+                        <form id="reportForm" class="mt-3 sm:mt-4" enctype="multipart/form-data">
+                            <input type="hidden" id="requestId" name="requestId">
+                            
+                            <!-- Status Update -->
+                            <div class="mb-3 sm:mb-4">
+                                <label for="status" class="block text-sm font-medium text-gray-700 text-left mb-1">Status Update</label>
+                                <select id="status" name="status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+
+                            <!-- Issue Description -->
+                            <div class="mb-3 sm:mb-4">
+                                <label for="issueDescription" class="block text-sm font-medium text-gray-700 text-left mb-1">Issue Description</label>
+                                <textarea id="issueDescription" name="issueDescription" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"></textarea>
+                            </div>
+
+                            <!-- Action Taken -->
+                            <div class="mb-3 sm:mb-4">
+                                <label for="actionTaken" class="block text-sm font-medium text-gray-700 text-left mb-1">Action Taken</label>
+                                <textarea id="actionTaken" name="actionTaken" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"></textarea>
+                            </div>
+
+                            <!-- Maintenance Cost -->
+                            <div class="mb-3 sm:mb-4">
+                                <label for="maintenanceCost" class="block text-sm font-medium text-gray-700 text-left mb-1">Maintenance Cost</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₱</span>
+                                    <input type="number" id="maintenanceCost" name="maintenanceCost" step="0.01" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-8 pr-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Completion Date -->
+                            <div class="mb-3 sm:mb-4">
+                                <label for="completionDate" class="block text-sm font-medium text-gray-700 text-left mb-1">Completion Date</label>
+                                <input type="datetime-local" id="completionDate" name="completionDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                            </div>
+
+                            <!-- Upload Images -->
+                            <div class="mb-3 sm:mb-4">
+                                <label for="uploadImages" class="block text-sm font-medium text-gray-700 text-left mb-1">Upload Images</label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <div class="flex text-sm text-gray-600">
+                                            <label for="uploadImages" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                                <span>Upload files</span>
+                                                <input id="uploadImages" name="uploadImages[]" type="file" class="sr-only" multiple>
+                                            </label>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 sm:mt-6 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                                <button type="button" id="closeModalBtn" class="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200 text-sm">Cancel</button>
+                                <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 text-sm">Submit Report</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
         <!-- Work Orders Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
@@ -113,12 +188,15 @@ while ($row = $result->fetch_assoc()) {
                             } elseif ($request['status'] == 'Completed') {
                                 $statusColor = 'bg-green-100 text-green-800';
                             }
+
+                            // Format the date
+                            $formattedDate = date('F j, Y', strtotime($request['service_date']));
                             ?>
                             <tr>
                                 <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['unit']); ?></td>
                                 <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['issue']); ?></td>
                                 <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['description']); ?></td>
-                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($request['service_date']); ?></td>
+                                <td class="px-4 sm:px-6 py-4 text-sm"><?php echo htmlspecialchars($formattedDate); ?></td>
                                 <td class="px-4 sm:px-6 py-4 text-sm">
                                     <?php if ($request['image']) : ?>
                                         <a href="../users/<?php echo htmlspecialchars($request['image']); ?>" target="_blank" class="text-blue-600">View Image</a>
@@ -131,18 +209,16 @@ while ($row = $result->fetch_assoc()) {
                                         <?php echo htmlspecialchars($request['status']); ?>
                                     </span>
                                 </td>
-                                <td class="px-4 sm:px-6 py-4 text-sm">
-                                    <a href="submit_report.php?id=<?php echo $request['id']; ?>" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                        <!-- Feather icon: file-text -->
-                                        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                            <polyline points="14 2 14 8 20 8"></polyline>
-                                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                                            <polyline points="10 9 9 9 8 9"></polyline>
-                                        </svg>
-                                        Submit Report
-                                    </a>
+                                <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="viewRequest(<?= $request['id'] ?>)" class="text-blue-600 hover:text-blue-900 mr-3">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="openReportModal(<?= $request['id'] ?>)" class="text-blue-600 hover:text-blue-900 mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="archiveRequest(<?= $request['id'] ?>)" class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -150,10 +226,85 @@ while ($row = $result->fetch_assoc()) {
                 </table>
             </div>
         </div>
+
+        
     </div>
 </div>
 
 <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+
+
+<script>
+  // Function to close modal
+  function closeModal() {
+        document.getElementById('reportModal').classList.add('hidden');
+        document.getElementById('reportForm').reset();
+    }
+
+    // Function to open the report modal with pre-filled data
+    function openReportModal(requestId) {
+        document.getElementById('requestId').value = requestId;
+        document.getElementById('reportModal').classList.remove('hidden');
+    
+    }
+
+    // Event listener for close button
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+
+    // Close modal when clicking outside
+    document.getElementById('reportModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeModal();
+        }
+    });
+
+    // Handle form submission
+    document.getElementById('reportForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('submit_maintenance_report.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Report submitted successfully!');
+                closeModal();
+                // Optionally refresh the page or update the table
+                location.reload();
+            } else {
+                alert('Error submitting report: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while submitting the report.');
+        });
+    });
+
+
+
+
+
+    // Function to view request details
+    function viewRequest(requestId) {
+        // Add your view request logic here
+        alert('View request ' + requestId);
+    }
+
+    // Function to archive request
+    function archiveRequest(requestId) {
+        if (confirm('Are you sure you want to archive this request?')) {
+            // Add your archive request logic here
+            alert('Archive request ' + requestId);
+        }
+    }
+
+
+</script>
 
 <script>
     feather.replace();
@@ -168,7 +319,7 @@ while ($row = $result->fetch_assoc()) {
         rows.forEach(row => {
             const statusElement = row.querySelector('td:nth-child(6) span');
             const status = statusElement ? statusElement.textContent.trim().toLowerCase() : '';
-            console.log("Row Status:", status); // Debugging: Print the status of each row
+
 
             const issue = row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase(); // Issue is in the 2nd column
             const description = row.querySelector('td:nth-child(3)').textContent.trim().toLowerCase(); // Description is in the 3rd column

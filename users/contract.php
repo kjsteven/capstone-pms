@@ -3,21 +3,27 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 
-
 start_secure_session();
-
 
 // Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
-    // If not logged in, redirect to login page
-    header('Location: ../authentication/login.php'); // Adjust the path as necessary
+    header('Location: ../authentication/login.php');
     exit();
 }
 
+// Fetch tenant's contracts
+$user_id = $_SESSION['user_id'];
+$query = "SELECT t.tenant_id, t.contract_file, t.contract_upload_date, 
+          p.unit_no, p.unit_type, t.rent_from, t.rent_until 
+          FROM tenants t 
+          JOIN property p ON t.unit_rented = p.unit_id 
+          WHERE t.user_id = ? AND t.status = 'active'";
 
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$contracts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -29,6 +35,7 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="icon" href="../images/logo.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 </head>
 
 <body class="bg-gray-100 font-[Poppins]">
@@ -43,55 +50,87 @@ if (!isset($_SESSION['user_id'])) {
     <div class="sm:ml-64 p-6 mt-20">
         <!-- Title and Search Form -->
         <div class="mb-6">
-            <h2 class="text-2xl font-semibold mb-4">Your Rent Agreement</h2>
-            <form class="max-w-lg w-full">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div class="relative w-full">
-                        <input type="search" id="search-agreement" class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Search for agreements..." required />
-                        <button type="submit" class="absolute top-0 right-0 h-full p-2.5 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300">
-                            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                            </svg>
-                            <span class="sr-only">Search</span>
-                        </button>
-                    </div>
-                </div>
-            </form>
+            <h2 class="text-2xl font-semibold mb-4">Your Rent Agreements</h2>
         </div>
 
-        <!-- Agreement Table -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <table class="min-w-full table-auto">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-gray-600">Unit Type</th>
-                        <th class="px-4 py-2 text-left text-gray-600">Unit Number</th>
-                        <th class="px-4 py-2 text-left text-gray-600">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="border-t">
-                        <td class="px-4 py-2">Standard Unit</td>
-                        <td class="px-4 py-2">101</td>
-                        <td class="px-4 py-2 flex space-x-4">
-                            <a href="#" class="text-gray-500 hover:text-gray-700" onclick="viewAgreement()">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="#" onclick="window.print()" class="text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-download"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    <!-- Add more rows dynamically here using PHP -->
-                </tbody>
-            </table>
-        </div>
+        <?php if (empty($contracts)): ?>
+            <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                <div class="text-gray-500 mb-4">
+                    <svg data-feather="file-text" class="w-16 h-16 mx-auto mb-4"></svg>
+                    <p>No contracts found</p>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <?php foreach ($contracts as $contract): ?>
+                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <svg data-feather="home" class="w-5 h-5 text-blue-600 mr-2"></svg>
+                                <h3 class="text-lg font-semibold">Unit <?php echo htmlspecialchars($contract['unit_no']); ?></h3>
+                            </div>
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full 
+                                <?php echo $contract['contract_file'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                <?php echo $contract['contract_file'] ? 'Active' : 'Pending'; ?>
+                            </span>
+                        </div>
+
+                        <div class="space-y-2 text-sm text-gray-600 mb-4">
+                            <p><span class="font-semibold">Type:</span> <?php echo htmlspecialchars($contract['unit_type']); ?></p>
+                            <p><span class="font-semibold">Period:</span> 
+                                <?php 
+                                echo date('M d, Y', strtotime($contract['rent_from'])) . ' - ' . 
+                                     date('M d, Y', strtotime($contract['rent_until'])); 
+                                ?>
+                            </p>
+                            <?php if ($contract['contract_upload_date']): ?>
+                                <p><span class="font-semibold">Uploaded:</span> 
+                                    <?php echo date('M d, Y', strtotime($contract['contract_upload_date'])); ?>
+                                </p>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if ($contract['contract_file']): ?>
+                            <div class="flex justify-between items-center">
+                                <a href="<?php echo htmlspecialchars('../' . $contract['contract_file']); ?>" 
+                                   target="_blank"
+                                   class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                                    <svg data-feather="eye" class="w-4 h-4 mr-2"></svg>
+                                    View Contract
+                                </a>
+                                <a href="<?php echo htmlspecialchars('../' . $contract['contract_file']); ?>" 
+                                   download
+                                   class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200">
+                                    <svg data-feather="download" class="w-4 h-4 mr-2"></svg>
+                                    Download
+                                </a>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-center text-gray-500">
+                                <p>Contract not yet uploaded</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 
+    <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
     <script>
-        function viewAgreement() {
-            alert('Viewing Rent Agreement...');
-        }
+        feather.replace();
+
+        // Show notification when contract is downloaded
+        document.querySelectorAll('a[download]').forEach(link => {
+            link.addEventListener('click', () => {
+                Toastify({
+                    text: "Downloading contract...",
+                    duration: 3000,
+                    backgroundColor: "#4CAF50"
+                }).showToast();
+            });
+        });
     </script>
 </body>
 

@@ -58,7 +58,7 @@ if (!check_admin_role()) {
         }
         .chart-container {
             position: relative;
-            height: 250px;
+            height: 300px;
             width: 100%;
             max-width: 600px;
             margin: 0 auto;

@@ -110,6 +110,12 @@ echo '<script>
                     <span>Maintenance</span>
                 </a>
             </li>
+            <li>
+                <a href="contractAdmin.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="file-plus" class="text-white icon-size"></svg>
+                    <span>Contract</span>
+                </a>
+            </li>
 
             <!-- Financial Section -->
             <li>

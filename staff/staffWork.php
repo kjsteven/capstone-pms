@@ -255,6 +255,7 @@ while ($row = $result->fetch_assoc()) {
 
 
 <script>
+
   // Function to close modal
   function closeModal() {
         document.getElementById('reportModal').classList.add('hidden');
@@ -394,6 +395,8 @@ while ($row = $result->fetch_assoc()) {
 
 </script>
 
+
+
 <script>
     feather.replace();
 
@@ -431,6 +434,7 @@ while ($row = $result->fetch_assoc()) {
 
     // Initial filter to apply any default filters
     filterTasks();
+    
 </script>
 
 </body>

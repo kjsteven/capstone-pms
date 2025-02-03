@@ -87,14 +87,36 @@ while ($row = $result->fetch_assoc()) {
         </div>
 
            
-           <!-- Modal -->
+        <!-- Modal -->
          <div id="reportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 p-4">
                 <div class="relative mx-auto p-4 sm:p-5 border w-full max-w-[95%] sm:max-w-[80%] md:max-w-[600px] shadow-lg rounded-md bg-white my-8">
                     <div class="mt-2 sm:mt-3">
                         <h3 class="text-base sm:text-lg leading-6 font-medium text-gray-900 mb-3 sm:mb-4">Submit Maintenance Report</h3>
                         <form id="reportForm" class="mt-3 sm:mt-4" enctype="multipart/form-data">
                             <input type="hidden" id="requestId" name="requestId">
-                            
+
+                           <!-- Pre-filled Request Details Section -->
+                            <div class="mb-3 sm:mb-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="modalUnit" class="block text-sm font-medium text-gray-700 text-left mb-1">Unit</label>
+                                        <input type="text" id="modalUnit" name="modalUnit" readonly class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none text-sm bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label for="modalServiceDate" class="block text-sm font-medium text-gray-700 text-left mb-1">Service Date</label>
+                                        <input type="text" id="modalServiceDate" name="modalServiceDate" readonly class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none text-sm bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label for="modalIssue" class="block text-sm font-medium text-gray-700 text-left mb-1">Issue</label>
+                                        <input type="text" id="modalIssue" name="modalIssue" readonly class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none text-sm bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label for="modalDescription" class="block text-sm font-medium text-gray-700 text-left mb-1">Description</label>
+                                        <textarea id="modalDescription" name="modalDescription" readonly rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none text-sm bg-gray-100 cursor-not-allowed"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Status Update -->
                             <div class="mb-3 sm:mb-4">
                                 <label for="status" class="block text-sm font-medium text-gray-700 text-left mb-1">Status Update</label>
@@ -103,12 +125,6 @@ while ($row = $result->fetch_assoc()) {
                                     <option value="In Progress">In Progress</option>
                                     <option value="Completed">Completed</option>
                                 </select>
-                            </div>
-
-                            <!-- Issue Description -->
-                            <div class="mb-3 sm:mb-4">
-                                <label for="issueDescription" class="block text-sm font-medium text-gray-700 text-left mb-1">Issue Description</label>
-                                <textarea id="issueDescription" name="issueDescription" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"></textarea>
                             </div>
 
                             <!-- Action Taken -->
@@ -132,22 +148,26 @@ while ($row = $result->fetch_assoc()) {
                                 <input type="datetime-local" id="completionDate" name="completionDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                             </div>
 
-                            <!-- Upload Images -->
+                           <!-- Upload Images -->
                             <div class="mb-3 sm:mb-4">
                                 <label for="uploadImages" class="block text-sm font-medium text-gray-700 text-left mb-1">Upload Images</label>
                                 <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                                    <div class="space-y-1 text-center">
+                                    <div class="space-y-1 text-center w-full">
                                         <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
-                                        <div class="flex text-sm text-gray-600">
+                                        <div class="flex justify-center items-center text-sm text-gray-600 w-full">
                                             <label for="uploadImages" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                                                 <span>Upload files</span>
-                                                <input id="uploadImages" name="uploadImages[]" type="file" class="sr-only" multiple>
+                                                <input id="uploadImages" name="uploadImages[]" type="file" class="sr-only" multiple accept="image/png, image/jpeg, image/gif">
                                             </label>
                                             <p class="pl-1">or drag and drop</p>
                                         </div>
                                         <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                        
+                                        <!-- File name display container -->
+                                        <div id="fileNameContainer" class="mt-2 text-sm text-gray-700 space-y-1 max-h-24 overflow-y-auto"><!-- File names will be dynamically added here --></div>
+                                
                                     </div>
                                 </div>
                             </div>
@@ -156,10 +176,10 @@ while ($row = $result->fetch_assoc()) {
                                 <button type="button" id="closeModalBtn" class="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-200 text-sm">Cancel</button>
                                 <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 text-sm">Submit Report</button>
                             </div>
-                        </form>
-                    </div>
+                    </form>
                 </div>
             </div>
+        </div>
 
         <!-- Work Orders Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -241,12 +261,21 @@ while ($row = $result->fetch_assoc()) {
         document.getElementById('reportForm').reset();
     }
 
-    // Function to open the report modal with pre-filled data
     function openReportModal(requestId) {
+        // Find the row corresponding to the requestId
+        const row = document.querySelector(`tr button[onclick="openReportModal(${requestId})"]`).closest('tr');
+        
+        // Pre-fill modal details
         document.getElementById('requestId').value = requestId;
+        document.getElementById('modalUnit').value = row.querySelector('td:nth-child(1)').textContent;
+        document.getElementById('modalServiceDate').value = row.querySelector('td:nth-child(4)').textContent;
+        document.getElementById('modalIssue').value = row.querySelector('td:nth-child(2)').textContent;
+        document.getElementById('modalDescription').value = row.querySelector('td:nth-child(3)').textContent;
+        
+        // Open the modal
         document.getElementById('reportModal').classList.remove('hidden');
-    
     }
+
 
     // Event listener for close button
     document.getElementById('closeModalBtn').addEventListener('click', closeModal);
@@ -257,6 +286,65 @@ while ($row = $result->fetch_assoc()) {
             closeModal();
         }
     });
+
+    
+    // Display the selected file name when a file is selected
+
+    document.getElementById('uploadImages').addEventListener('change', function(event) {
+    const fileNameContainer = document.getElementById('fileNameContainer');
+    fileNameContainer.innerHTML = ''; // Clear previous file names
+
+    const files = Array.from(event.target.files);
+
+    // Validate and display file names
+    const validFiles = files.filter(file => {
+        const validTypes = ['image/png', 'image/jpeg', 'image/gif'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+
+        if (!validTypes.includes(file.type)) {
+            alert('Invalid file type. Only PNG, JPG, and GIF are allowed.');
+            return false;
+        }
+
+        if (file.size > maxSize) {
+            alert('File is too large. Maximum size is 10MB.');
+            return false;
+        }
+
+        return true;
+    });
+
+    // Display file names
+    if (validFiles.length > 0) {
+        const fileNameList = validFiles.map(file => 
+            `<div class="bg-gray-100 px-2 py-1 rounded flex justify-between items-center break-words">
+            <span class="truncate flex-grow mr-2">${file.name}</span>
+            <button type="button" class="text-red-500 remove-file shrink-0" data-filename="${file.name}">&times;</button>
+            </div>`
+        ).join('');
+
+        fileNameContainer.innerHTML = fileNameList;
+
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-file').forEach(button => {
+                button.addEventListener('click', function() {
+                    const filename = this.getAttribute('data-filename');
+                    const input = document.getElementById('uploadImages');
+                    const dt = new DataTransfer();
+                    
+                    Array.from(input.files)
+                        .filter(file => file.name !== filename)
+                        .forEach(file => dt.items.add(file));
+                    
+                    input.files = dt.files;
+                    
+                    // Trigger change event to refresh display
+                    input.dispatchEvent(new Event('change'));
+                });
+            });
+        }
+    });
+
 
     // Handle form submission
     document.getElementById('reportForm').addEventListener('submit', function(event) {

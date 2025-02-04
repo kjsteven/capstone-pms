@@ -347,35 +347,44 @@ while ($row = $result->fetch_assoc()) {
     });
 
 
-    // Handle form submission
-    document.getElementById('reportForm').addEventListener('submit', function(event) {
+    // Update the form submission handler in your JavaScript
+    document.getElementById('reportForm').addEventListener('submit', async function(event) {
         event.preventDefault();
         
-        const formData = new FormData(this);
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Submitting...';
         
-        fetch('submit_maintenance_report.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
+        try {
+            const formData = new FormData(this);
+            const response = await fetch('submit_maintenance_report.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            let data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                throw new Error(`Invalid response type: ${contentType}`);
+            }
+
             if (data.success) {
                 alert('Report submitted successfully!');
                 closeModal();
-                // Optionally refresh the page or update the table
                 location.reload();
             } else {
-                alert('Error submitting report: ' + data.message);
+                throw new Error(data.message || 'Unknown error occurred');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while submitting the report.');
-        });
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert('Error submitting report: ' + error.message);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Submit Report';
+        }
     });
-
-
-
 
 
     // Function to view request details

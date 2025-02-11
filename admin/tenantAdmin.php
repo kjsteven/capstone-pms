@@ -11,6 +11,17 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Pagination settings
+$entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $entriesPerPage;
+
+// Get total number of active tenants
+$totalQuery = "SELECT COUNT(*) as total FROM tenants WHERE status = 'active'";
+$totalResult = $conn->query($totalQuery);
+$totalRows = $totalResult->fetch_assoc()['total'];
+$totalPages = ceil($totalRows / $entriesPerPage);
+
 // Fetch units that are not yet occupied
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_units'])) {
     header('Content-Type: application/json');
@@ -76,7 +87,8 @@ $tenantsResult = $conn->query("SELECT tenants.*, users.name AS user_name, proper
                               FROM tenants 
                               LEFT JOIN users ON tenants.user_id = users.user_id
                               LEFT JOIN property ON tenants.unit_rented = property.unit_id
-                              WHERE tenants.status = 'active'");
+                              WHERE tenants.status = 'active'
+                              LIMIT $entriesPerPage OFFSET $offset");
 
 $tenants = $tenantsResult->fetch_all(MYSQLI_ASSOC);
 
@@ -212,38 +224,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             <h1 class="text-xl font-semibold text-gray-800">Tenants Management</h1>
         </div>
 
-        <div class="flex flex-wrap items-center gap-4 sm:gap-6 mb-4">
-        <!-- Search Bar -->
-        <div class="relative w-full sm:w-1/3 md:w-1/4">
-            <input type="text" id="search-keyword" placeholder="Search..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-            <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
-            <svg data-feather="search" class="w-4 h-4"></svg>
-            </button>
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div class="flex flex-wrap items-center gap-4 flex-1">
+        <!-- Entries per page -->
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600">Show entries:</label>
+            <select id="entriesPerPage" class="border rounded px-2 py-1.5" onchange="changeEntries(this.value)">
+                <option value="10" <?php echo $entriesPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                <option value="25" <?php echo $entriesPerPage == 25 ? 'selected' : ''; ?>>25</option>
+                <option value="50" <?php echo $entriesPerPage == 50 ? 'selected' : ''; ?>>50</option>
+                <option value="100" <?php echo $entriesPerPage == 100 ? 'selected' : ''; ?>>100</option>
+            </select>
         </div>
-
-        <!-- Buttons Container -->
-        <div class="flex space-x-4">
-            <!-- Print Button -->
-            <button id="printButton" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 justify-center">
-                <svg data-feather="printer" class="w-4 h-4"></svg>
-                Print
+        
+        <!-- Search Bar -->
+        <div class="relative flex-1 max-w-sm">
+            <input type="text" id="search-keyword" placeholder="Search..." 
+                   class="w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300">
+            <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+                <svg data-feather="search" class="w-4 h-4"></svg>
             </button>
-            
-            <!-- Add Tenant Button -->
-            <button id="newTenant" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 justify-center">
-                <svg data-feather="plus" class="w-4 h-4"></svg>
-                New Tenant
-            </button>
-
-             <!-- Add New Unit for Existing Tenant Button -->
-             <button id="newUnitforTenant" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 justify-center">
-                <svg data-feather="plus" class="w-4 h-4"></svg>
-                Add Unit for Existing Tenant
-            </button>
-
-
         </div>
     </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-2">
+        <button id="printButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+            <svg data-feather="printer" class="w-4 h-4"></svg>
+            Print
+        </button>
+        <button id="newTenant" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+            <svg data-feather="plus" class="w-4 h-4"></svg>
+            New Tenant
+        </button>
+        <button id="newUnitforTenant" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+            <svg data-feather="plus" class="w-4 h-4"></svg>
+            Add Unit
+        </button>
+    </div>
+</div>
   
 
     <div class="overflow-x-auto bg-white shadow-md rounded-lg">
@@ -284,6 +303,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             <?php endforeach; ?>
         </tbody>
     </table>
+</div>
+
+<!-- Pagination controls -->
+<div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="text-sm text-gray-600">
+        Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $entriesPerPage, $totalRows); ?> of <?php echo $totalRows; ?> entries
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <?php if($totalPages > 1): ?>
+            <?php for($i = 1; $i <= $totalPages; $i++): ?>
+                <a href="?page=<?php echo $i; ?>&entries=<?php echo $entriesPerPage; ?>" 
+                   class="px-3 py-1 border rounded <?php echo $page === $i ? 'bg-blue-600 text-white' : 'text-gray-600'; ?>">
+                    <?php echo $i; ?>
+                </a>
+            <?php endfor; ?>
+        <?php endif; ?>
+    </div>
 </div>
 
 
@@ -812,6 +848,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 });
         });
 
+        // Add entries per page change handler
+        function changeEntries(value) {
+            window.location.href = `?entries=${value}&page=1`;
+        }
+
+        // Modify search functionality to work with pagination
+        document.getElementById('search-keyword').addEventListener('input', function() {
+            let searchTerm = this.value.toLowerCase();
+            let rows = document.querySelectorAll('#tenantTableBody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                let name = row.cells[1].textContent.toLowerCase();
+                let shouldShow = searchTerm === '' || name.includes(searchTerm);
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
+                
+                // Show/hide extra columns based on search
+                if (searchTerm !== '') {
+                    row.querySelectorAll('.extra-column').forEach(col => col.classList.remove('hidden'));
+                } else {
+                    row.querySelectorAll('.extra-column').forEach(col => col.classList.add('hidden'));
+                }
+            });
+        });
     </script>
 
 

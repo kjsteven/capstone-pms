@@ -4,9 +4,23 @@ require '../session/db.php';
 
 session_start();
 
-// Fetch only active properties from database
-$query = "SELECT * FROM property WHERE position = 'active' ORDER BY unit_id DESC";
-$result = mysqli_query($conn, $query);
+// Pagination settings
+$entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $entriesPerPage;
+
+// Get total number of active properties
+$totalQuery = "SELECT COUNT(*) as total FROM property WHERE position = 'active'";
+$totalResult = $conn->query($totalQuery);
+$totalRows = $totalResult->fetch_assoc()['total'];
+$totalPages = ceil($totalRows / $entriesPerPage);
+
+// Modify the main query to include pagination
+$query = "SELECT * FROM property WHERE position = 'active' ORDER BY unit_id DESC LIMIT ? OFFSET ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param('ii', $entriesPerPage, $offset);
+$stmt->execute();
+$result = $stmt->get_result();
 
 // Handle the status update via AJAX (on success, show Toastify notification)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -102,28 +116,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 <div class="sm:ml-64 p-8 mt-20 mx-auto">
-    <h1 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Property Management</h1>
+    <h1 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Properties Management</h1>
 
     <!-- Search Bar and Buttons -->
-    <div class="flex flex-wrap items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4">
-        <div class="relative w-full sm:w-1/3">
-            <input type="text" id="search" placeholder="Search Unit No or Type..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-            <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+    <div class="flex flex-wrap items-center gap-4 mb-6">
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600">Show entries:</label>
+            <select id="entriesPerPage" class="border rounded px-2 py-1.5" onchange="changeEntries(this.value)">
+                <option value="10" <?php echo $entriesPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                <option value="25" <?php echo $entriesPerPage == 25 ? 'selected' : ''; ?>>25</option>
+                <option value="50" <?php echo $entriesPerPage == 50 ? 'selected' : ''; ?>>50</option>
+                <option value="100" <?php echo $entriesPerPage == 100 ? 'selected' : ''; ?>>100</option>
+            </select>
+        </div>
+        
+        <div class="relative flex-1 max-w-sm">
+            <input type="text" id="search" placeholder="Search Unit No or Type..." 
+                   class="w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300">
+            <button class="absolute right-0 top-0 h-full px-3 bg-blue-600 text-white rounded-r-lg">
                 <svg data-feather="search" class="w-4 h-4"></svg>
             </button>
         </div>
 
-        <!-- Print Button -->
-        <button class="print-button w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 justify-center">
-            <svg data-feather="printer" class="w-4 h-4"></svg>
-            Print
-        </button>
-        
-        <!-- Add Property Button -->
-        <a href="property_form.php" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 justify-center">
-            <svg data-feather="plus" class="w-4 h-4"></svg>
-            Add Unit
-        </a>
+        <div class="flex gap-2">
+            <button class="print-button px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+                <svg data-feather="printer" class="w-4 h-4"></svg>
+                Print
+            </button>
+            
+            <a href="property_form.php" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+                <svg data-feather="plus" class="w-4 h-4"></svg>
+                Add Unit
+            </a>
+        </div>
     </div>
 
     <!-- Table -->
@@ -187,6 +212,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination controls -->
+    <div class="mt-4 flex flex-wrap items-center justify-between">
+        <div class="text-sm text-gray-600">
+            Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $entriesPerPage, $totalRows); ?> of <?php echo $totalRows; ?> entries
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <?php if($totalPages > 1): ?>
+                <?php for($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?page=<?php echo $i; ?>&entries=<?php echo $entriesPerPage; ?>" 
+                       class="px-3 py-1 border rounded <?php echo $page === $i ? 'bg-blue-600 text-white' : 'text-gray-600'; ?>">
+                        <?php echo $i; ?>
+                    </a>
+                <?php endfor; ?>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
 
 
@@ -233,24 +275,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     document.getElementById("search").addEventListener("input", function() {
         const searchQuery = this.value.toLowerCase().trim();
         const rows = document.querySelectorAll("#property-table tbody tr");
+        let visibleCount = 0;
 
         rows.forEach(row => {
             const unitNo = row.getAttribute('data-unit-no').toLowerCase();
             const unitType = row.getAttribute('data-unit-type').toLowerCase();
-
-            if (searchQuery === "") {
-                // When search is empty, keep essential columns visible
-                row.style.display = "";
-                const columnsToHide = row.querySelectorAll('td:not(:nth-child(1), :nth-child(2), :nth-child(3), :nth-last-child(1))');
-                columnsToHide.forEach(col => col.classList.add('hidden-content'));
-            } else if (unitNo.includes(searchQuery) || unitType.includes(searchQuery)) {
-                // Show row and remove hidden content for matching rows
-                row.style.display = "";
-                const hiddenColumns = row.querySelectorAll('.hidden-content');
-                hiddenColumns.forEach(col => col.classList.remove('hidden-content'));
-            } else {
-                // Hide rows that don't match
-                row.style.display = "none";
+            const shouldShow = searchQuery === "" || unitNo.includes(searchQuery) || unitType.includes(searchQuery);
+            
+            row.style.display = shouldShow ? "" : "none";
+            if (shouldShow) {
+                visibleCount++;
+                // Show all columns when searching
+                if (searchQuery !== "") {
+                    row.querySelectorAll('.hidden-content').forEach(col => col.classList.remove('hidden-content'));
+                } else {
+                    // Hide extra columns when search is cleared
+                    const columnsToHide = row.querySelectorAll('td:not(:nth-child(1), :nth-child(2), :nth-child(3), :nth-last-child(1))');
+                    columnsToHide.forEach(col => col.classList.add('hidden-content'));
+                }
             }
         });
     });

@@ -18,24 +18,34 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Query to fetch user details
-$query = "SELECT user_id, name, email, phone, role, status FROM users";
-$result = mysqli_query($conn, $query);
+// Pagination settings
+$entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $entriesPerPage;
 
-// Check if the query was successful
-if (!$result) {
-    die('Error: ' . mysqli_error($conn));
-}
+// Modify the users query
+$total_users_query = "SELECT COUNT(*) as total FROM users";
+$total_users_result = $conn->query($total_users_query);
+$total_users = $total_users_result->fetch_assoc()['total'];
+$total_users_pages = ceil($total_users / $entriesPerPage);
 
-// Query to fetch staff details 
-$query_staff = "SELECT staff_id, Name, Email, Specialty, Phone_Number, status FROM staff";
-$result_staff = mysqli_query($conn, $query_staff);
+$query = "SELECT user_id, name, email, phone, role, status FROM users LIMIT ? OFFSET ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param('ii', $entriesPerPage, $offset);
+$stmt->execute();
+$result = $stmt->get_result();
 
-if (!$result_staff) {
-    die('Error: ' . mysqli_error($conn));
-}
+// Modify the staff query
+$total_staff_query = "SELECT COUNT(*) as total FROM staff";
+$total_staff_result = $conn->query($total_staff_query);
+$total_staff = $total_staff_result->fetch_assoc()['total'];
+$total_staff_pages = ceil($total_staff / $entriesPerPage);
 
-
+$query_staff = "SELECT staff_id, Name, Email, Specialty, Phone_Number, status FROM staff LIMIT ? OFFSET ?";
+$stmt_staff = $conn->prepare($query_staff);
+$stmt_staff->bind_param('ii', $entriesPerPage, $offset);
+$stmt_staff->execute();
+$result_staff = $stmt_staff->get_result();
 
 // Check if a role change is requested
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['role'])) {
@@ -119,15 +129,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
 <div id="tab-content-users" class="tab-content block">
     <form class="space-y-6">
         <!-- Search Bar and Print Button Form -->
-        <div class="flex items-center space-x-4 mb-4">
-            <div class="relative w-full sm:w-1/4">
-                <input type="text" id="search-keyword" placeholder="Search by Name..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-                <button type="button" id="search-button" class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+        <div class="flex flex-wrap items-center gap-4 mb-6">
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600">Show entries:</label>
+                <select id="entriesPerPage" class="border rounded px-2 py-1.5" onchange="changeEntries(this.value, 'users')">
+                    <option value="10" <?php echo $entriesPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                    <option value="25" <?php echo $entriesPerPage == 25 ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?php echo $entriesPerPage == 50 ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?php echo $entriesPerPage == 100 ? 'selected' : ''; ?>>100</option>
+                </select>
+            </div>
+            <div class="relative w-full sm:w-1/3">
+                <input type="text" id="search-keyword" placeholder="Search by Name..." 
+                    class="w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300">
+                <button type="button" id="search-button" 
+                        class="absolute right-0 top-0 h-full px-3 bg-blue-600 text-white rounded-r-lg">
                     <svg data-feather="search" class="w-4 h-4"></svg>
                 </button>
             </div>
-
-            <!-- Print Button -->
             <button id="print-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
                 <svg data-feather="printer" class="w-4 h-4"></svg>
                 Print
@@ -186,6 +205,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                 </tbody>
             </table>
         </div>
+        <!-- Users Pagination controls -->
+        <div class="mt-4 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $entriesPerPage, $total_users); ?> of <?php echo $total_users; ?> entries
+            </div>
+            <div class="flex gap-2">
+                <?php if($total_users_pages > 1): ?>
+                    <?php for($i = 1; $i <= $total_users_pages; $i++): ?>
+                        <a href="?page=<?php echo $i; ?>&entries=<?php echo $entriesPerPage; ?>" 
+                        class="px-3 py-1 border rounded <?php echo $page === $i ? 'bg-blue-600 text-white' : 'text-gray-600'; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                <?php endif; ?>
+            </div>
+        </div>
     </form>
 </div>
 
@@ -193,16 +228,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
 <div id="tab-content-staff" class="tab-content hidden">
     <form class="space-y-6">
         <!-- Search Bar and Add Staff Button -->
-        <div class="relative flex items-center w-full">
-            <!-- Search Bar -->
-            <div class="relative w-full sm:w-1/4">
-                <input type="text" id="search-keyword-staff" placeholder="Search by Name..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-                <button type="button" id="search-button-staff" class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+        <div class="flex flex-wrap items-center gap-4 mb-6">
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600">Show entries:</label>
+                <select id="entriesPerPageStaff" class="border rounded px-2 py-1.5" onchange="changeEntries(this.value, 'staff')">
+                    <option value="10" <?php echo $entriesPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                    <option value="25" <?php echo $entriesPerPage == 25 ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?php echo $entriesPerPage == 50 ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?php echo $entriesPerPage == 100 ? 'selected' : ''; ?>>100</option>
+                </select>
+            </div>
+            <div class="relative w-full sm:w-1/3">
+                <input type="text" id="search-keyword-staff" placeholder="Search by Name..." 
+                    class="w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300">
+                <button type="button" id="search-button-staff" 
+                        class="absolute right-0 top-0 h-full px-3 bg-blue-600 text-white rounded-r-lg">
                     <svg data-feather="search" class="w-4 h-4"></svg>
                 </button>
             </div>
-
-            <a href="staff_form.php" class="px-4 py-2 ml-4 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+            <a href="staff_form.php" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
                 <svg data-feather="plus" class="w-4 h-4"></svg>
                 Add Account
             </a>
@@ -253,6 +297,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                     <?php endwhile; ?>
                 </tbody>
             </table>
+        </div>
+        <!-- Staff Pagination controls -->
+        <div class="mt-4 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $entriesPerPage, $total_staff); ?> of <?php echo $total_staff; ?> entries
+            </div>
+            <div class="flex gap-2">
+                <?php if($total_staff_pages > 1): ?>
+                    <?php for($i = 1; $i <= $total_staff_pages; $i++): ?>
+                        <a href="?page=<?php echo $i; ?>&entries=<?php echo $entriesPerPage; ?>&tab=staff" 
+                        class="px-3 py-1 border rounded <?php echo $page === $i ? 'bg-blue-600 text-white' : 'text-gray-600'; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                <?php endif; ?>
+            </div>
         </div>
     </form>
 </div>
@@ -434,6 +494,25 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php if (isset($message) && $message == "Role updated successfully.") : ?>
         showNotification();
     <?php endif; ?>
+
+    function changeEntries(value, tab) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('entries', value);
+        url.searchParams.set('page', '1');
+        if (tab === 'staff') {
+            url.searchParams.set('tab', 'staff');
+        }
+        window.location.href = url.toString();
+    }
+
+    // Maintain active tab after page reload
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        if (tab === 'staff') {
+            showTabContent('staff');
+        }
+    });
 
 </script>
 

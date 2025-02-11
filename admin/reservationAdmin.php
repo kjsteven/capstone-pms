@@ -9,6 +9,11 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Pagination settings
+$entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $entriesPerPage;
+
 // Check if this is an AJAX request
 if (isset($_GET['search']) || isset($_GET['status'])) {
     ob_clean();
@@ -70,20 +75,27 @@ if (isset($_GET['search']) || isset($_GET['status'])) {
 }
 
 // Regular page load query
-$query = "SELECT r.reservation_id, r.viewing_date, r.viewing_time, r.created_at, 
+$query = "SELECT SQL_CALC_FOUND_ROWS r.reservation_id, r.viewing_date, r.viewing_time, r.created_at, 
                 u.unit_no, u.unit_type, u.monthly_rent, u.square_meter, r.status,
                 usr.name, usr.email, usr.phone
         FROM reservations r
         JOIN property u ON r.unit_id = u.unit_id
         JOIN users usr ON r.user_id = usr.user_id
         WHERE r.archived = 0 
-        ORDER BY r.created_at DESC";
+        ORDER BY r.created_at DESC
+        LIMIT ? OFFSET ?";
 
 try {
     $stmt = $conn->prepare($query);
+    $stmt->bind_param('ii', $entriesPerPage, $offset);
     $stmt->execute();
     $result = $stmt->get_result();
     $reservations = $result->fetch_all(MYSQLI_ASSOC);
+    
+    // Get total rows
+    $totalResult = $conn->query("SELECT FOUND_ROWS()");
+    $totalRows = $totalResult->fetch_row()[0];
+    $totalPages = ceil($totalRows / $entriesPerPage);
 } catch (Exception $e) {
     die("Error fetching reservations: " . $e->getMessage());
 }
@@ -124,37 +136,40 @@ try {
         <h1 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6">Reservation Management</h1>
         
     <!-- Filter Section -->
-    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
-
-    <!-- Status Filter -->
-    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-        <select id="admin-status-filter" class="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-auto">
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-        </select>
-
-        <!-- Search Bar -->
-        <div class="relative search-bar w-full sm:max-w-md">
-            <input type="text" id="search" placeholder="Search by name or unit..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-            <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
-                <svg data-feather="search" class="w-4 h-4"></svg>
-            </button>
+    <div class="flex flex-wrap items-center gap-4 mb-6">
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600">Show entries:</label>
+            <select id="entriesPerPage" class="border rounded px-2 py-1.5" onchange="changeEntries(this.value)">
+                <option value="10" <?php echo $entriesPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                <option value="25" <?php echo $entriesPerPage == 25 ? 'selected' : ''; ?>>25</option>
+                <option value="50" <?php echo $entriesPerPage == 50 ? 'selected' : ''; ?>>50</option>
+                <option value="100" <?php echo $entriesPerPage == 100 ? 'selected' : ''; ?>>100</option>
+            </select>
         </div>
-    </div>
+        
+        <div class="flex items-center gap-4 flex-1">
+            <select id="admin-status-filter" class="border border-gray-300 rounded-lg px-4 py-2">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
 
-    <!-- Bulk Actions -->
-    <div class="w-full sm:w-auto flex justify-center sm:justify-end">
-        <button id="bulk-archive" class="bg-red-600 text-white px-4 py-2 rounded-md inline-flex items-center space-x-2">
+            <div class="relative w-full sm:w-1/3">
+                <input type="text" id="search" placeholder="Search by name or unit..." 
+                       class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300">
+                <button class="absolute right-0 top-0 h-full px-3 bg-blue-600 text-white rounded-r-lg">
+                    <svg data-feather="search" class="w-4 h-4"></svg>
+                </button>
+            </div>
+        </div>
+
+        <button id="bulk-archive" class="bg-red-600 text-white px-4 py-2 rounded-md inline-flex items-center gap-2">
             <i data-feather="archive" class="w-4 h-4"></i>
             <span>Archive Selected</span>
         </button>
     </div>
-
-    </div>
-     
 
         <!-- Reservation Table -->
         <div class="overflow-x-auto bg-white rounded-lg shadow">
@@ -231,6 +246,23 @@ try {
                     <?php } ?>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination controls -->
+        <div class="mt-4 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $entriesPerPage, $totalRows); ?> of <?php echo $totalRows; ?> entries
+            </div>
+            <div class="flex gap-2">
+                <?php if($totalPages > 1): ?>
+                    <?php for($i = 1; $i <= $totalPages; $i++): ?>
+                        <a href="?page=<?php echo $i; ?>&entries=<?php echo $entriesPerPage; ?>" 
+                           class="px-3 py-1 border rounded <?php echo $page === $i ? 'bg-blue-600 text-white' : 'text-gray-600'; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
@@ -407,14 +439,14 @@ try {
 
     <script>
         // Function to handle search and filter
-        function updateTable(searchTerm = '', statusFilter = '') {
+        function updateTable(searchTerm = '', statusFilter = '', page = 1, entries = document.getElementById('entriesPerPage').value) {
             const tableBody = document.getElementById('admin-reservation-table-body');
             
             // Show loading state
             tableBody.innerHTML = '<tr><td colspan="12" class="text-center py-4">Loading...</td></tr>';
 
             // Fetch filtered and searched data
-            fetch(`reservationAdmin.php?search=${encodeURIComponent(searchTerm)}&status=${encodeURIComponent(statusFilter)}`)
+            fetch(`reservationAdmin.php?search=${encodeURIComponent(searchTerm)}&status=${encodeURIComponent(statusFilter)}&page=${page}&entries=${entries}`)
                 .then(response => response.json())
                 .then(data => {
                     tableBody.innerHTML = ''; // Clear loading state
@@ -481,6 +513,11 @@ try {
         document.getElementById('admin-status-filter').addEventListener('change', function(e) {
             updateTable(document.getElementById('search').value, e.target.value);
         });
+
+        // Add entries per page change handler
+        function changeEntries(value) {
+            window.location.href = `?entries=${value}&page=1`;
+        }
 
     </script>
 

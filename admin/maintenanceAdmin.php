@@ -11,9 +11,18 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Pagination settings
+$entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $entriesPerPage;
 
+// Get total number of records
+$totalQuery = "SELECT COUNT(*) as total FROM maintenance_requests WHERE archived = 0";
+$totalResult = $conn->query($totalQuery);
+$totalRows = $totalResult->fetch_assoc()['total'];
+$totalPages = ceil($totalRows / $entriesPerPage);
 
-// Query to fetch maintenance request details with user name
+// Modify the main query to include pagination
 $query = "
     SELECT 
         mr.id, 
@@ -28,15 +37,13 @@ $query = "
     FROM maintenance_requests mr
     JOIN users u ON mr.user_id = u.user_id
     LEFT JOIN staff s ON mr.assigned_to = s.staff_id
-    WHERE mr.archived = 0"; // Exclude archived rows
+    WHERE mr.archived = 0
+    LIMIT ? OFFSET ?";
 
-
-$result = mysqli_query($conn, $query);
-
-// Check if the query was successful
-if (!$result) {
-    die('Error: ' . mysqli_error($conn));
-}
+$stmt = $conn->prepare($query);
+$stmt->bind_param('ii', $entriesPerPage, $offset);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $toast_message = null;
 $toast_type = null;
@@ -107,6 +114,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         body {
             font-family: 'Poppins', sans-serif;
         }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-section, .print-section * {
+                visibility: visible;
+            }
+            .print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 
     
@@ -124,16 +148,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 
 <!-- Users Tab Content -->
 <div class="tab-content block">
-        <!-- Search Bar and Print Button Form -->
-        <div class="flex items-center space-x-4 mb-4">
-            <div class="relative w-full sm:w-1/4">
-                <input type="text" id="search-keyword" placeholder="Search by Name..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-                <button type="button" id="search-button" class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+        <!-- Search Bar, Entries Selection and Print Button -->
+        <div class="flex flex-wrap items-center gap-4 mb-6">
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600">Show entries:</label>
+                <select id="entriesPerPage" class="border rounded px-2 py-1.5" onchange="changeEntries(this.value)">
+                    <option value="10" <?php echo $entriesPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                    <option value="25" <?php echo $entriesPerPage == 25 ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?php echo $entriesPerPage == 50 ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?php echo $entriesPerPage == 100 ? 'selected' : ''; ?>>100</option>
+                </select>
+            </div>
+            <div class="relative w-full sm:w-1/3">
+                <input type="text" id="search-keyword" placeholder="Search by Name..." 
+                       class="w-full p-2 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300">
+                <button type="button" id="search-button" 
+                        class="absolute right-0 top-0 h-full px-3 bg-blue-600 text-white rounded-r-lg">
                     <svg data-feather="search" class="w-4 h-4"></svg>
                 </button>
             </div>
-
-            <!-- Print Button -->
             <button id="print-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
                 <svg data-feather="printer" class="w-4 h-4"></svg>
                 Print
@@ -141,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         </div>
 
          <!-- Table Form -->
-         <div class="overflow-x-auto shadow-lg rounded-lg">
+         <div class="overflow-x-auto shadow-lg rounded-lg print-section">
             <table class="min-w-full bg-white" id="users-table">
                 <thead>
                     <tr>
@@ -219,6 +252,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             </table>
         </div>
 
+        <!-- Pagination controls -->
+        <div class="mt-4 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $entriesPerPage, $totalRows); ?> of <?php echo $totalRows; ?> entries
+            </div>
+            <div class="flex gap-2">
+                <?php if($totalPages > 1): ?>
+                    <?php for($i = 1; $i <= $totalPages; $i++): ?>
+                        <a href="?page=<?php echo $i; ?>&entries=<?php echo $entriesPerPage; ?>" 
+                           class="px-3 py-1 border rounded <?php echo $page === $i ? 'bg-blue-600 text-white' : 'text-gray-600'; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                <?php endif; ?>
+            </div>
+        </div>
 
 <!-- Modal for Editing -->
 <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
@@ -509,7 +558,29 @@ document.querySelectorAll('a[href^="archive_request.php"]').forEach(link => {
 
 </script>
 
+<script>
+// Add entries per page change handler
+function changeEntries(value) {
+    window.location.href = `?entries=${value}&page=1`;
+}
 
+// Print functionality
+document.getElementById('print-button').addEventListener('click', function() {
+    // Add a title before printing
+    const title = document.createElement('h2');
+    title.className = 'text-xl font-bold mb-4 print-section';
+    title.style.textAlign = 'center';
+    title.innerText = 'Maintenance Requests Report';
+    
+    const table = document.querySelector('.print-section');
+    table.parentNode.insertBefore(title, table);
+    
+    window.print();
+    
+    // Remove the title after printing
+    title.remove();
+});
+</script>
 
 </body>
 </html>

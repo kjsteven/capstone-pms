@@ -1,15 +1,30 @@
 <?php
 require '../session/db.php';
 
-// Modify the query to handle NULL values and use COALESCE
+// Pagination settings
+$entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
+$page = isset($_GET['page']) ? (int)$_GET['page']: 1; // Removed extra parenthesis
+$offset = ($page - 1) * $entriesPerPage;
+
+// Get total number of records
+$totalQuery = "SELECT COUNT(*) as total FROM tenants t WHERE t.status = 'active'";
+$totalResult = $conn->query($totalQuery);
+$totalRows = $totalResult->fetch_assoc()['total'];
+$totalPages = ceil($totalRows / $entriesPerPage);
+
+// Modified query with pagination
 $query = "SELECT t.tenant_id, t.user_id, u.name AS tenant_name, p.unit_no, 
           COALESCE(t.contract_file, '') as contract_file, 
           t.contract_upload_date 
           FROM tenants t 
           JOIN users u ON t.user_id = u.user_id 
           JOIN property p ON t.unit_rented = p.unit_id 
-          WHERE t.status = 'active'";
-$result = $conn->query($query);
+          WHERE t.status = 'active'
+          LIMIT ? OFFSET ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param('ii', $entriesPerPage, $offset);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -27,6 +42,23 @@ $result = $conn->query($query);
         body {
             font-family: 'Poppins', sans-serif;
         }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-section, .print-section * {
+                visibility: visible;
+            }
+            .print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 
     
@@ -42,8 +74,17 @@ $result = $conn->query($query);
 <div class="sm:ml-64 p-8 mt-20 mx-auto">
     <h1 class="text-xl font-semibold text-gray-800 mb-6">Tenant Contracts Management</h1>
 
-    <!-- Search and Print Buttons -->
+    <!-- Entries per page selector -->
     <div class="flex flex-wrap items-center gap-4 mb-6">
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600">Show entries:</label>
+            <select id="entriesPerPage" class="border rounded px-2 py-1" onchange="changeEntries(this.value)">
+                <option value="10" <?php echo $entriesPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                <option value="25" <?php echo $entriesPerPage == 25 ? 'selected' : ''; ?>>25</option>
+                <option value="50" <?php echo $entriesPerPage == 50 ? 'selected' : ''; ?>>50</option>
+                <option value="100" <?php echo $entriesPerPage == 100 ? 'selected' : ''; ?>>100</option>
+            </select>
+        </div>
         <div class="relative w-full sm:w-1/3">
             <input type="text" id="searchInput" placeholder="Search tenant name or unit..." 
                    class="w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300">
@@ -58,7 +99,7 @@ $result = $conn->query($query);
     </div>
 
     <!-- Contracts Table -->
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <div class="overflow-x-auto bg-white rounded-lg shadow print-section">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -93,7 +134,7 @@ $result = $conn->query($query);
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex items-center gap-3">
                             <?php if($row['contract_file']): ?>
-                                <a href="<?php echo htmlspecialchars($row['contract_file']); ?>" 
+                                <a href="<?php echo '../' . htmlspecialchars($row['contract_file']); ?>" 
                                    class="text-blue-600 hover:text-blue-900" target="_blank">
                                     <svg data-feather="eye" class="w-5 h-5"></svg>
                                 </a>
@@ -116,6 +157,23 @@ $result = $conn->query($query);
                 <?php endwhile; ?>
             </tbody>
         </table>
+    </div>
+
+    <!-- Pagination controls -->
+    <div class="mt-4 flex items-center justify-between">
+        <div class="text-sm text-gray-600">
+            Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $entriesPerPage, $totalRows); ?> of <?php echo $totalRows; ?> entries
+        </div>
+        <div class="flex gap-2">
+            <?php if($totalPages > 1): ?>
+                <?php for($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?page=<?php echo $i; ?>&entries=<?php echo $entriesPerPage; ?>" 
+                       class="px-3 py-1 border rounded <?php echo $page === $i ? 'bg-blue-600 text-white' : 'text-gray-600'; ?>">
+                        <?php echo $i; ?>
+                    </a>
+                <?php endfor; ?>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
@@ -181,7 +239,19 @@ $result = $conn->query($query);
 
     // Print functionality
     document.getElementById('printButton').addEventListener('click', function() {
+        // Add a title before printing
+        const title = document.createElement('h2');
+        title.className = 'text-xl font-bold mb-4 print-section';
+        title.style.textAlign = 'center';
+        title.innerText = 'Tenant Contracts Report';
+        
+        const table = document.querySelector('.print-section');
+        table.parentNode.insertBefore(title, table);
+        
         window.print();
+        
+        // Remove the title after printing
+        title.remove();
     });
 
     // Delete contract
@@ -217,6 +287,11 @@ $result = $conn->query($query);
                 backgroundColor: "red",
             }).showToast();
         }
+    }
+
+    // Add this new function for entries per page
+    function changeEntries(value) {
+        window.location.href = `?entries=${value}&page=1`;
     }
 </script>
 

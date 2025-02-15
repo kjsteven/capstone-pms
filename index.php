@@ -274,7 +274,7 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
         <div class="container mx-auto px-6">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Contact Us</h2>
-                <p class="text-gray-600 mt-4">We're here to help you with any questions or support you need.</p>
+                <p class="text-gray-600 mt-4">We're here to help you with any questions or support your needs.</p>
             </div>
             <form class="max-w-lg mx-auto">
                 <div class="grid grid-cols-1 gap-4">

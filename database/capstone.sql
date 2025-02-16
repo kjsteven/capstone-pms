@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 22, 2025 at 05:32 PM
+-- Generation Time: Feb 16, 2025 at 01:57 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -43,7 +43,7 @@ CREATE TABLE `generated_reports` (
 --
 
 INSERT INTO `generated_reports` (`report_id`, `report_type`, `report_date`, `report_period`, `report_data`, `created_at`, `downloaded_count`, `file_path`) VALUES
-(131, 'Unit Occupancy Report', '2024-12-18', '2024-12', '{\"title\":\"Unit Occupancy Report\",\"overview\":{\"report_date\":\"2024-12-18 22:57:37\",\"report_period\":\"2024-12\",\"generated_by\":\"Jhon Bautista\"},\"units\":[{\"unit_number\":\"101\",\"unit_type\":\"Warehouse\",\"occupancy_status\":\"Maintenance\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"45000.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"102\",\"unit_type\":\"Commercial\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"22500.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"105\",\"unit_type\":\"Office\",\"occupancy_status\":\"Occupied\",\"tenant_name\":\"David Fuentes\",\"rent_start_date\":\"2024-12-29\",\"rent_end_date\":\"2026-05-20\",\"monthly_rent\":\"33750.00\",\"outstanding_balance\":\"440000.00\",\"payable_months\":\"14\",\"downpayment_amount\":\"100000.00\",\"registration_date\":\"2024-12-09 21:52:32\"},{\"unit_number\":\"106\",\"unit_type\":\"Warehouse\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"45000.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"107\",\"unit_type\":\"Commercial\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"67500.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"115\",\"unit_type\":\"Warehouse\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"49500.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"116\",\"unit_type\":\"Office\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"36000.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"201\",\"unit_type\":\"Commercial\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"22500.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"205\",\"unit_type\":\"Office\",\"occupancy_status\":\"Available\",\"tenant_name\":\"Conrad Palma\",\"rent_start_date\":\"2024-12-10\",\"rent_end_date\":\"2026-12-20\",\"monthly_rent\":\"22500.00\",\"outstanding_balance\":\"440000.00\",\"payable_months\":\"20\",\"downpayment_amount\":\"100000.00\",\"registration_date\":\"2024-12-10 12:27:46\"}],\"summary\":{\"total_units\":9,\"occupied_units\":1,\"available_units\":8,\"occupancy_rate\":11.11}}', '2024-12-18 14:57:37', 0, '../reports/unit_occupancy_report_2024-12-18_22-57-37.csv');
+(132, 'Unit Occupancy Report', '2025-02-16', '2025-01', '{\"title\":\"Unit Occupancy Report\",\"overview\":{\"report_date\":\"2025-02-16 19:31:24\",\"report_period\":\"2025-01\",\"generated_by\":\"Jhon Bautista\"},\"units\":[{\"unit_number\":\"101\",\"unit_type\":\"Warehouse\",\"occupancy_status\":\"Maintenance\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"45000.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"102\",\"unit_type\":\"Commercial\",\"occupancy_status\":\"Occupied\",\"tenant_name\":\"David Fuentes\",\"rent_start_date\":\"2025-01-03\",\"rent_end_date\":\"2027-11-24\",\"monthly_rent\":\"22500.00\",\"outstanding_balance\":\"665000.00\",\"payable_months\":\"30\",\"downpayment_amount\":\"100000.00\",\"registration_date\":\"2025-01-03 23:08:01\"},{\"unit_number\":\"105\",\"unit_type\":\"Office\",\"occupancy_status\":\"Occupied\",\"tenant_name\":\"David Fuentes\",\"rent_start_date\":\"2024-12-29\",\"rent_end_date\":\"2026-05-20\",\"monthly_rent\":\"33750.00\",\"outstanding_balance\":\"440000.00\",\"payable_months\":\"14\",\"downpayment_amount\":\"100000.00\",\"registration_date\":\"2024-12-09 21:52:32\"},{\"unit_number\":\"106\",\"unit_type\":\"Warehouse\",\"occupancy_status\":\"Occupied\",\"tenant_name\":\"Conrad Palma\",\"rent_start_date\":\"2025-01-23\",\"rent_end_date\":\"2027-10-03\",\"monthly_rent\":\"45000.00\",\"outstanding_balance\":\"940000.00\",\"payable_months\":\"21\",\"downpayment_amount\":\"500000.00\",\"registration_date\":\"2025-01-03 23:12:16\"},{\"unit_number\":\"107\",\"unit_type\":\"Commercial\",\"occupancy_status\":\"Occupied\",\"tenant_name\":\"Anora Hidson\",\"rent_start_date\":\"2024-12-31\",\"rent_end_date\":\"2026-10-31\",\"monthly_rent\":\"67500.00\",\"outstanding_balance\":\"1385000.00\",\"payable_months\":\"21\",\"downpayment_amount\":\"100000.00\",\"registration_date\":\"2024-12-31 16:43:13\"},{\"unit_number\":\"115\",\"unit_type\":\"Warehouse\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"49500.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"116\",\"unit_type\":\"Office\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"36000.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"201\",\"unit_type\":\"Commercial\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"22500.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"205\",\"unit_type\":\"Office\",\"occupancy_status\":\"Occupied\",\"tenant_name\":\"Conrad Palma\",\"rent_start_date\":\"2024-12-10\",\"rent_end_date\":\"2026-12-20\",\"monthly_rent\":\"22500.00\",\"outstanding_balance\":\"440000.00\",\"payable_months\":\"20\",\"downpayment_amount\":\"100000.00\",\"registration_date\":\"2024-12-10 12:27:46\"},{\"unit_number\":\"206\",\"unit_type\":\"Warehouse\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"67500.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"207\",\"unit_type\":\"Office\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"90000.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"},{\"unit_number\":\"208\",\"unit_type\":\"Office\",\"occupancy_status\":\"Available\",\"tenant_name\":\"N\\/A\",\"rent_start_date\":\"N\\/A\",\"rent_end_date\":\"N\\/A\",\"monthly_rent\":\"81000.00\",\"outstanding_balance\":0,\"payable_months\":0,\"downpayment_amount\":0,\"registration_date\":\"N\\/A\"}],\"summary\":{\"total_units\":12,\"occupied_units\":5,\"available_units\":7,\"occupancy_rate\":41.67}}', '2025-02-16 11:31:24', 0, '../reports/unit_occupancy_report_2025-02-16_19-31-24.csv');
 
 --
 -- Triggers `generated_reports`
@@ -69,8 +69,12 @@ CREATE TABLE `maintenance_requests` (
   `unit` varchar(50) NOT NULL,
   `issue` varchar(100) NOT NULL,
   `description` text NOT NULL,
+  `action_taken` text DEFAULT NULL,
+  `maintenance_cost` decimal(10,2) DEFAULT NULL,
+  `completion_date` datetime DEFAULT NULL,
   `service_date` date NOT NULL,
   `status` enum('Pending','In Progress','Completed') DEFAULT 'Pending',
+  `report_pdf` varchar(255) DEFAULT NULL,
   `image` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -83,11 +87,11 @@ CREATE TABLE `maintenance_requests` (
 -- Dumping data for table `maintenance_requests`
 --
 
-INSERT INTO `maintenance_requests` (`id`, `user_id`, `unit`, `issue`, `description`, `service_date`, `status`, `image`, `created_at`, `updated_at`, `assigned_to`, `priority`, `archived`) VALUES
-(89, 11, '105', 'Electrical Problem', 'Outage', '2024-12-13', 'In Progress', 'uploads/maintenance_requests/maintenance_675b0f44cce1d9.66352520.jpg', '2024-12-12 16:28:52', '2025-01-11 07:16:29', 15, 'medium', 0),
-(94, 23, '205', 'Electrical Problem', 'Outage', '2024-12-14', 'Completed', 'uploads/maintenance_requests/maintenance_675be5b19c7b59.82571621.jpg', '2024-12-13 07:43:45', '2024-12-31 07:46:20', 17, 'medium', 1),
-(95, 11, '102', 'Electrical Problem', 'Overheating', '2025-01-09', 'Pending', 'uploads/maintenance_requests/maintenance_6778c8547a2057.59459477.jpg', '2025-01-04 05:34:12', '2025-01-11 06:48:52', 17, 'high', 0),
-(96, 11, '105', 'Heating Issue', 'AC is broken', '2025-01-15', 'Pending', 'uploads/maintenance_requests/maintenance_6778c8f5505524.10953351.png', '2025-01-04 05:36:53', '2025-01-04 05:36:53', NULL, 'medium', 0);
+INSERT INTO `maintenance_requests` (`id`, `user_id`, `unit`, `issue`, `description`, `action_taken`, `maintenance_cost`, `completion_date`, `service_date`, `status`, `report_pdf`, `image`, `created_at`, `updated_at`, `assigned_to`, `priority`, `archived`) VALUES
+(89, 11, '105', 'Electrical Problem', 'Outage', 'First, I turned off the power at the circuit breaker to safely inspect the electrical panel and identified a blown fuse. Then i fix the cables.', 200.00, '2025-02-16 20:23:00', '2024-12-13', 'Completed', 'maintenance_report_89_20250216_132313.pdf', 'uploads/maintenance_requests/maintenance_675b0f44cce1d9.66352520.jpg', '2024-12-12 16:28:52', '2025-02-16 12:23:13', 15, 'medium', 0),
+(94, 23, '205', 'Electrical Problem', 'Outage', NULL, NULL, NULL, '2024-12-14', 'Pending', NULL, 'uploads/maintenance_requests/maintenance_675be5b19c7b59.82571621.jpg', '2024-12-13 07:43:45', '2025-02-16 12:30:30', 17, 'medium', 0),
+(95, 11, '102', 'Electrical Problem', 'Overheating', NULL, NULL, NULL, '2025-01-09', 'Pending', NULL, 'uploads/maintenance_requests/maintenance_6778c8547a2057.59459477.jpg', '2025-01-04 05:34:12', '2025-01-11 06:48:52', 17, 'high', 0),
+(96, 11, '105', 'Heating Issue', 'AC is broken', NULL, NULL, NULL, '2025-01-15', 'Pending', NULL, 'uploads/maintenance_requests/maintenance_6778c8f5505524.10953351.png', '2025-01-04 05:36:53', '2025-01-04 05:36:53', NULL, 'medium', 0);
 
 -- --------------------------------------------------------
 
@@ -134,7 +138,10 @@ INSERT INTO `property` (`unit_id`, `unit_no`, `unit_type`, `square_meter`, `mont
 (7, '115', 'Warehouse', 110.00, 49500.00, 'uploads/674ee720cb5b1_warehouse-1026496_1280.jpg', 'Available', 'active'),
 (8, '116', 'Office', 80.00, 36000.00, 'uploads/674ee99e0119e_classroom-4919804_1280.jpg', 'Available', 'active'),
 (9, '201', 'Commercial', 50.00, 22500.00, 'uploads/6757aa7d0e2eb_kitchen-8714865_1280.jpg', 'Available', 'active'),
-(10, '205', 'Office', 50.00, 22500.00, 'uploads/6757c2c52a4a1_kitchen-1336160_1280.jpg', 'Occupied', 'active');
+(10, '205', 'Office', 50.00, 22500.00, 'uploads/6757c2c52a4a1_kitchen-1336160_1280.jpg', 'Occupied', 'active'),
+(11, '206', 'Warehouse', 150.00, 67500.00, 'uploads/67ab43a74ce60_ShockWatch-Warehouse-Efficiency.jpg', 'Available', 'active'),
+(12, '207', 'Office', 200.00, 90000.00, 'uploads/67ab43e7572a9_pexels-seven11nash-380769.jpg', 'Available', 'active'),
+(13, '208', 'Office', 180.00, 81000.00, 'uploads/67ab442d24775_pexels-pixabay-221537.jpg', 'Available', 'active');
 
 -- --------------------------------------------------------
 
@@ -186,7 +193,7 @@ CREATE TABLE `staff` (
 --
 
 INSERT INTO `staff` (`staff_id`, `Email`, `Password`, `Name`, `Specialty`, `Phone_Number`, `ResetToken`, `created_at`, `reset_token_expires`, `status`) VALUES
-(15, 'freshplayz18@gmail.com', '$2y$10$Q2CDx//NHpKfT3H6pTKNAuuzzS6HIrAy0tOM4YrR97Ewzy0DyegAe', 'CONRAD KANE', 'Hvac Technician', '09510975884', NULL, '2024-11-25 18:23:43', NULL, 'Busy'),
+(15, 'freshplayz18@gmail.com', '$2y$10$cMki.nt/d2iZEOGmNgtGt.cnZWiSpefRq0L26r2bnFQFWBKP59xY.', 'CONRAD KANE', 'Hvac Technician', '09510975884', NULL, '2024-11-25 18:23:43', NULL, 'Busy'),
 (17, 'kjstevenpalma09@gmail.com', '$2y$10$QDPFoWWFQtzD2LSsSteRgeYl7cTjSdgROjeaJG20FuSLK.f5QSxj6', 'KJ STEVEN PALMA', 'General Maintenance', '09510975884', NULL, '2024-12-10 04:30:55', NULL, 'Busy');
 
 -- --------------------------------------------------------
@@ -208,19 +215,21 @@ CREATE TABLE `tenants` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `downpayment_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `payable_months` int(11) DEFAULT 0,
-  `status` enum('active','archived') DEFAULT 'active'
+  `status` enum('active','archived') DEFAULT 'active',
+  `contract_file` varchar(255) DEFAULT NULL,
+  `contract_upload_date` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `tenants`
 --
 
-INSERT INTO `tenants` (`tenant_id`, `user_id`, `unit_rented`, `rent_from`, `rent_until`, `monthly_rate`, `outstanding_balance`, `registration_date`, `created_at`, `updated_at`, `downpayment_amount`, `payable_months`, `status`) VALUES
-(20, 11, '3', '2024-12-29', '2026-05-20', 33750.00, 440000.00, '0000-00-00', '2024-12-09 13:52:32', '2024-12-09 13:52:32', 100000.00, 14, 'active'),
-(21, 23, '10', '2024-12-10', '2026-12-20', 22500.00, 440000.00, '0000-00-00', '2024-12-10 04:27:46', '2024-12-11 13:15:01', 100000.00, 20, 'active'),
-(42, 24, '6', '2024-12-31', '2026-10-31', 67500.00, 1385000.00, '0000-00-00', '2024-12-31 08:43:13', '2024-12-31 08:43:13', 100000.00, 21, 'active'),
-(43, 11, '4', '2025-01-03', '2027-11-24', 22500.00, 665000.00, '0000-00-00', '2025-01-03 15:08:01', '2025-01-03 15:08:01', 100000.00, 30, 'active'),
-(44, 23, '5', '2025-01-23', '2027-10-03', 45000.00, 940000.00, '0000-00-00', '2025-01-03 15:12:16', '2025-01-03 15:12:16', 500000.00, 21, 'active');
+INSERT INTO `tenants` (`tenant_id`, `user_id`, `unit_rented`, `rent_from`, `rent_until`, `monthly_rate`, `outstanding_balance`, `registration_date`, `created_at`, `updated_at`, `downpayment_amount`, `payable_months`, `status`, `contract_file`, `contract_upload_date`) VALUES
+(20, 11, '3', '2024-12-29', '2026-05-20', 33750.00, 440000.00, '0000-00-00', '2024-12-09 13:52:32', '2025-02-16 12:37:46', 100000.00, 14, 'active', 'uploads/contracts/67b1dc1a23042_20_Rental_Agreement.pdf', '2025-02-16 20:37:46'),
+(21, 23, '10', '2024-12-10', '2026-12-20', 22500.00, 440000.00, '0000-00-00', '2024-12-10 04:27:46', '2024-12-11 13:15:01', 100000.00, 20, 'active', NULL, NULL),
+(42, 24, '6', '2024-12-31', '2026-10-31', 67500.00, 1385000.00, '0000-00-00', '2024-12-31 08:43:13', '2024-12-31 08:43:13', 100000.00, 21, 'active', NULL, NULL),
+(43, 11, '4', '2025-01-03', '2027-11-24', 22500.00, 665000.00, '0000-00-00', '2025-01-03 15:08:01', '2025-01-03 15:08:01', 100000.00, 30, 'active', NULL, NULL),
+(44, 23, '5', '2025-01-23', '2027-10-03', 45000.00, 940000.00, '0000-00-00', '2025-01-03 15:12:16', '2025-01-03 15:12:16', 500000.00, 21, 'active', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -254,8 +263,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `profile_image`, `role`, `OTP`, `OTP_used`, `OTP_expiration`, `token`, `is_verified`, `created_at`, `updated_at`, `phone`, `ResetToken`, `login_attempts`, `last_attempt`, `status`) VALUES
-(1, 'Jhon Bautista', 'kjstevenpalma@gmail.com', '$2y$10$IbNu.ni4K.fxIYaIbyFqnekQgBR9RykaYNiTAbmUPa9obcBHlDxWG', NULL, 'Admin', '294149', 1, '2024-11-22 21:19:10', NULL, 1, '2024-10-22 08:59:15', '2025-01-18 06:25:26', '09510973323', NULL, 0, '2025-01-18 06:22:35', 'inactive'),
-(11, 'David Fuentes', 'kjstevengaming@gmail.com', '$2y$10$yc0OEs5v.bZxBY1Q5UnIaeUIU4WTBGIUanOZk2TJK/ugqjdgIz1iW', 'uploads/6746c58b0b8fd-145218582_429580515129022_8609296071987312843_n.jpg', 'User', '227288', 1, '2024-11-22 21:11:38', NULL, 1, '2024-10-22 09:34:53', '2025-01-04 06:21:58', '09510973444', NULL, 0, '2025-01-04 06:21:17', 'inactive'),
+(1, 'Jhon Bautista', 'kjstevenpalma@gmail.com', '$2y$10$IbNu.ni4K.fxIYaIbyFqnekQgBR9RykaYNiTAbmUPa9obcBHlDxWG', NULL, 'Admin', '294149', 1, '2024-11-22 21:19:10', NULL, 1, '2024-10-22 08:59:15', '2025-02-16 12:24:08', '09510973323', NULL, 0, '2025-02-16 12:24:08', 'active'),
+(11, 'David Fuentes', 'kjstevengaming@gmail.com', '$2y$10$8hnIlf5d4ugwVNVJFQzNzeOwelk1XTkhghCQDEHi053WvsBCyFUrq', 'uploads/6746c58b0b8fd-145218582_429580515129022_8609296071987312843_n.jpg', 'User', '227288', 1, '2024-11-22 21:11:38', NULL, 1, '2024-10-22 09:34:53', '2025-02-12 11:18:20', '09510973444', NULL, 0, '2025-02-12 10:57:33', 'inactive'),
 (23, 'Conrad Palma', 'kjstevenpalma18@gmail.com', '$2y$10$ePCz3ES5ycuXMIvghHlbS.Tp7vI8DHmRz8VbXRiSwGmb9S5yz3p/a', NULL, 'User', '226093', 1, '2024-12-10 05:32:45', NULL, 1, '2024-12-10 04:21:37', '2025-01-03 11:35:16', '09616733509', NULL, 0, '2025-01-03 11:34:04', 'inactive'),
 (24, 'Anora Hidson', 'freshplayz18@gmail.com', '$2y$10$mKVkrd7ZtB4yXrdmUPN.DO7.msB12SEcdbM1tp7MsZQtko5WOQctK', NULL, 'User', '864635', 1, '2024-12-25 08:58:18', NULL, 1, '2024-12-25 07:47:13', '2024-12-27 12:29:04', '09212973327', NULL, 0, '2024-12-27 12:29:04', 'active');
 
@@ -332,7 +341,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `generated_reports`
 --
 ALTER TABLE `generated_reports`
-  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=132;
+  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
 
 --
 -- AUTO_INCREMENT for table `maintenance_requests`
@@ -350,7 +359,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `property`
 --
 ALTER TABLE `property`
-  MODIFY `unit_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `unit_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `reservations`

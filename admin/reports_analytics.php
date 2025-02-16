@@ -512,6 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var propertyAvailabilityChart = new ApexCharts(document.querySelector("#property-availability-chart"), propertyAvailabilityOptions);
         propertyAvailabilityChart.render();
 
+        
         // ApexCharts Data for Property Maintenance Report
         var propertyMaintenanceOptions = {
             chart: { type: 'line', width: '100%', height: '100%' },
@@ -531,6 +532,8 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         var propertyMaintenanceChart = new ApexCharts(document.querySelector("#property-maintenance-chart"), propertyMaintenanceOptions);
         propertyMaintenanceChart.render();
+
+
 
         // ApexCharts Data for Monthly Payments Report
         var monthlyPaymentsOptions = {

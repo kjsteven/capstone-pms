@@ -347,7 +347,7 @@ while ($row = $result->fetch_assoc()) {
     });
 
 
-    // Update the form submission handler in your JavaScript
+    // Update the form submission handler with the new version
     document.getElementById('reportForm').addEventListener('submit', async function(event) {
         event.preventDefault();
         
@@ -362,12 +362,21 @@ while ($row = $result->fetch_assoc()) {
                 body: formData
             });
 
+            // Get the response text first
+            const responseText = await response.text();
+            
+            // Try to parse it as JSON
             let data;
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                data = await response.json();
-            } else {
-                throw new Error(`Invalid response type: ${contentType}`);
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                console.error('Server response:', responseText);
+                throw new Error('Invalid JSON response from server');
+            }
+
+            // Check if the request was successful
+            if (!response.ok) {
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
             }
 
             if (data.success) {
@@ -389,18 +398,37 @@ while ($row = $result->fetch_assoc()) {
 
     // Function to view request details
     function viewRequest(requestId) {
-        // Add your view request logic here
-        alert('View request ' + requestId);
+        // Open the PDF report in a new tab
+        window.open('view_report.php?id=' + requestId, '_blank');
     }
 
     // Function to archive request
     function archiveRequest(requestId) {
         if (confirm('Are you sure you want to archive this request?')) {
-            // Add your archive request logic here
-            alert('Archive request ' + requestId);
+            fetch('archive_request.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'requestId=' + requestId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Request archived successfully');
+                    // Remove the row from the table
+                    const row = document.querySelector(`tr button[onclick="archiveRequest(${requestId})"]`).closest('tr');
+                    row.remove();
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to archive request: ' + error.message);
+            });
         }
     }
-
 
 </script>
 

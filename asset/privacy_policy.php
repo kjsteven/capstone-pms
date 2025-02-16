@@ -133,8 +133,8 @@
                 about
                 third parties which we think you may find interesting if you tell us that you wish this to happen.</li>
             <li>You may request details of personal information which we hold about you. If you would like a copy of the
-                information held on you, please write to [Your Company Name, Address, City, State, Zip Code] or email
-                [email protected]</li>
+                information held on you, please write to PropertyWise, 28th Street, Taguig City, Metro Manila, 1200 or email
+                support@propertwise.com</li>
             <li>If you believe that any information we are holding on you is incorrect or incomplete, please write to or
                 email
                 us as soon as possible at the above address. We will promptly correct any information found to be

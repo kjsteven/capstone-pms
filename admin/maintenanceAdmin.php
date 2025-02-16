@@ -31,7 +31,8 @@ $query = "
         mr.issue, 
         mr.description, 
         mr.service_date, 
-        mr.image, 
+        mr.image,
+        mr.report_pdf, 
         s.name AS staff_name, 
         mr.status
     FROM maintenance_requests mr
@@ -185,6 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Description</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Service Date</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Image</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Report</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Assign To</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
@@ -204,6 +206,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                                     <a href="../users/<?php echo htmlspecialchars($row['image']); ?>" target="_blank" class="text-blue-600">View Image</a>
                                 <?php else : ?>
                                     No Image
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-6 py-3 border-b border-gray-200">
+                                <?php if ($row['report_pdf']) : ?>
+                                    <div class="flex flex-col space-y-2">
+                                        <a href="../reports/maintenance_reports/<?php echo htmlspecialchars($row['report_pdf']); ?>" 
+                                           target="_blank"
+                                           class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors duration-200">
+                                            <i class="fas fa-eye mr-2"></i>
+                                            <span class="text-sm">View Report</span>
+                                        </a>
+                                        <a href="download_report.php?file=<?php echo urlencode($row['report_pdf']); ?>" 
+                                           class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors duration-200">
+                                            <i class="fas fa-download mr-2"></i>
+                                            <span class="text-sm">Download</span>
+                                        </a>
+                                    </div>
+                                <?php else : ?>
+                                    <span class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-600 rounded-md">
+                                        <i class="fas fa-file-alt mr-2"></i>
+                                        <span class="text-sm">No Report</span>
+                                    </span>
                                 <?php endif; ?>
                             </td>
                             <td class="px-6 py-3 border-b border-gray-200"><?php echo $row['staff_name'] ? $row['staff_name'] : 'Not Assigned'; ?></td>

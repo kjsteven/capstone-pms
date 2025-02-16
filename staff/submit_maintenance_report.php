@@ -1,16 +1,29 @@
 <?php
-// Turn off all error reporting for production
-error_reporting(0);
-ini_set('display_errors', 0);
-
-// Set proper headers for JSON response
-header('Content-Type: application/json');
-
-// Start output buffering
+// Start output buffering right at the beginning
 ob_start();
 
+// Set proper headers
+header('Content-Type: application/json');
+
+// Disable error display but log them
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', '../error.log');
+
 try {
+    // Check if TCPDF exists before requiring it
+    if (!file_exists('../vendor/tecnickcom/tcpdf/tcpdf.php')) {
+        throw new Exception('TCPDF library not found');
+    }
+    
     require '../vendor/tecnickcom/tcpdf/tcpdf.php';
+    
+    // Check if database connection file exists
+    if (!file_exists('../session/db.php')) {
+        throw new Exception('Database configuration file not found');
+    }
+    
     require '../session/db.php';
 
     session_start();
@@ -56,11 +69,30 @@ try {
     $maintenanceCost = $_POST['maintenanceCost'];
     $completionDate = $_POST['completionDate'];
 
-    // Create PDF directory if it doesn't exist
-    $pdfDir = '../reports/maintenance_reports/';
-    if (!file_exists($pdfDir)) {
-        mkdir($pdfDir, 0777, true);
+    // Fix path handling - use clean absolute paths
+    $projectRoot = realpath(__DIR__ . '/..');  // Get clean path without ../
+    
+    // Create reports directory with clean absolute path
+    $reportsBaseDir = $projectRoot . DIRECTORY_SEPARATOR . 'reports';
+    if (!file_exists($reportsBaseDir)) {
+        if (!mkdir($reportsBaseDir, 0777, true)) {
+            throw new Exception('Failed to create reports directory: ' . $reportsBaseDir);
+        }
+        chmod($reportsBaseDir, 0777);
     }
+
+    // Create maintenance_reports directory with clean absolute path
+    $pdfDir = $reportsBaseDir . DIRECTORY_SEPARATOR . 'maintenance_reports';
+    if (!file_exists($pdfDir)) {
+        if (!mkdir($pdfDir, 0777, true)) {
+            throw new Exception('Failed to create maintenance_reports directory: ' . $pdfDir);
+        }
+        chmod($pdfDir, 0777);
+    }
+
+    // Debug logging
+    error_log('Project root: ' . $projectRoot);
+    error_log('PDF directory: ' . $pdfDir);
 
     // Create new PDF document
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
@@ -78,31 +110,35 @@ try {
     $pdf->SetMargins(15, 15, 15);
     $pdf->AddPage();
 
-    // Add logo if exists
-    $logoPath = '../images/logo.png';
+    // Fix logo path and update size
+    $logoPath = $projectRoot . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'logo.png';
     if (file_exists($logoPath)) {
-        $pdf->Image($logoPath, 15, 10, 30);
+        // Reduced logo size from 20mm to 15mm width, and positioned slightly higher
+        $pdf->Image($logoPath, 15, 8, 15);
     }
 
     // Set font
     $pdf->SetFont('helvetica', 'B', 16);
 
-    // Title
-    $pdf->Cell(0, 10, 'Maintenance Report', 0, 1, 'C');
-    $pdf->Ln(10);
+    // Title - adjusted spacing for smaller logo
+    $pdf->Cell(0, 6, 'Maintenance Report', 0, 1, 'C');
+    $pdf->Ln(3); // Reduced spacing after title due to smaller logo
 
     // Report details
     $pdf->SetFont('helvetica', 'B', 12);
     $pdf->Cell(50, 7, 'Report Details:', 0, 1);
     $pdf->SetFont('helvetica', '', 12);
     
-    // Create details array
+    // Create details array with added fields
     $details = array(
         'Date Generated' => date('F j, Y'),
         'Staff Name' => $staffName,
+        'Unit No.' => $_POST['modalUnit'],
+        'Service Date' => $_POST['modalServiceDate'],
+        'Issue Type' => $_POST['modalIssue'],
         'Status' => $status,
         'Completion Date' => date('F j, Y', strtotime($completionDate)),
-        'Maintenance Cost' => '₱ ' . number_format($maintenanceCost, 2)
+        'Maintenance Cost' => 'PHP ' . number_format($maintenanceCost, 2) // Changed ₱ to PHP to avoid encoding issues
     );
 
     // Add details to PDF
@@ -130,7 +166,7 @@ try {
     $pdf->MultiCell(0, 7, $actionTaken, 0);
     $pdf->Ln(5);
 
-    // Handle image uploads with proper error checking
+    // Handle image uploads with proper error checking - updated image sizing
     if (!empty($_FILES['uploadImages']['name'][0])) {
         $pdf->SetFont('helvetica', 'B', 11);
         $pdf->Cell(0, 7, 'Maintenance Images:', 0, 1);
@@ -140,8 +176,8 @@ try {
             if (is_uploaded_file($tmp_name)) {
                 $img_info = getimagesize($tmp_name);
                 if ($img_info !== false) {
-                    // Calculate image dimensions to fit page
-                    $max_width = 180; // Maximum width in mm
+                    // Reduce maximum width to make images smaller
+                    $max_width = 120; // Changed from 180 to 120 mm
                     $width = $img_info[0] * 0.264583; // Convert pixels to mm
                     $height = $img_info[1] * 0.264583;
                     
@@ -151,19 +187,44 @@ try {
                         $height = $height * $ratio;
                     }
                     
-                    $pdf->Image($tmp_name, null, null, $width, $height);
-                    $pdf->Ln(5);
+                    // Center the image
+                    $x = (210 - $width) / 2; // 210 is A4 width in mm
+                    $pdf->Image($tmp_name, $x, null, $width, $height);
+                    $pdf->Ln(($height + 5)); // Add some space after the image
                 }
             }
         }
     }
 
-    // Generate unique filename
-    $pdfFileName = 'maintenance_report_' . $requestId . '_' . date('Ymd_His') . '.pdf';
-    $pdfPath = $pdfDir . $pdfFileName;
+    // Generate clean PDF path
+    $pdfFileName = 'maintenance_report_' . intval($requestId) . '_' . date('Ymd_His') . '.pdf';
+    $pdfPath = $pdfDir . DIRECTORY_SEPARATOR . $pdfFileName;
 
-    // Save PDF
-    $pdf->Output($pdfPath, 'F');
+    // Debug logging
+    error_log('Attempting to save PDF at: ' . $pdfPath);
+
+    // Verify directory is writable
+    if (!is_writable(dirname($pdfPath))) {
+        throw new Exception('Directory is not writable: ' . dirname($pdfPath));
+    }
+
+    // Save PDF with error checking
+    $result = $pdf->Output($pdfPath, 'F');
+    if ($result === false) {
+        throw new Exception('TCPDF Output failed');
+    }
+
+    // Verify file was created with additional checks
+    clearstatcache(true, $pdfPath);
+    if (!file_exists($pdfPath)) {
+        throw new Exception('PDF file was not created at: ' . $pdfPath);
+    }
+    if (!is_readable($pdfPath)) {
+        throw new Exception('PDF file was created but is not readable: ' . $pdfPath);
+    }
+
+    // Set proper permissions for the file
+    chmod($pdfPath, 0644);
 
     // Update database with additional error checking
     $query = "UPDATE maintenance_requests 
@@ -194,20 +255,28 @@ try {
         throw new Exception('Database update failed: ' . $stmt->error);
     }
 
-    // Clear any output buffers
+    // Clear any existing output
     ob_clean();
 
+    // Send JSON response
     echo json_encode([
         'success' => true,
         'message' => 'Report submitted successfully',
         'pdfPath' => $pdfFileName
     ]);
+    exit;
 
 } catch (Exception $e) {
-    // Clear any output buffers
-    ob_clean();
+    // Clear any output
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
     
+    // Log error
     error_log('Maintenance Report Error: ' . $e->getMessage());
+    error_log('Detailed error: ' . $e->getMessage() . ' | Stack trace: ' . $e->getTraceAsString());
+    
+    // Send JSON error response
     echo json_encode([
         'success' => false,
         'message' => 'Error: ' . $e->getMessage(),
@@ -216,6 +285,7 @@ try {
             'error' => $e->getMessage()
         ]
     ]);
+    exit;
 } finally {
     // End and flush output buffer
     while (ob_get_level() > 0) {

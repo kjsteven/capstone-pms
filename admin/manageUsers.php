@@ -174,9 +174,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                         // Set status based on the database value
                         $status = $row['status']; 
 
-                        // Determine the class and icon based on the status
-                        $status_class = ($status == 'active') ? 'bg-green-500' : 'bg-red-500';
-                        $icon = ($status == 'active') ? 'check-circle' : 'x-circle';
+                        // Enhanced status styling
+                        $statusBg = $status == 'active' ? 'bg-green-100' : 'bg-red-100';
+                        $statusText = $status == 'active' ? 'text-green-800' : 'text-red-800';
+                        $statusDot = $status == 'active' ? 'bg-green-400' : 'bg-red-400';
                     ?>
                     <tr class="user-row hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['user_id']); ?></td>
@@ -186,19 +187,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                         <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 phone-column"><?php echo htmlspecialchars($row['phone']); ?></td>
                         <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 role-column"><?php echo htmlspecialchars($row['role']); ?></td>
                         <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 role-column">
-                            <form action="manageUsers.php" method="POST" class="flex items-center  mt-3">
+                            <!-- Role update form remains unchanged -->
+                            <form action="manageUsers.php" method="POST" class="flex items-center mt-3">
                                 <select name="role" class="border px-2 py-1 rounded mr-2">
                                     <option value="Admin" <?php if ($row['role'] == 'Admin') echo 'selected'; ?>>Admin</option>
                                     <option value="User" <?php if ($row['role'] == 'User') echo 'selected'; ?>>User</option>
                                 </select>
-                                <button type="submit" class="px-2 py-1 bg-blue-600 text-white rounded ">Update</button>
+                                <button type="submit" class="px-2 py-1 bg-blue-600 text-white rounded">Update</button>
                             </form>
                         </td>
-                            <td class="hidden additional-info px-4 py-4 whitespace-no-wrap border-b border-gray-200">
-                            <button class="flex items-center justify-center px-4 py-2 rounded text-white text-xs <?php echo $status_class; ?>">
-                                <i data-feather="<?php echo $icon; ?>" class="w-4 h-4"></i>
+                        <!-- Updated Status Display -->
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium <?php echo $statusBg . ' ' . $statusText; ?>">
+                                <span class="flex-shrink-0 w-2 h-2 mr-1.5 rounded-full <?php echo $statusDot; ?>"></span>
                                 <?php echo ucfirst($status); ?>
-                            </button>
+                            </span>
                         </td>
                     </tr>
                     <?php endwhile; ?>

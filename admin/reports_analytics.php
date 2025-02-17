@@ -23,9 +23,21 @@ while ($row = mysqli_fetch_assoc($result)) {
     }
 }
 
+// Only get the years for the dropdown
+$years_query = "
+    SELECT DISTINCT YEAR(service_date) as year 
+    FROM maintenance_requests 
+    ORDER BY year DESC";
 
+$years_result = mysqli_query($conn, $years_query);
+$years = [];
+while ($row = mysqli_fetch_assoc($years_result)) {
+    $years[] = $row['year'];
+}
 
-// Close the connection
+$years_json = json_encode($years);
+
+// Remove all maintenance data queries as we'll fetch them via AJAX
 mysqli_close($conn);
 ?>
 
@@ -153,24 +165,23 @@ mysqli_close($conn);
         </form>
     </div>
 
-    <!-- Table for generated reports -->
-    <div class="mt-8 overflow-x-auto">
-        <table class="min-w-full text-sm table-auto">
-            <thead>
-                <tr>
-                    <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Report Type</th>
-                    <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Date Generated</th>
-                    <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Date Period</th>
-                    <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="generated-reports-table">
-                <!-- Generated reports will appear here -->
-            </tbody>
-        </table>
+        <!-- Table for generated reports -->
+        <div class="mt-8 overflow-x-auto">
+            <table class="min-w-full text-sm table-auto">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Report Type</th>
+                        <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Date Generated</th>
+                        <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-left">Date Period</th>
+                        <th class="py-3 px-2 md:px-4 border-b border-gray-200 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="generated-reports-table">
+                    <!-- Generated reports will appear here -->
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-
 
         <!-- Tab Content for Analytics (Hidden by default) -->
         <div id="content-analytics" class="tab-content hidden">
@@ -182,9 +193,17 @@ mysqli_close($conn);
                     <div id="tenant-occupancy-chart"></div>
                 </div>
 
+        
                 <!-- Second Chart (Property Maintenance) - Second Column -->
                 <div class="col-span-1 chart-container shadow-md p-4 border border-gray-300">
-                    <h3 class="font-semibold text-md text-gray-800 mb-4">Property Maintenance</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-md text-gray-800">Property Maintenance</h3>
+                        <select id="maintenance-year-filter" class="px-3 py-1 border border-gray-300 rounded-md text-sm">
+                            <?php foreach ($years as $year): ?>
+                                <option value="<?php echo $year; ?>"><?php echo $year; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <div id="property-maintenance-chart"></div>
                 </div>
 
@@ -403,6 +422,190 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+<!-- Initialize Charts -->
+ 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const years = <?php echo $years_json; ?> || [];
+        let propertyAvailabilityChart = null;
+        let propertyMaintenanceChart = null;
+        let tenantOccupancyChart = null;
+
+        // Define chart options first
+        const tenantOccupancyOptions = {
+            chart: { 
+                type: 'pie', 
+                height: '100%', 
+                width: '100%',
+                toolbar: {
+                    show: true,
+                    tools: {
+                        download: true
+                    },
+                    export: {
+                        csv: { filename: 'tenant_occupancy_report' },
+                        png: { filename: 'tenant_occupancy_report' },
+                        jpeg: { filename: 'tenant_occupancy_report' }
+                    }
+                }
+            },
+            series: [<?php echo "$occupied, $available, $underMaintenance"; ?>],
+            labels: ['Occupied', 'Available', 'Under Maintenance'],
+            colors: ['#e74c3c', '#228b22', '#3498db'],
+            legend: {
+                position: 'right',
+                horizontalAlign: 'center',
+                verticalAlign: 'middle',
+                floating: false,
+                offsetY: 0
+            },
+            plotOptions: {
+                pie: {
+                    customScale: 0.9
+                }
+            },
+            responsive: [{
+                breakpoint: 1024,
+                options: {
+                    chart: { width: '100%' },
+                    legend: { position: 'bottom' }
+                }
+            }]
+        };
+
+        // Initialize all charts function
+        function initializeAllCharts() {
+            // Initialize tenant occupancy chart
+            tenantOccupancyChart = new ApexCharts(
+                document.querySelector("#tenant-occupancy-chart"), 
+                tenantOccupancyOptions
+            );
+            tenantOccupancyChart.render();
+
+            // Initialize property availability chart
+            initPropertyAvailabilityChart();
+
+            // Initialize maintenance chart
+            if (years && years.length > 0) {
+                const yearFilter = document.getElementById('maintenance-year-filter');
+                const initialYear = years[0];
+                yearFilter.value = initialYear;
+                fetchMaintenanceData(initialYear)
+                    .then(data => initMaintenanceChart(data, initialYear));
+            }
+
+            // Initialize other charts
+            const monthlyPaymentsChart = new ApexCharts(
+                document.querySelector("#monthly-payments-chart"), 
+                monthlyPaymentsOptions
+            );
+            monthlyPaymentsChart.render();
+
+            const rentalBalanceChart = new ApexCharts(
+                document.querySelector("#rental-balance-chart"), 
+                rentalBalanceOptions
+            );
+            rentalBalanceChart.render();
+        }
+
+        // Tab switching logic
+        const tabs = document.querySelectorAll('[id^="tab-"]');
+        const contentSections = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('border-blue-600', 'text-blue-600'));
+                this.classList.add('border-blue-600', 'text-blue-600');
+                
+                contentSections.forEach(content => content.classList.add('hidden'));
+                const contentId = this.id.replace('tab-', 'content-');
+                document.getElementById(contentId).classList.remove('hidden');
+
+                // Refresh charts when switching to analytics tab
+                if (this.id === 'tab-analytics') {
+                    if (propertyAvailabilityChart) {
+                        initPropertyAvailabilityChart();
+                    }
+                    if (propertyMaintenanceChart) {
+                        const yearFilter = document.getElementById('maintenance-year-filter');
+                        fetchMaintenanceData(yearFilter.value)
+                            .then(data => initMaintenanceChart(data, yearFilter.value));
+                    }
+                }
+            });
+        });
+
+        // Show first tab by default
+        tabs[0].classList.add('border-blue-600', 'text-blue-600');
+        contentSections[0].classList.remove('hidden');
+
+        // Initialize all charts when page loads
+        initializeAllCharts();
+
+        // Property Availability Chart Function
+        function initPropertyAvailabilityChart() {
+            console.log('Initializing property availability chart...');
+            fetch('get_availability_data.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received availability data:', data);
+                    
+                    const options = {
+                        // ... your existing propertyAvailabilityOptions ...
+                        chart: { 
+                            type: 'bar',
+                            height: '100%',
+                            width: '100%'
+                        },
+                        series: data.series,
+                        xaxis: {
+                            categories: data.categories,
+                            labels: {
+                                rotate: -45,
+                                style: { fontSize: '12px' }
+                            }
+                        },
+                        plotOptions: {
+                            bar: {
+                                horizontal: false,
+                                columnWidth: '55%',
+                                endingShape: 'rounded'
+                            }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function (val) {
+                                return val.toString();
+                            },
+                            offsetY: -20
+                        },
+                        colors: ['#2196f3']
+                    };
+
+                    if (propertyAvailabilityChart) {
+                        propertyAvailabilityChart.updateOptions(options);
+                    } else {
+                        propertyAvailabilityChart = new ApexCharts(
+                            document.querySelector("#property-availability-chart"), 
+                            options
+                        );
+                        propertyAvailabilityChart.render();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading availability data:', error);
+                });
+        }
+
+
+    });
+</script>
+
 
 <!-- Initialize Charts -->
 <script>
@@ -495,45 +698,250 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-        // ApexCharts Data for Property Availability Report
-        var propertyAvailabilityOptions = {
-            chart: { type: 'bar', width: '100%', height: '100%' },
-            series: [{
-                name: 'Available Units',
-                data: [10, 15, 5, 20, 12, 24, 16, 7, 3, 10, 8, 3],
-            }],
-            xaxis: {
-                categories: ['Ground Floor', 'Mezzanine', 'First Floor', 'Second Floor', 'Third Floor', 'Fourth Floor', 'Fifth Floor', 'Sixth Floor', 'Seventh Floor', 'Eight Floor', 'Nineth Floor', 'Tenth Floor']
-            },
-            legend: {
-                position: 'top'
-            }
-        };
-        var propertyAvailabilityChart = new ApexCharts(document.querySelector("#property-availability-chart"), propertyAvailabilityOptions);
-        propertyAvailabilityChart.render();
+        // ApexCharts Data for Property Availability
+        function initPropertyAvailabilityChart() {
+            fetch('get_availability_data.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Availability data:', data); // Debug log
+                    const propertyAvailabilityOptions = {
+                        chart: { 
+                            type: 'bar', 
+                            height: '100%',
+                            width: '100%',
+                            toolbar: {
+                                show: true
+                            }
+                        },
+                        series: data.series,
+                        xaxis: {
+                            categories: data.categories,
+                            labels: {
+                                rotate: -45,
+                                style: {
+                                    fontSize: '12px'
+                                }
+                            }
+                        },
+                        plotOptions: {
+                            bar: {
+                                horizontal: false,
+                                columnWidth: '55%',
+                                endingShape: 'rounded',
+                                dataLabels: {
+                                    position: 'top'
+                                }
+                            }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function (val) {
+                                return val.toString();
+                            },
+                            offsetY: -20,
+                            style: {
+                                fontSize: '12px',
+                                colors: ['#304758']
+                            }
+                        },
+                        colors: ['#2196f3'],
+                        title: {
+                            text: 'Available Units by Floor',
+                            align: 'center',
+                            style: {
+                                fontSize: '14px'
+                            }
+                        },
+                        yaxis: {
+                            title: {
+                                text: 'Number of Available Units'
+                            },
+                            min: 0
+                        }
+                    };
 
+                    if (window.propertyAvailabilityChart) {
+                        window.propertyAvailabilityChart.updateOptions(propertyAvailabilityOptions);
+                    } else {
+                        window.propertyAvailabilityChart = new ApexCharts(
+                            document.querySelector("#property-availability-chart"), 
+                            propertyAvailabilityOptions
+                        );
+                        window.propertyAvailabilityChart.render();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading availability data:', error);
+                });
+        }
+
+        // Add this to your existing DOMContentLoaded event listener:
+        document.addEventListener('DOMContentLoaded', function() {
+            // ...existing code...
+            
+            // Initialize property availability chart
+            initPropertyAvailabilityChart();
+            
+            // Refresh chart when analytics tab is clicked
+            document.getElementById('tab-analytics').addEventListener('click', function() {
+                // ...existing code...
+                initPropertyAvailabilityChart();
+            });
+        });
+
+
+       
         
-        // ApexCharts Data for Property Maintenance Report
-        var propertyMaintenanceOptions = {
-            chart: { type: 'line', width: '100%', height: '100%' },
-            series: [{
-                name: 'Completed',
-                data: [5, 8, 12, 15, 20, 5, 8, 12, 15, 20, 22, 14],
-            }, {
-                name: 'Pending',
-                data: [0, 2, 5, 3, 1, 0, 2, 4, 2, 7, 4, 5],
-            }],
-            xaxis: {
-                categories: ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
-            },
-            legend: {
-                position: 'top'
+      // Property Maintenance Chart Initialization
+        function fetchMaintenanceData(year) {
+            console.log('Fetching data for year:', year);
+            const url = `get_maintenance_data.php?year=${year}`;
+            console.log('Fetch URL:', url);
+            
+            return fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received maintenance data:', data);
+                    if (!data.completed || !data.pending || !data.inProgress) {
+                        throw new Error('Invalid data format received');
+                    }
+                    return data;
+                });
+        }
+
+        let propertyMaintenanceChart;
+        const years = <?php echo $years_json; ?>;
+
+        function initMaintenanceChart(data, year) {
+            console.log('Initializing chart with data:', data); // Add this line to log the data being passed to the chart
+            const options = {
+                chart: { 
+                    type: 'line',
+                    height: '100%',
+                    width: '100%',
+                    toolbar: {
+                        show: true,
+                        tools: { download: true }
+                    }
+                },
+                series: [{
+                    name: 'Completed',
+                    data: data.completed,
+                    color: '#10B981'
+                }, {
+                    name: 'Pending',
+                    data: data.pending,
+                    color: '#F59E0B'
+                }, {
+                    name: 'In Progress',
+                    data: data.inProgress,
+                    color: '#3B82F6'
+                }],
+                xaxis: {
+                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                },
+                yaxis: {
+                    title: { text: 'Number of Requests' },
+                    min: 0,
+                    forceNiceScale: true
+                },
+                title: {
+                    text: `Maintenance Requests - ${year}`,
+                    align: 'center'
+                },
+                stroke: { 
+                    curve: 'smooth',
+                    width: 2
+                },
+                markers: {
+                    size: 4
+                },
+                legend: {
+                    position: 'top'
+                }
+            };
+
+            if (propertyMaintenanceChart) {
+                propertyMaintenanceChart.updateOptions(options);
+            } else {
+                propertyMaintenanceChart = new ApexCharts(
+                    document.querySelector("#property-maintenance-chart"), 
+                    options
+                );
+                propertyMaintenanceChart.render();
             }
-        };
-        var propertyMaintenanceChart = new ApexCharts(document.querySelector("#property-maintenance-chart"), propertyMaintenanceOptions);
-        propertyMaintenanceChart.render();
+        }
 
+        // Load initial data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const yearFilter = document.getElementById('maintenance-year-filter');
+            
+            // Load initial data for the first year
+            if (years && years.length > 0) {
+                const initialYear = years[0];
+                yearFilter.value = initialYear;
+                fetchMaintenanceData(initialYear)
+                    .then(data => {
+                        initMaintenanceChart(data, initialYear);
+                    })
+                    .catch(error => {
+                        console.error('Error loading maintenance data:', error);
+                    });
+            }
 
+            // Handle year changes
+            yearFilter.addEventListener('change', function() {
+                const selectedYear = this.value;
+                fetchMaintenanceData(selectedYear)
+                    .then(data => {
+                        initMaintenanceChart(data, selectedYear);
+                    })
+                    .catch(error => {
+                        console.error('Error loading maintenance data:', error);
+                    });
+            });
+        });
+
+        // Add this console.log to check if years are available
+        console.log('Available years:', <?php echo $years_json; ?>);
+
+        // Initialize the chart when the analytics tab is shown
+        document.getElementById('tab-analytics').addEventListener('click', function() {
+            if (years && years.length > 0) {
+                const initialYear = years[0];
+                console.log('Loading data for initial year:', initialYear);
+                fetchMaintenanceData(initialYear)
+                    .then(data => {
+                        initMaintenanceChart(data, initialYear);
+                    })
+                    .catch(error => {
+                        console.error('Error loading maintenance data:', error);
+                    });
+            }
+        });
+
+        // Year filter change handler
+        document.getElementById('maintenance-year-filter').addEventListener('change', function() {
+            const selectedYear = this.value;
+            console.log('Year changed to:', selectedYear);
+            fetchMaintenanceData(selectedYear)
+                .then(data => {
+                    initMaintenanceChart(data, selectedYear);
+                })
+                .catch(error => {
+                    console.error('Error loading maintenance data:', error);
+                });
+        });
 
         // ApexCharts Data for Monthly Payments Report
         var monthlyPaymentsOptions = {

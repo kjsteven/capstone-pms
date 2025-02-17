@@ -238,9 +238,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
     // Initialize Feather Icons
     feather.replace();
-</script>
 
-<script>
+    // Function to handle entries per page change
+    function changeEntries(value) {
+        window.location.href = window.location.pathname + '?entries=' + value + '&page=1';
+    }
+
     // Handle form submission with AJAX
     const forms = document.querySelectorAll('.status-form');
     forms.forEach(form => {

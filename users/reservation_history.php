@@ -149,84 +149,117 @@ $query = "SELECT r.reservation_id, r.viewing_date, r.viewing_time, r.created_at,
     <?php include('sidebar.php'); ?>
 
     <!-- Main content for Reservation History -->
-    <div class="container mx-auto mr-20 mt-20 p-4">
-        <h1 class="text-2xl font-semibold text-gray-700 mb-4">Reservation History</h1>
-        
-        <!-- Search and Filter Section -->
-        <div class="mb-4 flex items-center space-x-2">
-            <!-- Status Filter -->
-            <div class="relative">
-                <select id="status-filter" class="border border-gray-300 rounded-lg px-4 py-2 pr-8 outline-none appearance-none">
-                    <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="pending">Confirmed</option>
-                    <option value="pending">Completed</option>
-                </select>
-                <span class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
-                    <i class="fas fa-chevron-down"></i>
-                </span>
-            </div>
+    <div class="p-2 sm:p-4 sm:ml-64"> <!-- Changed margin for sidebar -->
+        <div class="mt-20"> <!-- Adjusted top margin -->
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-700 mb-4">Reservation History</h1>
+            
+            <!-- Search and Filter Section -->
+            <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:space-x-2">
+                <!-- Status Filter -->
+                <div class="relative w-full sm:w-auto">
+                    <select id="status-filter" class="w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2 pr-8 outline-none appearance-none">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                    <span class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                        <i class="fas fa-chevron-down"></i>
+                    </span>
+                </div>
 
-            <!-- Keyword Search -->
-            <div class="relative w-full sm:w-1/4">
-                <input type="text" id="search-keyword" placeholder="Search..." class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
-                <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
-                    <i class="fas fa-search"></i>
-                </button>
+                <!-- Keyword Search -->
+                <div class="relative w-full sm:w-1/4">
+                    <input type="text" id="search-keyword" placeholder="Search..." class="w-full block p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 pr-10">
+                    <button class="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-lg">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
             </div>
+            
+            <?php if (empty($reservations)) { ?>
+                <div class="bg-white rounded-lg p-6 text-center">
+                    <p class="text-gray-600">You have no reservations yet.</p>
+                </div>
+            <?php } else { ?>
+                <div class="w-full overflow-hidden rounded-lg shadow-lg bg-white">
+                    <div class="w-full overflow-x-auto">
+                        <table class="w-full whitespace-nowrap">
+                            <thead>
+                                <tr class="bg-gray-200">
+                                    <th class="px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">ID</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">Unit No.</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">Type</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">Monthly Rent</th>
+                                    <th class="hidden md:table-cell px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">Size</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">Date</th>
+                                    <th class="hidden sm:table-cell px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">Time</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">Status</th>
+                                    <th class="px-3 py-3 text-xs font-semibold text-left text-gray-700 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservation-table-body" class="bg-white divide-y divide-gray-200">
+                                <?php foreach ($reservations as $reservation) { ?>
+                                    <tr class="hover:bg-gray-50 transition-colors duration-200" data-reservation-id="<?= htmlspecialchars($reservation['reservation_id']); ?>">
+                                        <td class="px-3 py-4 text-sm text-gray-900"><?= htmlspecialchars($reservation['reservation_id']); ?></td>
+                                        <td class="px-3 py-4 text-sm text-gray-900"><?= htmlspecialchars($reservation['unit_no']); ?></td>
+                                        <td class="px-3 py-4 text-sm text-gray-900"><?= htmlspecialchars($reservation['unit_type']); ?></td>
+                                        <td class="px-3 py-4 text-sm text-gray-900">₱<?= number_format($reservation['monthly_rent'], 2); ?></td>
+                                        <td class="hidden md:table-cell px-3 py-4 text-sm text-gray-900"><?= htmlspecialchars($reservation['square_meter']); ?> sqm</td>
+                                        <td class="px-3 py-4 text-sm text-gray-900"><?= date("M d, Y", strtotime($reservation['viewing_date'])); ?></td>
+                                        <td class="hidden sm:table-cell px-3 py-4 text-sm text-gray-900"><?= date("h:i A", strtotime($reservation['viewing_time'])); ?></td>
+                                        <td class="px-3 py-4 text-sm">
+                                            <?php
+                                            $statusClass = '';
+                                            $statusBg = '';
+                                            switch(strtolower($reservation['status'])) {
+                                                case 'pending':
+                                                    $statusClass = 'text-blue-700 bg-blue-100 border-blue-500';
+                                                    break;
+                                                case 'confirmed':
+                                                    $statusClass = 'text-green-700 bg-green-100 border-green-500';
+                                                    break;
+                                                case 'cancelled':
+                                                    $statusClass = 'text-red-700 bg-red-100 border-red-500';
+                                                    break;
+                                                case 'completed':
+                                                    $statusClass = 'text-purple-700 bg-purple-100 border-purple-500';
+                                                    break;
+                                            }
+                                            ?>
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full <?= $statusClass ?>">
+                                                <?= htmlspecialchars($reservation['status']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-4 text-sm">
+                                            <div class="flex items-center space-x-2">
+                                                <?php if (strtolower($reservation['status']) !== 'cancelled') { ?>
+                                                    <button class="cancel-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200" data-id="<?= htmlspecialchars($reservation['reservation_id']); ?>" data-unit="<?= htmlspecialchars($reservation['unit_no']); ?>" data-status="<?= htmlspecialchars($reservation['status']); ?>">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                        </svg>
+                                                        Cancel
+                                                    </button>
+                                                <?php } ?>
+                                                <?php if (strtolower($reservation['status']) === 'completed') { ?>
+                                                    <button class="archive-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200" data-id="<?= htmlspecialchars($reservation['reservation_id']); ?>">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                                        </svg>
+                                                        Archive
+                                                    </button>
+                                                <?php } ?>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php } ?>
         </div>
-        
-        <?php if (empty($reservations)) { ?>
-            <p class="text-gray-600">You have no reservations yet.</p>
-        <?php } else { ?>
-         <div class="overflow-x-auto shadow-lg rounded-lg">
-            <table class="min-w-full bg-white border border-gray-300 rounded-lg">
-                <thead>
-                    <tr class="bg-gray-200">
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Reservation ID</th>
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Unit Number</th>
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Unit Type</th>
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Monthly Rent</th>
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Square Meter</th>
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Viewing Date</th>
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Viewing Time</th>
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Status</th>
-                        <th class="py-2 px-4 border-b text-sm text-gray-800 uppercase tracking-wider">Actions</th> 
-                    </tr>
-                </thead>
-                <tbody id="reservation-table-body">
-                <?php foreach ($reservations as $reservation) { ?>
-                    <tr data-reservation-id="<?= htmlspecialchars($reservation['reservation_id']); ?>">
-                        <td class="py-2 px-4 text-center border-b"><?= htmlspecialchars($reservation['reservation_id']); ?></td>
-                        <td class="py-2 px-4 text-center border-b"><?= htmlspecialchars($reservation['unit_no']); ?></td>
-                        <td class="py-2 px-4 text-center border-b"><?= htmlspecialchars($reservation['unit_type']); ?></td>
-                        <td class="py-2 px-4 text-center border-b"><?= htmlspecialchars($reservation['monthly_rent']); ?></td>
-                        <td class="py-2 px-4 text-center border-b"><?= htmlspecialchars($reservation['square_meter']); ?></td>
-                        <td class="py-2 px-4 text-center border-b"><?= htmlspecialchars($reservation['viewing_date']); ?></td>
-                        <td class="py-2 px-4 text-center border-b">
-                            <?= date("h:i A", strtotime($reservation['viewing_time'])); ?>  <!-- Formatting time to 12-hour format with AM/PM -->
-                        </td>
-                        <td class="py-2 px-4 text-center border-b status-cell"><?= htmlspecialchars($reservation['status']); ?></td>
-                        <td class="py-2 px-4 text-center border-b flex items-center justify-center gap-4">
-                            <!-- Cancel Button -->
-                            <button class="bg-blue-500 hover:bg-blue-700 text-white text-sm font-medium py-1 px-2 rounded-md cancel-btn flex items-center gap-2" data-id="<?= htmlspecialchars($reservation['reservation_id']); ?>" data-unit="<?= htmlspecialchars($reservation['unit_no']); ?>" data-status="<?= htmlspecialchars($reservation['status']); ?>">
-                                <i data-feather="x-circle" class="w-4 h-4" ></i> Cancel
-                            </button>
-
-                            <!-- Archive Button (only show if status is 'completed') -->
-                            <?php if ($reservation['status'] == 'Completed') { ?>
-                                <button class="bg-red-500 hover:bg-red-700 text-white text-sm font-medium py-1 px-2 rounded-md archive-btn flex items-center gap-2" data-id="<?= htmlspecialchars($reservation['reservation_id']); ?>">
-                                    <i data-feather="archive" class="w-4 h-4" ></i> Archive
-                                </button>
-                            <?php } ?>
-                        </td>
-                    </tr>
-                <?php } ?>
-            </tbody>
-            </table>
-         </div>
-        <?php } ?>
     </div>
 
     <!-- Modal for Cancel Reservation -->
@@ -347,25 +380,7 @@ $query = "SELECT r.reservation_id, r.viewing_date, r.viewing_time, r.created_at,
     <script>
 
         // Function to update status cell colors
-        function updateStatusColors() {
-            document.querySelectorAll('.status-cell').forEach(cell => {
-                const status = cell.textContent.toLowerCase();
-                switch(status) {
-                    case 'pending':
-                        cell.classList.add('text-blue-600', 'font-semibold');
-                        break;
-                    case 'confirmed':
-                        cell.classList.add('text-green-600', 'font-semibold');
-                        break;
-                    case 'cancelled':
-                        cell.classList.add('text-red-600', 'font-semibold');
-                        break;
-                    case 'completed':
-                        cell.classList.add('text-purple-600', 'font-semibold');
-                        break;
-                }
-            });
-        }
+        function updateStatusColors() {}
 
         // Function to filter and search reservations
         function filterReservations() {

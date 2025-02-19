@@ -544,7 +544,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Property Availability Chart Function
         function initPropertyAvailabilityChart() {
-            console.log('Initializing property availability chart...');
             fetch('get_availability_data.php')
                 .then(response => {
                     if (!response.ok) {
@@ -553,21 +552,40 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Received availability data:', data);
-                    
-                    const options = {
-                        // ... your existing propertyAvailabilityOptions ...
+                    const propertyAvailabilityOptions = {
                         chart: { 
                             type: 'bar',
                             height: '100%',
-                            width: '100%'
+                            width: '100%',
+                            stacked: true,
+                            toolbar: {
+                                show: true
+                            }
                         },
-                        series: data.series,
+                        series: [
+                            {
+                                name: 'Available',
+                                data: data.series[0].data,
+                                color: '#228b22' // Green
+                            },
+                            {
+                                name: 'Occupied',
+                                data: data.series[1].data,
+                                color: '#e74c3c' // Red
+                            },
+                            {
+                                name: 'Maintenance',
+                                data: data.series[2].data,
+                                color: '#3498db' // Blue
+                            }
+                        ],
                         xaxis: {
                             categories: data.categories,
                             labels: {
                                 rotate: -45,
-                                style: { fontSize: '12px' }
+                                style: {
+                                    fontSize: '12px'
+                                }
                             }
                         },
                         plotOptions: {
@@ -582,19 +600,45 @@ document.addEventListener('DOMContentLoaded', function() {
                             formatter: function (val) {
                                 return val.toString();
                             },
-                            offsetY: -20
+                            style: {
+                                fontSize: '12px',
+                                colors: ['#fff']
+                            }
                         },
-                        colors: ['#2196f3']
+                        title: {
+                            text: 'Unit Status by Floor',
+                            align: 'center',
+                            style: {
+                                fontSize: '14px'
+                            }
+                        },
+                        yaxis: {
+                            title: {
+                                text: 'Number of Units'
+                            },
+                            min: 0
+                        },
+                        legend: {
+                            position: 'top',
+                            horizontalAlign: 'center'
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: function (val) {
+                                    return val + " units"
+                                }
+                            }
+                        }
                     };
 
-                    if (propertyAvailabilityChart) {
-                        propertyAvailabilityChart.updateOptions(options);
+                    if (window.propertyAvailabilityChart) {
+                        window.propertyAvailabilityChart.updateOptions(propertyAvailabilityOptions);
                     } else {
-                        propertyAvailabilityChart = new ApexCharts(
+                        window.propertyAvailabilityChart = new ApexCharts(
                             document.querySelector("#property-availability-chart"), 
-                            options
+                            propertyAvailabilityOptions
                         );
-                        propertyAvailabilityChart.render();
+                        window.propertyAvailabilityChart.render();
                     }
                 })
                 .catch(error => {

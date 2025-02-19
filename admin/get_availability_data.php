@@ -5,47 +5,63 @@ require '../session/db.php';
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Function to get floor prefix from unit number
+// Updated function to correctly handle floor numbers
 function getFloorPrefix($unit_no) {
-    if (substr($unit_no, 0, 2) === '10') {
+    // First, ensure we're working with a string
+    $unit_no = (string)$unit_no;
+    
+    // For tenth floor (units starting with 10 and length of 4)
+    if (substr($unit_no, 0, 2) === '10' && strlen($unit_no) === 4) {
         return '10';
     }
+    
+    // For first floor (units starting with 1 and length of 3)
+    if ($unit_no[0] === '1' && strlen($unit_no) === 3) {
+        return '1';
+    }
+    
+    // For all other floors
     return substr($unit_no, 0, 1);
 }
 
-// Initialize counters for each floor
-$floorCounts = [
-    'G' => 0,  // Ground Floor
-    '1' => 0,  // First Floor
-    '2' => 0,  // Second Floor
-    '3' => 0,  // Third Floor
-    '4' => 0,  // Fourth Floor
-    '5' => 0,  // Fifth Floor
-    '6' => 0,  // Sixth Floor
-    '7' => 0,  // Seventh Floor
-    '8' => 0,  // Eighth Floor
-    '9' => 0,  // Ninth Floor
-    '10' => 0  // Tenth Floor
+// Initialize counters for each floor and status
+$floorData = [
+    'G' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '1' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '2' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '3' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '4' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '5' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '6' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '7' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '8' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '9' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0],
+    '10' => ['Available' => 0, 'Occupied' => 0, 'Maintenance' => 0]
 ];
 
 try {
-    // Query to get available units
-    $query = "SELECT unit_no FROM property WHERE status = 'Available' AND position = 'active'";
+    // Add debug logging
+    $query = "SELECT unit_no, status FROM property WHERE position = 'active'";
     $result = $conn->query($query);
 
     if (!$result) {
         throw new Exception("Database query failed: " . $conn->error);
     }
 
-    // Count available units per floor
+    // Count units per floor and status with debug logging
     while ($row = $result->fetch_assoc()) {
         $floor = getFloorPrefix($row['unit_no']);
-        if (isset($floorCounts[$floor])) {
-            $floorCounts[$floor]++;
+        $status = $row['status'];
+        
+        // Debug log
+        error_log("Unit: {$row['unit_no']}, Floor: {$floor}, Status: {$status}");
+        
+        if (isset($floorData[$floor][$status])) {
+            $floorData[$floor][$status]++;
         }
     }
 
-    // Format data for the chart
+    // Format data for the stacked column chart
     $data = [
         'categories' => [
             'Ground Floor', 'First Floor', 'Second Floor', 'Third Floor', 
@@ -54,14 +70,19 @@ try {
         ],
         'series' => [
             [
-                'name' => 'Available Units',
-                'data' => array_values($floorCounts)
+                'name' => 'Available',
+                'data' => array_column($floorData, 'Available')
+            ],
+            [
+                'name' => 'Occupied',
+                'data' => array_column($floorData, 'Occupied')
+            ],
+            [
+                'name' => 'Maintenance',
+                'data' => array_column($floorData, 'Maintenance')
             ]
         ]
     ];
-
-    // Debug log
-    error_log('Available units data: ' . json_encode($data));
 
     header('Content-Type: application/json');
     echo json_encode($data);
@@ -73,3 +94,4 @@ try {
 }
 
 $conn->close();
+   

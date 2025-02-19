@@ -161,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 </select>
             </div>
             <div class="relative w-full sm:w-1/3">
-                <input type="text" id="search-keyword" placeholder="Search by Name..." 
+                <input type="text" id="search-keyword" placeholder="Search by name or unit number..." 
                        class="w-full p-2 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300">
                 <button type="button" id="search-button" 
                         class="absolute right-0 top-0 h-full px-3 bg-blue-600 text-white rounded-r-lg">
@@ -425,7 +425,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 </script>
 
 
-<!-- Search, Print Functionality, Edit Request -->
+<!-- Edit Modal Script -->
 
 
 <script>
@@ -604,6 +604,56 @@ document.getElementById('print-button').addEventListener('click', function() {
     // Remove the title after printing
     title.remove();
 });
+</script>
+
+
+<!-- Search functionality -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-keyword');
+    const searchButton = document.getElementById('search-button');
+    const tbody = document.querySelector('#users-table tbody');
+    const allRows = Array.from(tbody.querySelectorAll('tr'));
+    
+    function performSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
+        
+        allRows.forEach(row => {
+            const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase(); // Name column
+            const unit = row.querySelector('td:nth-child(3)').textContent.toLowerCase(); // Unit column
+            const issue = row.querySelector('td:nth-child(4)').textContent.toLowerCase(); // Issue column
+            
+            // Check if any of the fields contain the search term
+            const matches = name.includes(searchTerm) || 
+                          unit.includes(searchTerm) || 
+                          issue.includes(searchTerm);
+            
+            // Show/hide the row based on match
+            row.style.display = matches ? '' : 'none';
+        });
+    }
+
+    // Search on input change with debouncing
+    let debounceTimeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(performSearch, 300);
+    });
+    
+    // Search on button click
+    searchButton.addEventListener('click', performSearch);
+    
+    // Search on Enter key press
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch();
+        }
+    });
+});
+
 </script>
 
 </body>

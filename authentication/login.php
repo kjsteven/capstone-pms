@@ -63,53 +63,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Verify password
         if (password_verify($password, $hashedPassword)) {
             if ($isVerified) {
-                // Successful login, reset login attempts and redirect
+                // Successful login, reset login attempts
                 $resetStmt = $conn->prepare("UPDATE users SET login_attempts = 0, last_attempt = NOW(), status = 'active' WHERE user_id = ?");
                 $resetStmt->bind_param("i", $userId);
                 $resetStmt->execute();
                 $resetStmt->close();
                 
+                // Generate new OTP for every login
+                $otp = mt_rand(100000, 999999); // Generate a 6-digit OTP
+                $otpExpiration = date('Y-m-d H:i:s', strtotime('+10 minutes')); // OTP expiration time (10 minutes from now)
 
-                // Check if OTP has been used for verification
-                if ($otpUsed == 0) {
-                    // Generate a new OTP since it has not been used
-                    $otp = mt_rand(100000, 999999); // Generate a 6-digit OTP
-                    $otpExpiration = date('Y-m-d H:i:s', strtotime('+10 minutes')); // OTP expiration time (10 minutes from now)
+                // Update the OTP in database
+                $updateOtpStmt = $conn->prepare("UPDATE users SET OTP = ?, OTP_used = 0, OTP_expiration = ? WHERE user_id = ?");
+                $updateOtpStmt->bind_param("ssi", $otp, $otpExpiration, $userId);
+                $updateOtpStmt->execute();
+                $updateOtpStmt->close();
 
-                    // Update the OTP and set OTP_used to 0 (indicating it needs to be verified)
-                    $updateOtpStmt = $conn->prepare("UPDATE users SET OTP = ?, OTP_used = 0, OTP_expiration = ? WHERE user_id = ?");
-                    $updateOtpStmt->bind_param("ssi", $otp, $otpExpiration, $userId);
-                    $updateOtpStmt->execute();
-                    $updateOtpStmt->close();
-
-                    // Send OTP email
-                    $otpSent = sendOtpEmail($email, $otp);
-                    if ($otpSent === true) {
-                        // Store the user ID and username for OTP verification page
-                        $_SESSION['user_id'] = $userId;
-                        $_SESSION['username'] = $username;
-                        header("Location: otp.php"); // Redirect to OTP verification page
-                        exit;
-                    } else {
-                        $_SESSION['error_message'] = "Error sending OTP. Please try again.";
-                        header("Location: " . $_SERVER['PHP_SELF']);
-                        exit;
-                    }
-                } else {
-                    // OTP has already been used, proceed to dashboard based on role
+                // Send OTP email
+                $otpSent = sendOtpEmail($email, $otp);
+                if ($otpSent === true) {
+                    // Store the user ID and username for OTP verification page
                     $_SESSION['user_id'] = $userId;
-                    $_SESSION["role"] = getUserRole($userId);
-                    if ($_SESSION["role"] == "Admin") {
-                        header("Location: ../admin/dashboardAdmin.php");
-
-                       
-
-
-                    } else {
-                        header("Location: ../users/dashboard.php");
-
-                      
-                    }
+                    $_SESSION['username'] = $username;
+                    header("Location: otp.php"); // Redirect to OTP verification page
+                    exit;
+                } else {
+                    $_SESSION['error_message'] = "Error sending OTP. Please try again.";
+                    header("Location: " . $_SERVER['PHP_SELF']);
                     exit;
                 }
             } else {
@@ -164,20 +144,45 @@ function sendOtpEmail($email, $otp) {
     try {
         // Server settings
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com'; // Your SMTP server
+        $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
-        $mail->Username = SMTP_USERNAME; // Use the constant
-        $mail->Password = SMTP_PASSWORD; // Use the constant
+        $mail->Username = SMTP_USERNAME;
+        $mail->Password = SMTP_PASSWORD;
         $mail->setFrom(SMTP_USERNAME, 'PropertyWise | OTP Verification');
         $mail->addAddress($email);
+        $mail->isHTML(true);
 
-        // Email content
-        $mail->Subject = 'Your OTP Code';
-        $mail->Body = 'Your OTP code is: ' . $otp;
+        // Email content with HTML and inline CSS (Tailwind-like styles)
+        $mail->Subject = 'Your OTP Verification Code';
+        $mail->Body = '
+        <div style="font-family: \'Arial\', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f3f4f6;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #1f2937; font-size: 24px; font-weight: bold; margin-bottom: 10px;">OTP Verification</h1>
+                    <p style="color: #6b7280; font-size: 16px; margin-bottom: 20px;">Please use the following OTP to verify your account</p>
+                </div>
+                
+                <div style="background-color: #f8fafc; border: 1px dashed #e2e8f0; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #3b82f6;">' . $otp . '</span>
+                </div>
+                
+                <div style="color: #6b7280; font-size: 14px; text-align: center; margin-top: 20px;">
+                    <p>This OTP will expire in 10 minutes.</p>
+                    <p style="margin-top: 10px;">If you did not request this OTP, please ignore this email.</p>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px;">
+                    <p>This is an automated message, please do not reply.</p>
+                    <p style="margin-top: 5px;">&copy; ' . date("Y") . ' PropertyWise. All rights reserved.</p>
+                </div>
+            </div>
+        </div>';
 
-        // Send the email
+        // Plain text version for non-HTML mail clients
+        $mail->AltBody = "Your OTP code is: $otp\nThis code will expire in 10 minutes.";
+
         $mail->send();
         return true;
     } catch (Exception $e) {

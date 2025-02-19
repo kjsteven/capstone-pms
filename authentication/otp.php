@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["verify"])) {
      
     $userId = $_SESSION['user_id'];
 
-    $query = "SELECT OTP, OTP_used, OTP_expiration, role FROM users WHERE user_id = $userId";
+    $query = "SELECT OTP, OTP_expiration, role FROM users WHERE user_id = $userId";
     $result = mysqli_query($conn, $query);
 
     if ($result) {
@@ -33,18 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["verify"])) {
 
         if ($otpExpiration > time()) {
             if ($enteredOTP === $storedOTP) {
-                // OTP matched, update the user's OTP_used status
-                $updateQuery = "UPDATE users SET OTP_used = 1 WHERE user_id = $userId";
-                $updateResult = mysqli_query($conn, $updateQuery);
-
-                if ($updateResult) {
-                    $_SESSION["otp_verified"] = true;
-                    $dashboardURL = ($row["role"] == "Admin") ? "../admin/dashboardAdmin.php" : "../users/dashboard.php";
-                    header("Location: $dashboardURL");
-                    exit;
-                } else {
-                    echo "Error updating OTP: " . mysqli_error($conn);
-                }
+                // Set the session variables for authenticated user
+                $_SESSION["otp_verified"] = true;
+                $_SESSION["role"] = $row["role"];
+                
+                // Redirect based on role
+                $dashboardURL = ($row["role"] == "Admin") ? "../admin/dashboardAdmin.php" : "../users/dashboard.php";
+                header("Location: $dashboardURL");
+                exit;
             } else {
                 echo "<script>alert('Incorrect OTP. Please try again.');</script>";
             }
@@ -91,12 +87,36 @@ if (isset($_POST["resendOTP"])) {
         $mail->Port = 587;
         $mail->Username = SMTP_USERNAME;
         $mail->Password = SMTP_PASSWORD;
-
         $mail->setFrom(SMTP_USERNAME, 'PropertyWise | OTP Verification');
         $mail->addAddress($to);
         $mail->isHTML(true);
-        $mail->Subject = $subject;
-        $mail->Body = $message;
+        
+        $mail->Subject = 'Your New OTP Code';
+        $mail->Body = '
+        <div style="font-family: \'Arial\', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f3f4f6;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #1f2937; font-size: 24px; font-weight: bold; margin-bottom: 10px;">New OTP Verification</h1>
+                    <p style="color: #6b7280; font-size: 16px; margin-bottom: 20px;">Here is your new OTP code</p>
+                </div>
+                
+                <div style="background-color: #f8fafc; border: 1px dashed #e2e8f0; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+                    <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #3b82f6;">' . $newOTP . '</span>
+                </div>
+                
+                <div style="color: #6b7280; font-size: 14px; text-align: center; margin-top: 20px;">
+                    <p>This OTP will expire in 10 minutes.</p>
+                    <p style="margin-top: 10px;">If you did not request this OTP, please ignore this email.</p>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px;">
+                    <p>This is an automated message, please do not reply.</p>
+                    <p style="margin-top: 5px;">&copy; ' . date("Y") . ' PropertyWise. All rights reserved.</p>
+                </div>
+            </div>
+        </div>';
+
+        $mail->AltBody = "Your new OTP is: $newOTP\nThis code will expire in 10 minutes.";
 
         $mail->send();
         echo "<script>alert('OTP has been resent. Check your email.');</script>";

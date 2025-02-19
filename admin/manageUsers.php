@@ -274,6 +274,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                     <?php
                     // Display fetched staff data
                     while ($row_staff = mysqli_fetch_assoc($result_staff)) :
+                        // Convert status to lowercase for consistent comparison
+                        $status = strtolower($row_staff['status']);
+                        
+                        // Determine status styles
+                        switch($status) {
+                            case 'available':
+                                $statusBg = 'bg-green-100';
+                                $statusText = 'text-green-800';
+                                $statusDot = 'bg-green-400';
+                                break;
+                            case 'busy':
+                                $statusBg = 'bg-yellow-100';
+                                $statusText = 'text-yellow-800';
+                                $statusDot = 'bg-yellow-400';
+                                break;
+                            case 'suspended':
+                                $statusBg = 'bg-red-100';
+                                $statusText = 'text-red-800';
+                                $statusDot = 'bg-red-400';
+                                break;
+                            default:
+                                $statusBg = 'bg-gray-100';
+                                $statusText = 'text-gray-800';
+                                $statusDot = 'bg-gray-400';
+                        }
                     ?>
                     <tr class="staff-row hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['staff_id']); ?></td>
@@ -282,17 +307,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                         <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Email']); ?></td>
                         <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Specialty']); ?></td>
                         <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['Phone_Number']); ?></td>
-                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row_staff['status']); ?></td>
                         <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200">
-                             <div class="action-buttons flex items-center gap-2">
-                                <!-- Edit Button -->
-                                <button class="px-2 py-2 bg-green-600 text-white rounded flex items-center text-sm" onclick="editStaff(<?php echo $row_staff['staff_id']; ?>)">
-                                    <i data-feather="edit" class="mr-2 w-4 h-4"></i> Edit
+                            <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium <?php echo $statusBg . ' ' . $statusText; ?>">
+                                <span class="flex-shrink-0 w-2 h-2 mr-1.5 rounded-full <?php echo $statusDot; ?>"></span>
+                                <?php echo ucfirst($status); ?>
+                            </span>
+                        </td>
+                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                            <div class="flex space-x-2">
+                                <button type="button" 
+                                    onclick="event.preventDefault(); event.stopPropagation(); openEditModal(<?php echo htmlspecialchars($row_staff['staff_id']); ?>, 
+                                    '<?php echo htmlspecialchars($row_staff['Name']); ?>', 
+                                    '<?php echo htmlspecialchars($row_staff['Email']); ?>', 
+                                    '<?php echo htmlspecialchars($row_staff['Specialty']); ?>', 
+                                    '<?php echo htmlspecialchars($row_staff['Phone_Number']); ?>', 
+                                    '<?php echo htmlspecialchars($row_staff['status']); ?>')" 
+                                    class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"/>
+                                        <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/>
+                                    </svg>
+                                    Edit
                                 </button>
-
-                                <!-- Archive Button -->
-                                <button class="px-2 py-2 bg-red-600 text-white rounded flex items-center text-sm" onclick="archiveStaff(<?php echo $row_staff['staff_id']; ?>)">
-                                    <i data-feather="archive" class="mr-2 w-4 h-4"></i> Archive
+                                <button onclick="confirmSuspend(<?php echo htmlspecialchars($row_staff['staff_id']); ?>)" 
+                                    class="inline-flex items-center px-3 py-2 <?php echo $row_staff['status'] === 'suspended' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'; ?> text-white text-sm font-medium rounded-md transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"/>
+                                    </svg>
+                                    <?php echo $row_staff['status'] === 'suspended' ? 'Activate' : 'Suspend'; ?>
                                 </button>
                             </div>
                         </td>
@@ -519,9 +561,208 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </script>
 
+<div id="editStaffModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+        <h2 class="text-2xl font-bold mb-4">Edit Staff Information</h2>
+        <form id="editStaffForm" class="space-y-4">
+            <input type="hidden" id="editStaffId" name="staff_id">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Name</label>
+                <input type="text" id="editName" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" disabled>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="editEmail" name="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" disabled>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Specialty</label>
+                <input type="text" id="editSpecialty" name="specialty" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input type="text" id="editPhone" name="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Status</label>
+                <select id="editStatus" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="Available">Available</option>
+                    <option value="Busy">Busy</option>
+                    <option value="Active">Active</option>
+                    <option value="Suspended">Suspended</option>
+                </select>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 
+<script>
+function openEditModal(staffId, name, email, specialty, phone, status) {
+    document.getElementById('editStaffId').value = staffId;
+    document.getElementById('editName').value = name;
+    document.getElementById('editEmail').value = email;
+    document.getElementById('editSpecialty').value = specialty;
+    document.getElementById('editPhone').value = phone;
+    document.getElementById('editStatus').value = status;
+    document.getElementById('editStaffModal').classList.remove('hidden');
+    document.getElementById('editStaffModal').classList.add('flex');
+}
 
+function closeEditModal() {
+    document.getElementById('editStaffModal').classList.add('hidden');
+    document.getElementById('editStaffModal').classList.remove('flex');
+}
 
+document.getElementById('editStaffForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Prevent the default form submission
+    e.stopPropagation(); // Stop event bubbling
+    
+    const formData = new FormData(this);
+    
+    // Add loading state to submit button
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.innerHTML = 'Saving...';
+    submitButton.disabled = true;
+
+    fetch('update_staff.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            Toastify({
+                text: "Staff information updated successfully",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#4CAF50"
+            }).showToast();
+            closeEditModal();
+            // Reload the page after a short delay
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            throw new Error(data.message || 'Error updating staff information');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Toastify({
+            text: error.message || "An error occurred while updating staff information",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#F44336"
+        }).showToast();
+    })
+    .finally(() => {
+        // Reset button state
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+    });
+});
+
+// Add event listener to prevent modal from closing when clicking inside
+document.querySelector('#editStaffModal .bg-white').addEventListener('click', function(e) {
+    e.stopPropagation();
+});
+
+// Add event listener to close modal when clicking outside
+document.getElementById('editStaffModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+
+function confirmSuspend(staffId) {
+    if (confirm("Are you sure you want to change this staff member's status?")) {
+        fetch('toggle_staff_status.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ staff_id: staffId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                Toastify({
+                    text: data.message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: data.newStatus === 'Suspended' ? "#EF4444" : "#10B981",
+                    className: "toast-notification"
+                }).showToast();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                throw new Error(data.message || 'Error updating staff status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Toastify({
+                text: error.message || "An error occurred while updating staff status",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#F44336",
+                className: "toast-notification"
+            }).showToast();
+        });
+    }
+}
+
+// Update status styles based on new status options
+function getStatusStyle(status) {
+    switch(status.toLowerCase()) {
+        case 'available':
+            return {
+                bg: 'bg-green-100',
+                text: 'text-green-800',
+                dot: 'bg-green-400'
+            };
+        case 'busy':
+            return {
+                bg: 'bg-yellow-100',
+                text: 'text-yellow-800',
+                dot: 'bg-yellow-400'
+            };
+        case 'active':
+            return {
+                bg: 'bg-blue-100',
+                text: 'text-blue-800',
+                dot: 'bg-blue-400'
+            };
+        case 'suspended':
+            return {
+                bg: 'bg-red-100',
+                text: 'text-red-800',
+                dot: 'bg-red-400'
+            };
+        default:
+            return {
+                bg: 'bg-gray-100',
+                text: 'text-gray-800',
+                dot: 'bg-gray-400'
+            };
+    }
+}
+</script>
 
 </body>
 </html>

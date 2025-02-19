@@ -1,42 +1,91 @@
 <?php
-// Include database connection file
-require '../session/db.php';  // Adjust the path to where db.php is located
+require '../session/db.php';
+require '../vendor/autoload.php';
+require '../config/config.php';
 
-// Initialize error variable
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 $error = "";
 
-// Check if the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get the email and password from the form
     $email = $_POST['username'];
     $password = $_POST['password'];
 
-    // Prepare the query to select the staff record by email
     $query = "SELECT * FROM staff WHERE Email = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("s", $email); // 's' indicates the email is a string
-    
-    // Execute the query
+    $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
     $staff = $result->fetch_assoc();
 
-    // Verify the password
-    if ($staff && password_verify($password, $staff['Password'])) {
-        // If login is successful, start a session and redirect
-        session_start();
-        $_SESSION['staff_id'] = $staff['staff_id'];
-        $_SESSION['name'] = $staff['Name'];
-        header("Location: ../staff/staffDashboard.php");  // Redirect to staff dashboard
-        exit();
+    if ($staff) {
+        // First check if account is suspended
+        if ($staff['status'] === 'Suspended') {
+            $error = "Your account has been suspended. Please contact the administrator.";
+        } 
+        // If not suspended, proceed with password verification
+        else if (password_verify($password, $staff['Password'])) {
+            // Generate OTP and continue with existing login process
+            $otp = mt_rand(100000, 999999);
+            $otpExpiration = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+            
+            // Update staff record with OTP
+            $updateQuery = "UPDATE staff SET OTP = ?, OTP_expiration = ?, OTP_used = 0 WHERE staff_id = ?";
+            $updateStmt = $conn->prepare($updateQuery);
+            $updateStmt->bind_param("ssi", $otp, $otpExpiration, $staff['staff_id']);
+            
+            if ($updateStmt->execute()) {
+                // Start session and store staff data
+                session_start();
+                $_SESSION['staff_id'] = $staff['staff_id'];
+                $_SESSION['staff_email'] = $staff['Email'];
+                
+                // Send OTP email
+                $mail = new PHPMailer(true);
+                
+                try {
+                    $mail->isSMTP();
+                    $mail->Host = 'smtp.gmail.com';
+                    $mail->SMTPAuth = true;
+                    $mail->SMTPSecure = 'tls';
+                    $mail->Port = 587;
+                    $mail->Username = SMTP_USERNAME;
+                    $mail->Password = SMTP_PASSWORD;
+                    $mail->setFrom(SMTP_USERNAME, 'PropertyWise | Staff Verification');
+                    $mail->addAddress($staff['Email']);
+                    $mail->isHTML(true);
+                    
+                    $mail->Subject = 'Staff Login OTP Verification';
+                    $mail->Body = '
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f3f4f6;">
+                        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                            <h1 style="color: #1f2937; font-size: 24px; margin-bottom: 20px; text-align: center;">Staff Login Verification</h1>
+                            <p style="color: #6b7280; margin-bottom: 20px; text-align: center;">Your OTP for staff login verification is:</p>
+                            <div style="background-color: #f8fafc; border: 1px dashed #e2e8f0; padding: 20px; text-align: center; margin: 20px 0;">
+                                <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #3b82f6;">' . $otp . '</span>
+                            </div>
+                            <p style="color: #6b7280; font-size: 14px; text-align: center;">This OTP will expire in 10 minutes.</p>
+                        </div>
+                    </div>';
+
+                    $mail->send();
+                    header("Location: staff_otp.php");
+                    exit();
+                } catch (Exception $e) {
+                    $error = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                }
+            } else {
+                $error = "Error updating OTP";
+            }
+        } else {
+            $error = "Invalid email or password.";
+        }
     } else {
-        // If login failed, display an error message
         $error = "Invalid email or password.";
     }
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -108,7 +157,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <!-- Error message handling -->
             <?php if (!empty($error)): ?>
-                <div class="text-red-500 text-sm mt-4 text-center"><?php echo htmlspecialchars($error); ?></div>
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
+                </div>
             <?php endif; ?>
         </div>
     </div>

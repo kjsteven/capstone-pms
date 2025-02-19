@@ -51,11 +51,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail->Password = SMTP_PASSWORD;
 
             $mail->setFrom(SMTP_USERNAME, 'PropertyWise | Reset Password');
-            $mail->addAddress($email, 'Recipient Name');
-
+            $mail->addAddress($email);
             $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body = $body;
+            $mail->Subject = 'Password Reset Request';
+            
+            // Improved HTML email template
+            $mail->Body = '
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f3f4f6;">
+                <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    
+                    <h1 style="color: #1f2937; font-size: 24px; margin-bottom: 20px; text-align: center;">Reset Your Password</h1>
+                    <p style="color: #6b7280; margin-bottom: 20px; text-align: center;">You recently requested to reset your password for your PropertyWise account. Click the button below to proceed:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="https://localhost/capstone-pms/session/resetpassword.php?resettoken=' . $resetToken . '" 
+                           style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                            Reset Password
+                        </a>
+                    </div>
+                    <p style="color: #6b7280; font-size: 14px; text-align: center; margin-top: 20px;">
+                        If you did not request a password reset, please ignore this email or contact support if you have concerns.
+                    </p>
+                    <div style="border-top: 1px solid #e5e7eb; margin-top: 30px; padding-top: 20px;">
+                        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-bottom: 10px;">
+                            For security, this request will expire in 10 minutes.
+                        </p>
+                    </div>
+                    <div style="border-top: 1px solid #e5e7eb; margin-top: 30px; padding-top: 20px; text-align: center;">
+                        <p style="color: #9ca3af; font-size: 12px; margin-bottom: 10px;">
+                            This is an automated message, please do not reply.
+                        </p>
+                        <p style="color: #9ca3af; font-size: 12px;">
+                            PropertyWise &copy; ' . date('Y') . ' All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </div>';
+
+            // Plain text alternative
+            $mail->AltBody = 'Reset your password by copying and pasting this link into your browser: https://localhost/capstone-pms/session/resetpassword.php?resettoken=' . $resetToken;
 
             $mail->send();
 

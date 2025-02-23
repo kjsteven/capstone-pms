@@ -1,11 +1,20 @@
 <?php
-while (ob_get_level()) ob_end_clean();
-header('Content-Type: application/json');
+// Disable error reporting for production
+error_reporting(0);
+ini_set('display_errors', 0);
 
-require_once '../session/session_manager.php';
+// Clean any existing output
+while (ob_get_level()) ob_end_clean();
+// Start fresh output buffer
+ob_start();
+
+header('Content-Type: application/json');
+session_start();
+
 require '../session/db.php';
 require '../vendor/autoload.php';
 require '../config/config.php';
+require_once '../session/audit_trail.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -13,8 +22,20 @@ use PHPMailer\PHPMailer\Exception;
 $response = ['success' => false, 'message' => ''];
 
 try {
+    // Verify user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception('User not authenticated');
+    }
+
     $input = file_get_contents('php://input');
+    if (!$input) {
+        throw new Exception('No input received');
+    }
+
     $data = json_decode($input, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('Invalid JSON input: ' . json_last_error_msg());
+    }
 
     if (!$data || !isset($data['reservation_id']) || !isset($data['status'])) {
         throw new Exception('Invalid input data');
@@ -35,8 +56,37 @@ try {
         throw new Exception('Failed to update status');
     }
 
-     // If status is confirmed, update property status to Reserved
-     if (strtolower($data['status']) === 'confirmed') {
+    // Get admin/staff name for the audit log
+    $userQuery = $conn->prepare("SELECT name, role FROM users WHERE user_id = ?");
+    if (!$userQuery) {
+        throw new Exception('Failed to prepare user query');
+    }
+    
+    $userQuery->bind_param("i", $_SESSION['user_id']);
+    $userQuery->execute();
+    $userResult = $userQuery->get_result()->fetch_assoc();
+    
+    if (!$userResult) {
+        throw new Exception('User details not found');
+    }
+    
+    // Log the status update activity with user details
+    $auditDetails = sprintf(
+        "Reservation ID: %d updated to %s by %s (%s)",
+        $data['reservation_id'],
+        $data['status'],
+        $userResult['name'],
+        $userResult['role']
+    );
+    
+    logActivity(
+        $_SESSION['user_id'],
+        'Update Reservation',
+        $auditDetails
+    );
+
+    // If status is confirmed, update property status to Reserved
+    if (strtolower($data['status']) === 'confirmed') {
         $stmt = $conn->prepare("
             UPDATE property p 
             JOIN reservations r ON p.unit_id = r.unit_id 
@@ -147,12 +197,22 @@ try {
     $response['message'] = 'Status updated successfully';
 
 } catch (Exception $e) {
-    if (isset($conn)) $conn->rollback();
+    if (isset($conn) && !$conn->connect_error) {
+        $conn->rollback();
+    }
+    $response['success'] = false;
     $response['message'] = $e->getMessage();
+    error_log("Update reservation error: " . $e->getMessage());
 } finally {
+    // Close all statements and connection
     if (isset($stmt)) $stmt->close();
+    if (isset($userQuery)) $userQuery->close();
     if (isset($conn)) $conn->close();
+
+    // Clear any output buffer
+    if (ob_get_length()) ob_clean();
     
+    // Send JSON response
     echo json_encode($response);
     exit();
 }

@@ -2,6 +2,7 @@
 require '../session/db.php';
 require '../vendor/autoload.php';
 require '../config/config.php';
+require_once '../session/audit_trail.php'; // Add this line
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -26,6 +27,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } 
         // If not suspended, proceed with password verification
         else if (password_verify($password, $staff['Password'])) {
+            // Log the staff login activity
+            logActivity(
+                $staff['staff_id'],
+                'Staff Login',
+                'Staff member logged in successfully',
+                $_SERVER['REMOTE_ADDR']
+            );
+
             // Generate OTP and continue with existing login process
             $otp = mt_rand(100000, 999999);
             $otpExpiration = date('Y-m-d H:i:s', strtotime('+10 minutes'));

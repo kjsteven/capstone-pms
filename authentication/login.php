@@ -3,6 +3,7 @@
 require '../session/db.php'; 
 require '../vendor/autoload.php'; 
 require '../config/config.php';
+require_once '../session/audit_trail.php'; // Add this line
 
 session_start();
 
@@ -85,6 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Store the user ID and username for OTP verification page
                     $_SESSION['user_id'] = $userId;
                     $_SESSION['username'] = $username;
+
+                    // Log the login activity
+                    logActivity($userId, 'Login', 'User logged in successfully');
+
                     header("Location: otp.php"); // Redirect to OTP verification page
                     exit;
                 } else {

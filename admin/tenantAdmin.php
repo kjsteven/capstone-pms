@@ -2,6 +2,7 @@
 
 require_once '../session/session_manager.php';
 require '../session/db.php';
+require_once '../session/audit_trail.php';
 
 start_secure_session();
 
@@ -147,6 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $updateReservation = $conn->prepare("UPDATE reservations SET status = 'completed' WHERE user_id = ? AND unit_id = ? AND status = 'confirmed'");
         $updateReservation->bind_param("ii", $user_id, $unit_rented);
         $updateReservation->execute();
+
+
 
         echo json_encode(['success' => true, 'message' => 'Operation successful!']);
     } catch (Exception $e) {

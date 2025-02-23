@@ -4,6 +4,7 @@ ob_start();
 require_once '../session/session_manager.php';
 require '../session/db.php';
 include('../session/auth.php');
+require_once '../session/audit_trail.php';
 
 start_secure_session();
 
@@ -31,6 +32,8 @@ if (!check_admin_role()) {
     exit();
 }
 
+// Fetch recent activities
+$activities = getRecentActivities(10); // Get last 10 activities
 
 ?>
 
@@ -67,6 +70,26 @@ if (!check_admin_role()) {
             .chart-container {
                 height: 200px;
             }
+        }
+        /* Add to existing styles */
+        #activitiesTable {
+            max-height: none;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+
+        .activities-collapsed {
+            max-height: 0 !important;
+        }
+        /* Update the activities table styles */
+        #activitiesTable {
+            max-height: 500px; /* Set initial height */
+            transition: max-height 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        #activitiesTable.collapsed {
+            max-height: 0;
         }
     </style>
 </head>
@@ -171,28 +194,49 @@ if (!check_admin_role()) {
 
         <!-- Recent Activities Section -->
         <div class="mt-6">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">Recent Activities</h3>
-                <div class="overflow-x-auto">
+            <div class="bg-white rounded-lg shadow p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-lg font-semibold text-gray-700">Recent Activities</h3>
+                        <button id="toggleActivities" class="text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="exportToExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
+                            <i class="fas fa-file-excel"></i>
+                            Export to Excel
+                        </button>
+                    </div>
+                </div>
+                <div id="activitiesTable" class="overflow-x-auto">
                     <table class="min-w-full table-auto">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">New Tenant Registration</td>
-                                <td class="px-6 py-4 whitespace-nowrap">John Doe</td>
-                                <td class="px-6 py-4 whitespace-nowrap">2023-12-01</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
-                                </td>
-                            </tr>
-                            <!-- Add more rows as needed -->
+                            <?php foreach ($activities as $activity): ?>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm"><?php echo htmlspecialchars($activity['name']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            <?php echo getActivityRoleColor($activity['role']); ?>">
+                                            <?php echo htmlspecialchars($activity['role']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm"><?php echo htmlspecialchars($activity['action']); ?></td>
+                                    <td class="px-6 py-4 text-sm"><?php echo htmlspecialchars($activity['details']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <?php echo date('M d, Y H:i', strtotime($activity['timestamp'])); ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -201,6 +245,7 @@ if (!check_admin_role()) {
     </div>
 </div>
 
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
 <script>
     // Initialize Feather Icons
     feather.replace();
@@ -283,7 +328,82 @@ if (!check_admin_role()) {
             }
         }
     });
+
+    // Toggle activities table
+    document.getElementById('toggleActivities').addEventListener('click', function() {
+        const table = document.getElementById('activitiesTable');
+        const icon = this.querySelector('i');
+        
+        if (table.style.maxHeight) {
+            table.style.maxHeight = null;
+            icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        } else {
+            table.style.maxHeight = table.scrollHeight + "px";
+            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        }
+    });
+
+    // Export to Excel function
+    function exportToExcel() {
+        const table = document.querySelector('table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        
+        const data = rows.map(row => {
+            return Array.from(row.querySelectorAll('th, td')).map(cell => cell.textContent.trim());
+        });
+        
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Activities');
+        
+        // Generate timestamp for filename
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `activities_export_${timestamp}.xlsx`;
+        
+        // Trigger download
+        XLSX.writeFile(wb, filename);
+    }
+
+    // Initialize table state
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.getElementById('activitiesTable');
+        table.style.maxHeight = table.scrollHeight + "px";
+    });
+
+    // Replace the toggle activities function with this updated version
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('toggleActivities');
+        const table = document.getElementById('activitiesTable');
+        const icon = toggleBtn.querySelector('i');
+        let isExpanded = true;
+
+        toggleBtn.addEventListener('click', function() {
+            isExpanded = !isExpanded;
+            
+            if (isExpanded) {
+                table.classList.remove('collapsed');
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            } else {
+                table.classList.add('collapsed');
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
+        });
+    });
 </script>
+
+<?php
+// Helper function to get role badge color
+function getActivityRoleColor($role) {
+    switch (strtolower($role)) {
+        case 'admin':
+            return 'bg-purple-100 text-purple-800';
+        case 'staff':
+            return 'bg-blue-100 text-blue-800';
+        default:
+            return 'bg-green-100 text-green-800';
+    }
+}
+?>
 
 </body>
 </html>

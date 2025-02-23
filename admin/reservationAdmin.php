@@ -228,18 +228,17 @@ try {
                             </td>
                             <td class="px-4 sm:px-6 py-4 border-b text-center">
                             <div class="flex justify-center items-center space-x-2">
-                          
-                            <!-- Edit and Archive Buttons -->   
-                            <button class="bg-blue-500 text-white px-3 py-1 rounded-md inline-flex items-center space-x-1">
-                                <i data-feather="edit-2" class="w-4 h-4"></i>
-                                <span>Edit</span>
-                            </button>
+                                <button onclick="editReservation(<?php echo $reservation['reservation_id']; ?>)" 
+                                        class="bg-blue-500 text-white px-3 py-1 rounded-md inline-flex items-center space-x-1">
+                                    <i data-feather="edit-2" class="w-4 h-4"></i>
+                                    <span>Edit</span>
+                                </button>
 
-                            <button class="bg-red-500 text-white px-3 py-1 rounded-md inline-flex items-center space-x-1">
-                                <i data-feather="archive" class="w-4 h-4"></i>
-                                <span>Archive</span>
-                            </button>
-
+                                <button onclick="archiveReservation(<?php echo $reservation['reservation_id']; ?>)" 
+                                        class="bg-red-500 text-white px-3 py-1 rounded-md inline-flex items-center space-x-1">
+                                    <i data-feather="archive" class="w-4 h-4"></i>
+                                    <span>Archive</span>
+                                </button>
                             </div>
                             </td>
                         </tr>

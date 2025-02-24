@@ -1,9 +1,11 @@
 <?php
+
 // Include the database connection
 require '../session/db.php';
+require_once '../session/session_manager.php';
 
-// Start the session (if not already started)
-session_start();
+start_secure_session();
+
 
 // Check if the staff member is logged in
 if (!isset($_SESSION['staff_id'])) {

@@ -1,11 +1,17 @@
 <?php
 
 require '../session/db.php';
+require_once '../session/session_manager.php';
+
+start_secure_session();
 
 
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+// Check if the staff member is logged in
+if (!isset($_SESSION['staff_id'])) {
+    die("You must be logged in to view this page.");
 }
+
+
 // Get the logged-in staff member's ID
 $staffId = $_SESSION['staff_id'];
 
@@ -82,13 +88,13 @@ $staffEmail = $staff['Email'];
                             </div>
                             <ul class="py-1" role="none">
                                 <li>
-                                    <a href="profile.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
+                                    <a href="StaffProfile.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
                                         <svg data-feather="user" class="w-5 h-5 text-blue-500 mr-4"></svg>
                                         Profile
                                     </a> <!-- Feather User Icon -->
                                 </li>
                                 <li>
-                                    <a href="../authentication/logout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
+                                    <a href="../authentication/stafflogout.php" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white flex items-center" role="menuitem"> 
                                         <svg data-feather="log-out" class="w-5 h-5 text-blue-500 mr-4"></svg>
                                         Logout
                                     </a> <!-- Feather Log-out Icon -->

@@ -1,5 +1,6 @@
 <?php
 require '../session/db.php';
+
 session_start();
 
 try {

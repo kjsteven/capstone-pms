@@ -1,8 +1,16 @@
 <?php
 
-session_start();
 
 require '../session/db.php';
+require_once '../session/session_manager.php';
+
+start_secure_session();
+
+
+// Check if the staff member is logged in
+if (!isset($_SESSION['staff_id'])) {
+    die("You must be logged in to view this page.");
+}
 
 // Get staff profile
 function getStaffProfile($staff_id) {

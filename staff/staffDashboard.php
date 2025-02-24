@@ -1,14 +1,17 @@
 <?php
-// Include the database connection
-require '../session/db.php';
 
-// Start the session (if not already started)
-session_start();
+// Include required files
+require_once '../session/db.php';
+require_once '../session/session_manager.php';
+
+start_secure_session();
+
 
 // Check if the staff member is logged in
 if (!isset($_SESSION['staff_id'])) {
     die("You must be logged in to view this page.");
 }
+
 
 // Get the logged-in staff member's ID
 $staffId = $_SESSION['staff_id'];

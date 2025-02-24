@@ -42,7 +42,7 @@ function logActivity($id, $action, $details, $ip_address = null) {
     if (!$result) {
         error_log("Execute failed: " . $stmt->error);
         return false;
-    }
+    } 
     
     $stmt->close();
     return true;

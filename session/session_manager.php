@@ -37,7 +37,6 @@ function start_secure_session() {
 
             if (timeLeft < warningThreshold) {
                 alert("Your session will expire soon. Please save your work or refresh the page.");
-                // Optionally, add functionality to warn users repeatedly or refresh the session
             }
         }
 

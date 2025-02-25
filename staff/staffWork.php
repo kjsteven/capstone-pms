@@ -9,7 +9,8 @@ start_secure_session();
 
 // Check if the staff member is logged in
 if (!isset($_SESSION['staff_id'])) {
-    die("You must be logged in to view this page.");
+    header('Location: ../authentication/stafflogin.php');
+    exit();
 }
 
 // Get the logged-in staff member's ID

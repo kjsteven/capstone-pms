@@ -1,7 +1,14 @@
 <?php
-// Include database connection
+session_start();
 ob_start();
 require '../session/db.php';
+require_once '../session/audit_trail.php';
+
+// Check if user is logged in and has valid session data
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+    header("Location: ../login.php");
+    exit();
+}
 
 // Create uploads directory if it doesn't exist
 $upload_dir = "uploads/";
@@ -20,13 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Handle image uploads
     $image_urls = [];
-    if (isset($_FILES['images']) && $_FILES['images']['error'][0] == 0) {
+    if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) { // Fix array offset error
         foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
-            $image_name = basename($_FILES['images']['name'][$key]);
-            $target_file = $upload_dir . uniqid() . '_' . $image_name;
-            
-            if (move_uploaded_file($tmp_name, $target_file)) {
-                $image_urls[] = $target_file;
+            if ($_FILES['images']['error'][$key] === 0) { // Check each file for errors
+                $image_name = basename($_FILES['images']['name'][$key]);
+                $target_file = $upload_dir . uniqid() . '_' . $image_name;
+                
+                if (move_uploaded_file($tmp_name, $target_file)) {
+                    $image_urls[] = $target_file;
+                }
             }
         }
     }
@@ -36,7 +45,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt = $conn->prepare("INSERT INTO property (unit_no, unit_type, square_meter, monthly_rent, images, status) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("ssddss", $unit_no, $unit_type, $square_meter, $monthly_rent, $images, $status);
 
-    $insert_status = $stmt->execute() ? 'success' : 'error';
+    if ($stmt->execute()) {
+        // Add error handling for logging
+        if (!logActivity(
+            $_SESSION['user_id'], 
+            "Added New Unit", 
+            "Added new unit: $unit_no ($unit_type)"
+        )) {
+            error_log("Failed to log activity for new unit creation");
+        }
+        $insert_status = 'success';
+    } else {
+        $insert_status = 'error';
+        error_log("Failed to insert new property: " . $stmt->error);
+    }
     $stmt->close();
 }
 ?>
@@ -188,12 +210,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php if($insert_status == 'success'): ?>
             Toastify({
                 text: "Property added successfully!",
-                duration: 1000,
+                duration: 2000,
                 backgroundColor: "green",
                 callback: function(){
                     setTimeout(function() {
                         window.location.href = 'propertyAdmin.php';
-                    }, 1000);
+                    }, 3000);
                 }
             }).showToast();
         <?php else: ?>

@@ -4,6 +4,9 @@ require '../session/db.php';
 
 session_start();
 
+// Add at the top after session_start()
+require_once '../session/audit_trail.php';
+
 // Pagination settings
 $entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -29,6 +32,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = $_POST['status'];
         $unit_id = $_POST['unit_id'];
 
+        // Get the unit details for audit trail
+        $unit_query = "SELECT unit_no, unit_type FROM property WHERE unit_id = ?";
+        $stmt = $conn->prepare($unit_query);
+        $stmt->bind_param("i", $unit_id);
+        $stmt->execute();
+        $unit_result = $stmt->get_result();
+        $unit_data = $unit_result->fetch_assoc();
+        $stmt->close();
+
         // Update the status in the database
         $update_query = "UPDATE property SET status = ? WHERE unit_id = ?";
         $stmt = $conn->prepare($update_query);
@@ -40,6 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("si", $status, $unit_id);
 
         if ($stmt->execute()) {
+            // Fix: Use user_id instead of staff_id for admin actions
+            logActivity(
+                $_SESSION['user_id'],
+                "Updated Unit Status",
+                "Updated status of unit {$unit_data['unit_no']} to $status"
+            );
             $response = ['status' => 'success', 'message' => 'Status updated successfully!'];
         } else {
             $response = ['status' => 'error', 'message' => 'Failed to update status'];
@@ -54,6 +72,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['archive']) && isset($_POST['unit_id'])) {
         $unit_id = $_POST['unit_id'];
 
+        // Get the unit details for audit trail
+        $unit_query = "SELECT unit_no, unit_type FROM property WHERE unit_id = ?";
+        $stmt = $conn->prepare($unit_query);
+        $stmt->bind_param("i", $unit_id);
+        $stmt->execute();
+        $unit_result = $stmt->get_result();
+        $unit_data = $unit_result->fetch_assoc();
+        $stmt->close();
+
         // Archive the property
         $archive_query = "UPDATE property SET position = 'archive' WHERE unit_id = ?";
         $stmt = $conn->prepare($archive_query);
@@ -65,6 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("i", $unit_id);
 
         if ($stmt->execute()) {
+            logActivity(
+                $_SESSION['user_id'],
+                "Archived Unit",
+                "Archived unit {$unit_data['unit_no']} ({$unit_data['unit_type']})"
+            );
             $response = ['status' => 'success', 'message' => 'Unit archived successfully!'];
         } else {
             $response = ['status' => 'error', 'message' => 'Failed to archive unit'];

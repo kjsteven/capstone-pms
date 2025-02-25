@@ -27,15 +27,22 @@ function logActivity($id, $action, $details, $ip_address = null) {
         }
         $stmt->bind_param("isss", $id, $action, $details, $ip_address);
     } else {
-        // It's a regular user
+        // It's a user - get their role from the users table
+        $role_query = "SELECT role FROM users WHERE user_id = ?";
+        $stmt = $conn->prepare($role_query);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $role_result = $stmt->get_result();
+        $user_role = $role_result->fetch_assoc()['role'] ?? 'User';
+
         $query = "INSERT INTO activity_logs (user_id, staff_id, user_role, action, details, ip_address) 
-                 VALUES (?, NULL, 'User', ?, ?, ?)";
+                 VALUES (?, NULL, ?, ?, ?, ?)";
         $stmt = $conn->prepare($query);
         if (!$stmt) {
             error_log("Prepare failed: " . $conn->error);
             return false;
         }
-        $stmt->bind_param("isss", $id, $action, $details, $ip_address);
+        $stmt->bind_param("issss", $id, $user_role, $action, $details, $ip_address);
     }
     
     $result = $stmt->execute();

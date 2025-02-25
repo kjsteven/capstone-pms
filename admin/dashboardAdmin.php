@@ -32,8 +32,27 @@ if (!check_admin_role()) {
     exit();
 }
 
-// Fetch recent activities
-$activities = getRecentActivities(10); // Get last 10 activities
+// Pagination settings
+$items_per_page = 10;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $items_per_page;
+
+// Get total number of activities
+$total_query = "SELECT COUNT(*) as total FROM activity_logs";
+$total_result = mysqli_query($conn, $total_query);
+$total_rows = mysqli_fetch_assoc($total_result)['total'];
+$total_pages = ceil($total_rows / $items_per_page);
+
+// Modified query to handle both users and staff
+$activities_query = "SELECT a.*, 
+                    COALESCE(u.name, s.name) as name,
+                    a.user_role as role
+                    FROM activity_logs a 
+                    LEFT JOIN users u ON a.user_id = u.user_id
+                    LEFT JOIN staff s ON a.staff_id = s.staff_id 
+                    ORDER BY a.timestamp DESC 
+                    LIMIT $offset, $items_per_page";
+$activities = mysqli_query($conn, $activities_query)->fetch_all(MYSQLI_ASSOC);
 
 ?>
 
@@ -195,17 +214,17 @@ $activities = getRecentActivities(10); // Get last 10 activities
         <!-- Recent Activities Section -->
         <div class="mt-6">
             <div class="bg-white rounded-lg shadow p-5">
-                <div class="flex justify-between items-center mb-4">
-                    <div class="flex items-center gap-2">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                    <div class="flex items-center gap-2 mb-2 sm:mb-0">
                         <h3 class="text-lg font-semibold text-gray-700">Recent Activities</h3>
                         <button id="toggleActivities" class="text-gray-500 hover:text-gray-700 transition-colors duration-200">
                             <i class="fas fa-chevron-up"></i>
                         </button>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="exportToExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
+                        <button onclick="exportCurrentPage()" class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
                             <i class="fas fa-file-excel"></i>
-                            Export to Excel
+                            <span class="hidden sm:inline">Export Current Page</span>
                         </button>
                     </div>
                 </div>
@@ -213,32 +232,65 @@ $activities = getRecentActivities(10); // Get last 10 activities
                     <table class="min-w-full table-auto">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($activities as $activity): ?>
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm"><?php echo htmlspecialchars($activity['name']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm"><?php echo htmlspecialchars($activity['name']); ?></td>
+                                    <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                             <?php echo getActivityRoleColor($activity['role']); ?>">
                                             <?php echo htmlspecialchars($activity['role']); ?>
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm"><?php echo htmlspecialchars($activity['action']); ?></td>
-                                    <td class="px-6 py-4 text-sm"><?php echo htmlspecialchars($activity['details']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm"><?php echo htmlspecialchars($activity['action']); ?></td>
+                                    <td class="px-4 sm:px-6 py-4 text-xs sm:text-sm"><?php echo htmlspecialchars($activity['details']); ?></td>
+                                    <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm">
                                         <?php echo date('M d, Y H:i', strtotime($activity['timestamp'])); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+                        <div class="flex flex-1 justify-between sm:hidden">
+                            <?php if ($page > 1): ?>
+                                <a href="?page=<?php echo $page-1; ?>" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+                            <?php endif; ?>
+                            <?php if ($page < $total_pages): ?>
+                                <a href="?page=<?php echo $page+1; ?>" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+                            <?php endif; ?>
+                        </div>
+                        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    Showing <span class="font-medium"><?php echo $offset + 1; ?></span> to 
+                                    <span class="font-medium"><?php echo min($offset + $items_per_page, $total_rows); ?></span> of 
+                                    <span class="font-medium"><?php echo $total_rows; ?></span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                        <a href="?page=<?php echo $i; ?>" 
+                                           class="relative inline-flex items-center px-4 py-2 text-sm font-semibold 
+                                                  <?php echo $i === $page ? 'bg-indigo-600 text-white' : 'text-gray-900'; ?> 
+                                                  ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                            <?php echo $i; ?>
+                                        </a>
+                                    <?php endfor; ?>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -344,7 +396,7 @@ $activities = getRecentActivities(10); // Get last 10 activities
     });
 
     // Export to Excel function
-    function exportToExcel() {
+    function exportCurrentPage() {
         const table = document.querySelector('table');
         const rows = Array.from(table.querySelectorAll('tr'));
         
@@ -356,11 +408,9 @@ $activities = getRecentActivities(10); // Get last 10 activities
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Activities');
         
-        // Generate timestamp for filename
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `activities_export_${timestamp}.xlsx`;
+        const filename = `activities_export_page${<?php echo $page; ?>}_${timestamp}.xlsx`;
         
-        // Trigger download
         XLSX.writeFile(wb, filename);
     }
 
@@ -394,13 +444,15 @@ $activities = getRecentActivities(10); // Get last 10 activities
 <?php
 // Helper function to get role badge color
 function getActivityRoleColor($role) {
-    switch (strtolower($role)) {
-        case 'admin':
+    switch (strtoupper($role)) {  // Change to uppercase comparison
+        case 'ADMIN':
             return 'bg-purple-100 text-purple-800';
-        case 'staff':
+        case 'STAFF':
             return 'bg-blue-100 text-blue-800';
-        default:
+        case 'USER':
             return 'bg-green-100 text-green-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
     }
 }
 ?>

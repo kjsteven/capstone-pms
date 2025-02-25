@@ -7,7 +7,8 @@ require_once '../session/session_manager.php';
 start_secure_session();
 
 if (!isset($_SESSION['staff_id'])) {
-    die("You must be logged in to view this page.");
+    header('Location: ../authentication/stafflogin.php');
+    exit();
 }
 
 $staff_id = $_SESSION['staff_id'];

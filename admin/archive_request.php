@@ -2,7 +2,8 @@
 ob_start();
 require_once '../session/session_manager.php';
 require '../session/db.php';
-
+require '../session/audit_trail.php';
+start_secure_session();
 // Clear any previous output
 while (ob_get_level()) ob_end_clean();
 
@@ -38,15 +39,20 @@ try {
     $archive_stmt = $conn->prepare("UPDATE maintenance_requests SET archived = 1 WHERE id = ?");
     $archive_stmt->bind_param("i", $request_id);
     
-    if (!$archive_stmt->execute()) {
+    if ($archive_stmt->execute()) {
+        // Log the archive action
+        $user_id = $_SESSION['user_id'];
+        $action_details = "Archived maintenance request #$request_id";
+        logActivity($user_id, "Archive Maintenance Request", $action_details);
+
+        $conn->commit();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Request archived successfully'
+        ]);
+    } else {
         throw new Exception('Failed to archive request');
     }
-
-    $conn->commit();
-    echo json_encode([
-        'success' => true,
-        'message' => 'Request archived successfully'
-    ]);
 
 } catch (Exception $e) {
     if (isset($conn)) {

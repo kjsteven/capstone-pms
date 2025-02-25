@@ -5,6 +5,8 @@ ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/php_error.log');
 
 require '../session/db.php';
+require '../session/audit_trail.php';
+start_secure_session();
 
 if (!$conn) {
     echo json_encode(['status' => 'error', 'message' => 'Database connection failed']);
@@ -27,9 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    mysqli_begin_transaction($conn);
-
     try {
+        mysqli_begin_transaction($conn);
+
         // Update maintenance request
         $query = "UPDATE maintenance_requests SET assigned_to = ?, priority = ? WHERE id = ?";
         $stmt = $conn->prepare($query);
@@ -41,15 +43,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Execute failed: " . $stmt->error);
         }
 
-        // Update staff status
-        $staffQuery = "UPDATE staff SET status = 'Busy' WHERE staff_id = ?";
-        $staffStmt = $conn->prepare($staffQuery);
-        if (!$staffStmt) {
-            throw new Exception("Staff status update prepare failed: " . $conn->error);
-        }
-        $staffStmt->bind_param('i', $staff_id);
-        if (!$staffStmt->execute()) {
-            throw new Exception("Staff status update failed: " . $staffStmt->error);
+        if ($stmt->execute()) {
+            // Log the staff assignment
+            $user_id = $_SESSION['user_id'];
+            $action_details = "Assigned maintenance request #$request_id to staff ID: $staff_id with priority: $priority";
+            logActivity($user_id, "Assign Maintenance Staff", $action_details);
+
+            // Update staff status
+            $staffQuery = "UPDATE staff SET status = 'Busy' WHERE staff_id = ?";
+            $staffStmt = $conn->prepare($staffQuery);
+            if (!$staffStmt) {
+                throw new Exception("Staff status update prepare failed: " . $conn->error);
+            }
+            $staffStmt->bind_param('i', $staff_id);
+            if (!$staffStmt->execute()) {
+                throw new Exception("Staff status update failed: " . $staffStmt->error);
+            }
         }
 
         mysqli_commit($conn);

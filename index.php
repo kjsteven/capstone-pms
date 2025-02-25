@@ -20,6 +20,8 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif; /* Apply Poppins font */
@@ -39,6 +41,33 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
         scroll-margin-top: 80px; /* Adjust this value based on your header height */
         }
     
+        /* Hero Section Animation */
+        .hero-content {
+            animation: fadeInUp 1s ease-out;
+        }
+
+        /* Custom Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
          
     </style>
 </head>
@@ -94,10 +123,10 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
     <section class="relative bg-no-repeat bg-cover py-16 pb-24" style="background-image: url('images/bg2.jpg');">
         <div class="absolute inset-0 bg-black opacity-20"></div>
         <div class="container mx-auto px-4 flex flex-col md:flex-row items-center relative z-10">
-            <div class="md:w-1/2 mb-6 md:mb-0 text-center md:text-left">
-                <h1 class="text-3xl md:text-5xl font-bold text-white mb-4">Simplify Your Living Experience with RentEase</h1>
-                <p class="text-lg md:text-xl text-white mb-8">Enjoy a seamless experience for managing your rental, from maintenance requests to secure payments, all in one place.</p>
-                <a href="#how-it-works" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500">Discover How It Works</a>
+            <div class="md:w-1/2 mb-6 md:mb-0 text-center md:text-left hero-content">
+                <h1 class="text-3xl md:text-5xl font-bold text-white mb-4" data-aos="fade-right" data-aos-delay="100">Simplify Your Living Experience with RentEase</h1>
+                <p class="text-lg md:text-xl text-white mb-8" data-aos="fade-right" data-aos-delay="200">Enjoy a seamless experience for managing your rental, from maintenance requests to secure payments, all in one place.</p>
+                <a href="#how-it-works" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500" data-aos="fade-up" data-aos-delay="300">Discover How It Works</a>
             </div>
         </div>
     </section>
@@ -106,44 +135,44 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 <!-- Features Section -->
 <section id="features" class="py-16 bg-gray-50">
     <div class="container mx-auto px-6">
-        <div class="text-center mb-12">
+        <div class="text-center mb-12" data-aos="fade-up">
             <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Key Features</h2>
             <p class="text-gray-600 mt-4">Explore the essential features that simplify your rental experience and enhance your comfort.</p>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- Feature 1: Profile Management -->
-            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white" data-aos="fade-up" data-aos-delay="100">
                 <h3 class="text-xl font-bold mb-2 ">Profile Management</h3>
                 <p class="text-gray-600 transition duration-300 ease-in-out hover:text-white">Easily manage your personal information, contact details, and account settings from one platform.</p>
             </div>
 
             <!-- Feature 2: View Unit Information -->
-            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white" data-aos="fade-up" data-aos-delay="200">
                 <h3 class="text-xl font-bold mb-2">View Unit Information</h3>
                 <p class="text-gray-600 transition duration-300 ease-in-out hover:text-white">Access important details about your unit, including rental dates and rental rates, at any time.</p>
             </div>
 
             <!-- Feature 3: Maintenance Requests -->
-            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white" data-aos="fade-up" data-aos-delay="300">
                 <h3 class="text-xl font-bold mb-2">Maintenance Requests</h3>
                 <p class="text-gray-600 transition duration-300 ease-in-out hover:text-white">Submit and track your maintenance requests effortlessly to ensure your home is always comfortable.</p>
             </div>
 
             <!-- Feature 4: Online Payments -->
-            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white" data-aos="fade-up" data-aos-delay="400">
                 <h3 class="text-xl font-bold mb-2">Online Payments</h3>
                 <p class="text-gray-600 transition duration-300 ease-in-out hover:text-white">Pay your rent and other fees securely online, making your payment process hassle-free.</p>
             </div>
 
             <!-- Feature 5: Notifications -->
-            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white" data-aos="fade-up" data-aos-delay="500">
                 <h3 class="text-xl font-bold mb-2">Notifications</h3>
                 <p class="text-gray-600 transition duration-300 ease-in-out hover:text-white">Receive timely updates on maintenance, payment reminders, and important announcements via email or SMS.</p>
             </div>
 
             <!-- Feature 6: Booking -->
-            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-blue-600 transition duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white" data-aos="fade-up" data-aos-delay="600">
                 <h3 class="text-xl font-bold mb-2">Booking</h3>
                 <p class="text-gray-600 transition duration-300 ease-in-out hover:text-white">Schedule appointments or reserve facilities easily through an intuitive booking system.</p>
             </div>
@@ -153,13 +182,13 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 
  <!-- List of Properties Section -->
 <section id="services" class="py-16 bg-gray-50">
-    <div class="container mx-auto text-center mb-12">
+    <div class="container mx-auto text-center mb-12" data-aos="fade-up">
         <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Our Properties</h2>
         <p class="text-gray-600 mt-4">Explore a variety of properties curated just for you.</p>
     </div>
 
     <!-- Property Cards Container -->
-    <div class="relative flex items-center justify-center">
+    <div class="relative flex items-center justify-center" data-aos="fade-up" data-aos-delay="200">
         <!-- Left Arrow -->
         <button id="prevButton" 
                 class=" left-2 z-10 bg-blue-600 text-white p-3 md:p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none transform -translate-y-1/2 top-1/2">
@@ -233,14 +262,14 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
  <!-- How It Works Section -->
 <section id="how-it-works" class="py-16 bg-blue-50">
     <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
+        <div class="text-center mb-12" data-aos="fade-up">
             <h2 class="text-3xl md:text-4xl font-bold text-blue-600">How It Works</h2>
             <p class="text-gray-600 mt-4">Managing your rental experience has never been easier! Here's how it works:</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Step 1 -->
-            <div class="text-center p-6">
+            <div class="text-center p-6" data-aos="fade-right" data-aos-delay="100">
                 <div class="text-blue-600 mb-4">
                     <span class="text-4xl font-bold">1</span>
                 </div>
@@ -249,7 +278,7 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
             </div>
 
             <!-- Step 2 -->
-            <div class="text-center p-6">
+            <div class="text-center p-6" data-aos="fade-up" data-aos-delay="200">
                 <div class="text-blue-600 mb-4">
                     <span class="text-4xl font-bold">2</span>
                 </div>
@@ -258,7 +287,7 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
             </div>
 
             <!-- Step 3 -->
-            <div class="text-center p-6">
+            <div class="text-center p-6" data-aos="fade-left" data-aos-delay="300">
                 <div class="text-blue-600 mb-4">
                     <span class="text-4xl font-bold">3</span>
                 </div>
@@ -272,11 +301,11 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
    <!-- Contact Section -->
    <section id="contact" class="py-16 bg-gray-50">
         <div class="container mx-auto px-6">
-            <div class="text-center mb-12">
+            <div class="text-center mb-12" data-aos="fade-down">
                 <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Contact Us</h2>
                 <p class="text-gray-600 mt-4">We're here to help you with any questions or support your needs.</p>
             </div>
-            <form class="max-w-lg mx-auto">
+            <form class="max-w-lg mx-auto" data-aos="zoom-in" data-aos-delay="200">
                 <div class="grid grid-cols-1 gap-4">
                     <input type="text" class="border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500" placeholder="Your Name" required>
                     <input type="email" class="border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500" placeholder="Your Email" required>
@@ -290,10 +319,10 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 <!-- Get Started Section -->
 <section id="get-started" class="py-16 bg-blue-50">
     <div class="container mx-auto px-4 text-center">
-        <h2 class="text-3xl md:text-4xl font-bold text-blue-600">Ready to Enhance Your Rental Experience?</h2>
-        <p class="text-gray-600 mt-4">Join our community of tenants and experience hassle-free property management.</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-blue-600" data-aos="fade-up">Ready to Enhance Your Rental Experience?</h2>
+        <p class="text-gray-600 mt-4" data-aos="fade-up" data-aos-delay="100">Join our community of tenants and experience hassle-free property management.</p>
 
-        <a href="./authentication/signup.php" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500 mt-4 inline-block">Register Now</a>
+        <a href="./authentication/signup.php" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500 mt-4 inline-block" data-aos="fade-up" data-aos-delay="200">Register Now</a>
     </div>
 </section>
 
@@ -441,6 +470,13 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 
         menuBtn.addEventListener('click', () => {
             mobileMenu.classList.toggle('active');
+        });
+
+        // Initialize AOS
+        AOS.init({
+            duration: 1000,
+            once: false,  // Changed from true to false to allow repeat animations
+            offset: 100
         });
     </script>
 

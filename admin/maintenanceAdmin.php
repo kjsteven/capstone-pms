@@ -1,6 +1,7 @@
 <?php
 require_once '../session/session_manager.php';
 require '../session/db.php';
+require '../session/audit_trail.php';
 
 start_secure_session();
 
@@ -70,6 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             $stmt->bind_param("si", $status, $request_id);
 
             if ($stmt->execute()) {
+                // Log the status update
+                $user_id = $_SESSION['user_id'];
+                $action_details = "Updated maintenance request #$request_id status to: $status";
+                logActivity($user_id, "Update Maintenance Status", $action_details);
+
                 echo json_encode([
                     'status' => 'success', 
                     'message' => "Status updated successfully!",

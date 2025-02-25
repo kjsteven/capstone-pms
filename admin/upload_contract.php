@@ -1,5 +1,14 @@
 <?php
 require '../session/db.php';
+require '../session/audit_trail.php';
+
+// Make sure user is logged in and get user_id
+start_secure_session();
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
 
 header('Content-Type: application/json');
 
@@ -40,6 +49,11 @@ try {
     if (!$stmt->execute()) {
         throw new Exception('Failed to update database');
     }
+
+    // Add audit log using user_id from session
+    $user_id = $_SESSION['user_id'];
+    $tenant_details = "Contract uploaded for tenant ID: $tenant_id - File: $filename";
+    logActivity($user_id, "Upload Contract", $tenant_details);
 
     echo json_encode(['success' => true]);
 

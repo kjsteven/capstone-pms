@@ -1,6 +1,6 @@
 <?php
-require_once '../session/session_manager.php';
-start_secure_session();
+session_start();
+require '../session/audit_trail.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -14,7 +14,6 @@ if (!isset($_GET['file']) || empty($_GET['file'])) {
     exit('No file specified');
 }
 
-// Clean the filename
 $filename = basename($_GET['file']);
 $filepath = "../reports/maintenance_reports/" . $filename;
 
@@ -32,6 +31,23 @@ if (strpos($realPath, $reportsDir) !== 0) {
     exit('Invalid file path');
 }
 
+// Simple download tracking using session
+if (!isset($_SESSION['downloaded_files']) || !in_array($filename, $_SESSION['downloaded_files'])) {
+    // Log the download action
+    $user_id = $_SESSION['user_id'];
+    $action_details = "Downloaded maintenance report: $filename";
+    logActivity($user_id, "Download Report", $action_details);
+    
+    // Track this file as downloaded
+    if (!isset($_SESSION['downloaded_files'])) {
+        $_SESSION['downloaded_files'] = array();
+    }
+    $_SESSION['downloaded_files'][] = $filename;
+}
+
+// Clear output buffer
+if (ob_get_level()) ob_end_clean();
+
 // Set headers for download
 header('Content-Type: application/pdf');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -43,3 +59,4 @@ header('Expires: 0');
 // Output file
 readfile($filepath);
 exit;
+?>

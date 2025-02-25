@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+start_secure_session();
 
 date_default_timezone_set('Asia/Manila'); 
 

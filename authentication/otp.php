@@ -142,20 +142,54 @@ if (isset($_POST["resendOTP"])) {
         body {
             font-family: 'Poppins', sans-serif;
         }
+        .otp-input {
+            width: 3.5rem;
+            height: 3.5rem;
+        }
+        .timer {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        /* Responsive styles */
+        @media (max-width: 640px) {
+            .otp-input {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1.25rem;
+            }
+            .otp-container {
+                gap: 0.5rem;
+            }
+            .timer {
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 380px) {
+            .otp-input {
+                width: 2rem;
+                height: 2rem;
+                font-size: 1rem;
+                padding: 0.5rem;
+            }
+            .otp-container {
+                gap: 0.25rem;
+            }
+        }
     </style>
 </head>
 
 <body class="min-h-screen bg-cover bg-center flex items-center justify-center py-6 px-4" style="background-image: url('../images/bg3.jpg');">
-
-    <div class="max-w-md w-full" style="background-color: #1f2937; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+    <div class="max-w-md w-full bg-gray-900 rounded-2xl p-6 sm:p-8">
         <header class="mb-8 text-center">
-            <h1 class="text-2xl font-bold mb-1 text-white">OTP Verification</h1>
+            <h1 class="text-2xl font-bold mb-2 text-white">OTP Verification</h1>
             <p class="text-[15px] text-slate-300">Enter the 6-digit verification code that was sent to your email.</p>
+            <!-- Add timer display -->
+            <p class="mt-4 text-slate-300">Time remaining: <span id="timer" class="timer text-blue-500">10:00</span></p>
         </header>
         <form id="otp-form" method="POST" action="">
-            <div class="flex items-center justify-center gap-3">
+            <div class="flex items-center justify-center gap-3 otp-container">
                 <?php for ($i = 0; $i < 6; $i++): ?>
-                    <input type="text" name="otp<?php echo $i; ?>" class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" maxlength="1" />
+                    <input type="text" name="otp<?php echo $i; ?>" class="otp-input w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" maxlength="1" />
                 <?php endfor; ?>
             </div>
             <input type="hidden" name="verify" value="true" />
@@ -197,6 +231,29 @@ if (isset($_POST["resendOTP"])) {
 
             inputs[0].focus();
         });
+
+        // Updated Timer functionality for 10 minutes
+        let timeLeft = 600; // 10 minutes in seconds (10 * 60)
+        const timerDisplay = document.getElementById('timer');
+        const resendBtn = document.getElementById('resendBtn');
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+                resendBtn.disabled = false;
+                timerDisplay.classList.remove('text-blue-600');
+                timerDisplay.classList.add('text-red-600');
+            } else {
+                timeLeft--;
+            }
+        }
+
+        const timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();
     </script>
 </body>
 </html>

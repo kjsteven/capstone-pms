@@ -1,6 +1,6 @@
 <?php
 require '../session/db.php';
-session_start();
+start_secure_session();
 
 header('Content-Type: application/json');
 

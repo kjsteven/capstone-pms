@@ -2,10 +2,7 @@
 require '../session/db.php';
 
 
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
+start_secure_session();
 // Assuming you have a session started and the user is logged in, get the user ID
 $user_id = $_SESSION['user_id']; // or fetch user ID from session if already set
 

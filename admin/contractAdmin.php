@@ -1,5 +1,6 @@
 <?php
 require '../session/db.php';
+start_secure_session();
 
 // Pagination settings
 $entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;

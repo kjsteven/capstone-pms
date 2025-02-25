@@ -2,7 +2,7 @@
 // Include database connection
 require '../session/db.php';
 
-session_start();
+start_secure_session();
 
 // Add at the top after session_start()
 require_once '../session/audit_trail.php';

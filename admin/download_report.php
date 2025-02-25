@@ -1,5 +1,5 @@
 <?php
-session_start();
+start_secure_session();
 require '../session/audit_trail.php';
 
 // Check if user is logged in

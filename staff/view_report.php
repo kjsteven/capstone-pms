@@ -1,7 +1,6 @@
 <?php
 require '../session/db.php';
-
-session_start();
+start_secure_session();
 
 try {
     if (!isset($_SESSION['staff_id'])) {

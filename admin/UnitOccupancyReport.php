@@ -1,5 +1,6 @@
 <?php
 require '../session/db.php';
+start_secure_session();
 
 class UnitOccupancyReport {
     private $conn;

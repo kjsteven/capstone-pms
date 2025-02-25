@@ -1,5 +1,5 @@
 <?php
-session_start();
+start_secure_session();
 ob_start();
 require '../session/db.php';
 require_once '../session/audit_trail.php';

@@ -1,7 +1,7 @@
 <?php
 
 require '../session/db.php';
-session_start();
+start_secure_session();
 
 // Query to fetch unit statuses
 $query = "SELECT status, COUNT(*) AS count FROM property GROUP BY status";

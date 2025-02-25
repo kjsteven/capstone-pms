@@ -9,7 +9,7 @@ while (ob_get_level()) ob_end_clean();
 ob_start();
 
 header('Content-Type: application/json');
-session_start();
+start_secure_session();
 
 require '../session/db.php';
 require '../vendor/autoload.php';

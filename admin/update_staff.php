@@ -2,6 +2,8 @@
 require_once '../session/db.php';
 require_once '../session/audit_trail.php';
 
+start_secure_session();
+
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

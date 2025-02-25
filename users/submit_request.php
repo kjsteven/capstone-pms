@@ -1,7 +1,10 @@
 <?php
 require_once '../session/session_manager.php';
 require '../session/db.php';
-start_secure_session();
+require_once '../session/audit_trail.php';  // Add this line
+
+session_start();
+
 
 try {
     // Check if user is logged in
@@ -26,6 +29,16 @@ try {
             echo "Error: Field '$field' is required.";
             exit();
         }
+    }
+
+    // Validate service date is in the future
+    $service_date = strtotime($_POST['service_date']);
+    $today = strtotime(date('Y-m-d'));
+    
+    if ($service_date <= $today) {
+        http_response_code(400);
+        echo "Error: Service date must be a future date.";
+        exit();
     }
 
     // Handle file upload (if applicable)
@@ -59,6 +72,14 @@ try {
 
     $stmt->bind_param("isssss", $_SESSION['user_id'], $_POST['unit'], $_POST['issue'], $_POST['description'], $_POST['service_date'], $image);
     if ($stmt->execute()) {
+        // Log the activity
+        $request_id = $conn->insert_id;
+        logActivity(
+            $_SESSION['user_id'],
+            'Submit Maintenance Request',
+            "Submitted maintenance request for unit {$_POST['unit']}, Issue: {$_POST['issue']}"
+        );
+
         http_response_code(200); // OK
         echo "Success: Maintenance request submitted successfully.";
     } else {

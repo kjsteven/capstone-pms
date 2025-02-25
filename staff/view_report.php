@@ -1,4 +1,5 @@
 <?php
+require_once '../session/session_manager.php';
 require '../session/db.php';
 start_secure_session();
 

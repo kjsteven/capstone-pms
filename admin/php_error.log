@@ -1,0 +1,2 @@
+[25-Feb-2025 12:12:44 Europe/Berlin] PHP Warning:  Undefined global variable $_SESSION in C:\xampp\htdocs\capstone-pms\admin\update_request.php on line 47
+[25-Feb-2025 12:12:44 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\capstone-pms\admin\update_request.php on line 47

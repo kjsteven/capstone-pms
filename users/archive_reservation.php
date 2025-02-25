@@ -1,9 +1,9 @@
 <?php
-// Prevent any output before our JSON response
 ob_start();
 
 require_once '../session/session_manager.php';
 require '../session/db.php';
+require_once '../session/audit_trail.php';  // Add this line
 
 start_secure_session();
 
@@ -28,8 +28,8 @@ if (isset($_POST['archive_reservation'])) {
         $reservation_id = $_POST['reservation_id'];
         $user_id = $_SESSION['user_id'];
         
-        // Log incoming request
-        error_log("Archiving reservation: " . $reservation_id . " for user: " . $user_id);
+        // Begin transaction
+        $conn->begin_transaction();
         
         $update_query = "UPDATE reservations SET archived = 1 WHERE reservation_id = ? AND user_id = ?";
         $update_stmt = $conn->prepare($update_query);
@@ -42,6 +42,16 @@ if (isset($_POST['archive_reservation'])) {
         $update_stmt->execute();
 
         if ($update_stmt->affected_rows > 0) {
+            // Log the archive action
+            logActivity(
+                $user_id,
+                'Archive Reservation',
+                "Archived reservation #$reservation_id"
+            );
+
+            // Commit transaction
+            $conn->commit();
+            
             $response = [
                 'success' => true,
                 'message' => 'Reservation archived successfully'
@@ -52,6 +62,9 @@ if (isset($_POST['archive_reservation'])) {
             throw new Exception("No changes were made. The reservation might not exist.");
         }
     } catch (Exception $e) {
+        // Rollback transaction on error
+        $conn->rollback();
+        
         $error_response = [
             'success' => false, 
             'error' => "Error archiving reservation: " . $e->getMessage()

@@ -1,6 +1,6 @@
 <?php
 require '../session/db.php';
-
+require_once '../session/session_manager.php';
 
 start_secure_session();
 // Assuming you have a session started and the user is logged in, get the user ID

@@ -4,6 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 require '../session/db.php';
+require_once '../session/session_manager.php';
 start_secure_session();
 
 // Check database connection

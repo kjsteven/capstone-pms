@@ -1,6 +1,9 @@
 <?php
-start_secure_session();
+
+require_once '../session/session_manager.php';
 require '../session/audit_trail.php';
+
+start_secure_session();
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {

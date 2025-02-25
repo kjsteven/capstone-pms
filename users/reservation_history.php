@@ -1,6 +1,7 @@
 <?php
 require_once '../session/session_manager.php';
 require '../session/db.php';
+require_once '../session/audit_trail.php';  // Add this line
 
 start_secure_session();
 
@@ -45,6 +46,13 @@ if (isset($_POST['cancel_reservation'])) {
         $update_stmt->execute();
 
         if ($update_stmt->affected_rows > 0) {
+            // Add audit log for cancellation
+            logActivity(
+                $_SESSION['user_id'],
+                'Cancel Reservation',
+                "Cancelled reservation #$reservation_id"
+            );
+
             $response = [
                 'success' => true,
                 'message' => 'Reservation cancelled successfully',
@@ -67,6 +75,51 @@ if (isset($_POST['cancel_reservation'])) {
     exit();
 }
 
+// Add new handler for archiving reservations
+if (isset($_POST['archive_reservation'])) {
+    header('Content-Type: application/json');
+    
+    if (!isset($_POST['reservation_id'])) {
+        echo json_encode(['success' => false, 'error' => 'reservation_id not provided']);
+        exit();
+    }
+    
+    $reservation_id = $_POST['reservation_id'];
+    
+    try {
+        $archive_query = "UPDATE reservations SET archived = 1 WHERE reservation_id = ? AND user_id = ?";
+        $archive_stmt = $conn->prepare($archive_query);
+        
+        if (!$archive_stmt) {
+            throw new Exception("Failed to prepare archive statement");
+        }
+        
+        $archive_stmt->bind_param("ii", $reservation_id, $user_id);
+        $archive_stmt->execute();
+        
+        if ($archive_stmt->affected_rows > 0) {
+            // Add audit log for archiving
+            logActivity(
+                $_SESSION['user_id'],
+                'Archive Reservation',
+                "Archived reservation #$reservation_id"
+            );
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Reservation archived successfully'
+            ]);
+        } else {
+            throw new Exception("Failed to archive reservation");
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit();
+}
 
 // fetching reservation history
 
@@ -234,7 +287,7 @@ $query = "SELECT r.reservation_id, r.viewing_date, r.viewing_time, r.created_at,
                                         </td>
                                         <td class="px-3 py-4 text-sm">
                                             <div class="flex items-center space-x-2">
-                                                <?php if (strtolower($reservation['status']) !== 'cancelled') { ?>
+                                                <?php if (strtolower($reservation['status']) !== 'cancelled' && strtolower($reservation['status']) !== 'completed') { ?>
                                                     <button class="cancel-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200" data-id="<?= htmlspecialchars($reservation['reservation_id']); ?>" data-unit="<?= htmlspecialchars($reservation['unit_no']); ?>" data-status="<?= htmlspecialchars($reservation['status']); ?>">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -388,94 +441,124 @@ $query = "SELECT r.reservation_id, r.viewing_date, r.viewing_time, r.created_at,
             const searchKeyword = document.getElementById('search-keyword').value.toLowerCase();
             const tbody = document.getElementById('reservation-table-body');
             const rows = tbody.getElementsByTagName('tr');
+            let visibleCount = 0;
 
             for (let row of rows) {
                 let showRow = true;
-                const statusCell = row.querySelector('.status-cell');
-                const status = statusCell.textContent.toLowerCase();
+                const cells = row.getElementsByTagName('td');
+                const statusCell = row.querySelector('td:nth-child(8)').textContent.toLowerCase();
                 
-                // Check status filter
-                if (statusFilter && status !== statusFilter) {
+                // Status filter
+                if (statusFilter && !statusCell.includes(statusFilter)) {
                     showRow = false;
                 }
-
-                // Check search keyword
-                if (searchKeyword) {
-                    let found = false;
-                    const cells = row.getElementsByTagName('td');
+                
+                // Keyword search across all columns
+                if (showRow && searchKeyword) {
+                    showRow = false;
                     for (let cell of cells) {
                         if (cell.textContent.toLowerCase().includes(searchKeyword)) {
-                            found = true;
+                            showRow = true;
                             break;
                         }
                     }
-                    if (!found) {
-                        showRow = false;
-                    }
                 }
-
+                
                 row.style.display = showRow ? '' : 'none';
+                if (showRow) visibleCount++;
+            }
+
+            // Show no results message if needed
+            const noResultsDiv = document.getElementById('no-results');
+            if (visibleCount === 0) {
+                if (!noResultsDiv) {
+                    const message = document.createElement('div');
+                    message.id = 'no-results';
+                    message.className = 'text-center py-4 text-gray-500';
+                    message.textContent = 'No reservations found matching your criteria.';
+                    tbody.parentNode.insertBefore(message, tbody.nextSibling);
+                }
+            } else if (noResultsDiv) {
+                noResultsDiv.remove();
             }
         }
+
+        // Debounce function to limit how often the filter runs
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners with debouncing
+            const debouncedFilter = debounce(filterReservations, 300);
+            
+            document.getElementById('status-filter').addEventListener('change', filterReservations);
+            document.getElementById('search-keyword').addEventListener('input', debouncedFilter);
+            
+            // Initialize filters
+            filterReservations();
+        });
 
         // archive reservation
 
         function archiveReservation(reservationId) {
-        const formData = new FormData();
-        formData.append('archive_reservation', '1');
-        formData.append('reservation_id', reservationId);
+            const formData = new FormData();
+            formData.append('archive_reservation', '1');
+            formData.append('reservation_id', reservationId);
 
-        fetch('archive_reservation.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            // First check if the response is ok
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            // Try to parse the JSON, if it fails, throw an error with the text
-            return response.text().then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (e) {
-                    console.error('Invalid JSON:', text);
-                    throw new Error('Invalid server response');
+            fetch('archive_reservation.php', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
-            });
-        })
-        .then(data => {
-            if (data.success) {
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Toastify({
+                        text: data.message || "Reservation archived successfully!",
+                        backgroundColor: "#4CAF50",
+                        className: "success-toast",
+                        position: "right",
+                        duration: 3000,
+                        close: true
+                    }).showToast();
+
+                    // Remove the row from the table
+                    const row = document.querySelector(`tr[data-reservation-id="${reservationId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to archive reservation');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 Toastify({
-                    text: data.message || "Reservation archived successfully!",
-                    backgroundColor: "#4CAF50",
-                    className: "success-toast",
+                    text: error.message || "Error archiving the reservation!",
+                    backgroundColor: "#FF5252",
+                    className: "error-toast",
                     position: "right",
-                    duration: 3000,
+                    duration: 4000,
                     close: true
                 }).showToast();
-
-                // Remove the row from the table
-                const row = document.querySelector(`tr[data-reservation-id="${reservationId}"]`);
-                if (row) {
-                    row.remove();
-                }
-            } else {
-                throw new Error(data.error || 'Failed to archive reservation');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Toastify({
-                text: error.message || "Error archiving the reservation!",
-                backgroundColor: "#FF5252",
-                className: "error-toast",
-                position: "right",
-                duration: 4000,
-                close: true
-            }).showToast();
-        });
-    }
+            });
+        }
 
         // Add event listeners
         document.addEventListener('DOMContentLoaded', function() {

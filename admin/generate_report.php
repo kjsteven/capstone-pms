@@ -4,7 +4,7 @@ start_secure_session();
 
 date_default_timezone_set('Asia/Manila'); 
 
-
+require_once '../session/session_manager.php';
 require '../session/db.php';
 require 'UnitOccupancyReport.php';
 

@@ -1,6 +1,7 @@
-    <?php
+<?php
     require_once '../session/session_manager.php';
     require '../session/db.php';
+    require '../session/audit_trail.php';  // Add this line
 
     start_secure_session();
 
@@ -72,6 +73,10 @@
                 $stmt->bind_param("si", $uploadPath, $user_id);
 
                 if ($stmt->execute()) {
+                    // Add audit log for profile image update
+                    $action_details = "Updated profile image: " . $fileName;
+                    logActivity($_SESSION['user_id'], "Profile Image Update", $action_details);
+                    
                     // Redirect to the same page to prevent form resubmission
                     header('Location: ' . $_SERVER['PHP_SELF']);
                     exit(); // Make sure to exit after the redirect

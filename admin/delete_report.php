@@ -1,5 +1,7 @@
 <?php
 require '../session/db.php';
+require_once '../session/session_manager.php';
+
 start_secure_session();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_id'])) {

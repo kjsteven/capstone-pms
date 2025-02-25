@@ -1,5 +1,6 @@
 <?php
 require '../session/db.php';
+require_once '../session/session_manager.php';
 require '../session/audit_trail.php';
 
 // Make sure user is logged in and get user_id

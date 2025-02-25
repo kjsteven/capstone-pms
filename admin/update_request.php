@@ -5,6 +5,7 @@ ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/php_error.log');
 
 require '../session/db.php';
+require_once '../session/session_manager.php';
 require '../session/audit_trail.php';
 start_secure_session();
 

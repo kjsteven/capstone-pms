@@ -1,9 +1,11 @@
 <?php
 require '../session/db.php';
+require_once '../session/session_manager.php';
 require '../session/audit_trail.php';
 
 // Make sure user is logged in and get user_id
 start_secure_session();
+
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);

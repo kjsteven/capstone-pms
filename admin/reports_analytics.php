@@ -1,6 +1,7 @@
 <?php
 
 require '../session/db.php';
+require_once '../session/session_manager.php';
 start_secure_session();
 
 // Query to fetch unit statuses

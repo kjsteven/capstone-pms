@@ -1,6 +1,7 @@
 <?php
 start_secure_session();
 ob_start();
+require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';
 

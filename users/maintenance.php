@@ -1,28 +1,81 @@
-    <?php
-
+<?php
     require_once '../session/session_manager.php';
     require '../session/db.php';
+    require_once '../session/audit_trail.php';  // Add this line
 
-    start_secure_session();
+   session_start();
 
-    $user_id = $_SESSION['user_id']; 
+    // Check if this is an AJAX request
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+              strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-    // Check if the user is logged in
+    // Handle AJAX requests first, before any HTML output
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        
+        if (!isset($_SESSION['user_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
+            exit;
+        }
+
+        $user_id = $_SESSION['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'archive') {
+            $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+            
+            // Verify the request exists and is completed
+            $check_query = "SELECT status FROM maintenance_requests 
+                           WHERE id = ? AND user_id = ? AND status = 'Completed'";
+            $stmt = mysqli_prepare($conn, $check_query);
+            mysqli_stmt_bind_param($stmt, 'ii', $id, $user_id);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+        
+            if (mysqli_num_rows($result) > 0) {
+                $update_query = "UPDATE maintenance_requests SET archived = 1 
+                                WHERE id = ? AND user_id = ?";
+                $stmt = mysqli_prepare($conn, $update_query);
+                mysqli_stmt_bind_param($stmt, 'ii', $id, $user_id);
+                
+                if (mysqli_stmt_execute($stmt)) {
+                    // Add audit log
+                    logActivity(
+                        $user_id,
+                        'Archive Maintenance Request',
+                        "Archived maintenance request #$id"
+                    );
+
+                    echo json_encode(['success' => true, 'message' => 'Request archived successfully']);
+                    exit;
+                }
+            }
+            
+            echo json_encode(['success' => false, 'message' => 'Unable to archive request']);
+            exit;
+        }
+
+        echo json_encode(['success' => false, 'message' => 'Invalid request']);
+        exit;
+    }
+
+    // Regular page load handling
     if (!isset($_SESSION['user_id'])) {
-        // If not logged in, redirect to login page
-        header('Location: ../authentication/login.php'); // Adjust the path as necessary
+        header('Location: ../authentication/login.php');
         exit();
     }
 
+    $user_id = $_SESSION['user_id'];
 
-
-    $query = " SELECT unit, issue, description, service_date, status, image
-    FROM maintenance_requests WHERE user_id = $user_id";
-
-    $result = mysqli_query($conn, $query);
-
-
-    ?>
+    // Query to get maintenance requests
+    $query = "SELECT id, unit, issue, description, service_date, status, image 
+              FROM maintenance_requests 
+              WHERE user_id = ? AND archived = 0";
+              
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+?>
 
     <!DOCTYPE html>
     <html lang="en">
@@ -234,17 +287,18 @@
                                     No Image
                                 <?php endif; ?>
                             </td>
-                            <td class="py-2 px-4 text-center border-b flex items-center justify-center gap-4">
-                              
-                                   <!-- Edit Button -->
-                                <button class="bg-blue-500 hover:bg-blue-700 text-white text-sm font-medium py-1 px-2 rounded-md cancel-btn flex items-center gap-2">
-                                    <i data-feather="edit-2" class="w-4 h-4" ></i> Edit
-                                </button>
-
-                                <!-- Archive Button -->
-                                <button class="bg-red-500 hover:bg-red-700 text-white text-sm font-medium py-1 px-2 rounded-md archive-btn flex items-center gap-2">
-                                    <i data-feather="archive" class="w-4 h-4" ></i> Archive
-                                </button>
+                            <td class="py-2 px-4 text-center border-b">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <?php if ($row['status'] === 'Completed'): ?>
+                                        <button onclick="archiveRequest(<?php echo $row['id']; ?>)" 
+                                                class="group relative inline-flex items-center px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                            </svg>
+                                            Archive
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -283,9 +337,6 @@
                 tabHistory.classList.add('border-blue-600');
                 tabRequest.classList.remove('border-blue-600');
             });
-
-
-
        
     // Add event listener for form submission
     document.querySelector("form").addEventListener("submit", function(event) {
@@ -306,9 +357,6 @@
         }
     });
 
-
-
-
     // File upload animation
     const fileUploadInput = document.getElementById('file_upload');
     const fileUploadLabel = document.querySelector('.file-upload-label');
@@ -328,8 +376,6 @@
         }
     });
 
-
-   
     function handleSubmit(event) {
     event.preventDefault(); // Prevent default form submission
 
@@ -378,88 +424,119 @@
     });
 }
 
-</script>
+function archiveRequest(id) {
+    if (!confirm('Are you sure you want to archive this request?')) {
+        return;
+    }
 
-<script>
-    
+    fetch('maintenance.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `action=archive&id=${id}`
+    })
+    .then(response => {
+        console.log("Raw Response:", response); // Log the raw response
+        return response.text(); // First, get the response as text
+    })
+    .then(text => {
+        console.log("Response Text:", text); // Log the response text
+        return JSON.parse(text); // Try to parse it as JSON
+    })
+    .then(data => {
+        if (data.success) {
+            Toastify({
+                text: data.message,
+                backgroundColor: "green",
+                gravity: "top",
+                position: "right",
+                duration: 3000,
+            }).showToast();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            throw new Error(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error); // Log the error
+        Toastify({
+            text: error.message || "An error occurred while archiving the request",
+            backgroundColor: "red",
+            gravity: "top",
+            position: "right",
+            duration: 3000,
+        }).showToast();
+    });
+}
+
     document.addEventListener('DOMContentLoaded', function() {
-    fetch('maintenance.php')  // Replace with the actual PHP script that outputs the requests as JSON
-        .then(response => response.json())
-        .then(data => {
-            const tableBody = document.getElementById('request-history-body');
-            data.forEach(request => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 border-b border-gray-200">${request.unit}</td>
-                    <td class="px-6 py-4 border-b border-gray-200">${request.issue}</td>
-                    <td class="px-6 py-4 border-b border-gray-200">${request.description}</td>
-                    <td class="px-6 py-4 border-b border-gray-200">${request.service_date}</td>
-                    <td class="px-6 py-4 border-b border-gray-200">
-                        <button class="flex items-center justify-center px-4 py-2 rounded text-white text-xs ${request.status === 'In Progress' ? 'bg-yellow-500' : request.status === 'Completed' ? 'bg-green-500' : 'bg-red-500'}">
-                            <i data-feather="${request.status === 'In Progress' ? 'clock' : request.status === 'Completed' ? 'check-circle' : 'times-circle'}" class="w-4 h-4"></i>
-                            ${request.status}
-                        </button>
-                    </td>
-                    <td class="px-6 py-4 border-b border-gray-200">
-                        ${request.image ? `<a href="${request.image}" target="_blank" class="text-blue-600">View Image</a>` : 'No Image'}
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        })
-        .catch(error => console.error('Error fetching data:', error));
-});
-
-
-
-// for status filter and search query
-document.addEventListener('DOMContentLoaded', function () {
-    // Get references to the filter elements and the table rows
+    // Status filter and search functionality
     const statusFilter = document.getElementById('status-filter');
     const searchKeyword = document.getElementById('search-keyword');
     const tableRows = document.querySelectorAll('#request-table-body tr');
 
-    // Function to filter rows based on status and search keyword
     function filterTable() {
-        const searchTerm = searchKeyword.value.toLowerCase(); // Get the search term
-        const selectedStatus = statusFilter.value.toLowerCase(); // Get the selected status
+        const searchTerm = searchKeyword.value.toLowerCase();
+        const selectedStatus = statusFilter.value.toLowerCase();
 
-        // Loop through all table rows and check if they match the filter criteria
         tableRows.forEach(row => {
             const unit = row.cells[0].textContent.toLowerCase();
             const issue = row.cells[1].textContent.toLowerCase();
             const description = row.cells[2].textContent.toLowerCase();
-            const serviceDate = row.cells[3].textContent.toLowerCase();
             const status = row.cells[4].textContent.toLowerCase();
 
-            // Check if row matches the search term and selected status
-            const matchesSearch = unit.includes(searchTerm) || issue.includes(searchTerm) || description.includes(searchTerm);
+            const matchesSearch = unit.includes(searchTerm) || 
+                               issue.includes(searchTerm) || 
+                               description.includes(searchTerm);
             const matchesStatus = selectedStatus ? status.includes(selectedStatus) : true;
 
-            // Show or hide row based on the matches
-            if (matchesSearch && matchesStatus) {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
+            row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
         });
     }
 
-    // Event listener for status filter change
-    statusFilter.addEventListener('change', function () {
-        filterTable(); // Call the filter function when status is changed
-    });
-
-    // Event listener for keyword search input
-    searchKeyword.addEventListener('input', function () {
-        filterTable(); // Call the filter function when the search term is typed
-    });
-
-    // Initial call to populate the table with default filters
+    statusFilter?.addEventListener('change', filterTable);
+    statusFilter?.addEventListener('change', filterTable);
+    searchKeyword?.addEventListener('input', filterTable);
     filterTable();
+}); 
+
+// Add this after your existing JavaScript code
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date for service date input
+    const serviceDateInput = document.getElementById('service-date');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Format date as YYYY-MM-DD
+    const formattedDate = tomorrow.toISOString().split('T')[0];
+    serviceDateInput.min = formattedDate;
+
+    // Add validation to form submission
+    document.getElementById('maintenance-form').addEventListener('submit', function(event) {
+        const selectedDate = new Date(serviceDateInput.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (selectedDate <= today) {
+            event.preventDefault();
+            Toastify({
+                text: "Service date must be a future date",
+                backgroundColor: "red",
+                gravity: "top",
+                position: "right",
+                duration: 3000,
+            }).showToast();
+        }
+    });
 });
 
 </script>
 
 </body>
+
 </html>

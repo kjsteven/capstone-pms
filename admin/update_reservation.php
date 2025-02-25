@@ -14,6 +14,7 @@ start_secure_session();
 require '../session/db.php';
 require '../vendor/autoload.php';
 require '../config/config.php';
+require_once '../session/session_manager.php';
 require_once '../session/audit_trail.php';
 
 use PHPMailer\PHPMailer\PHPMailer;

@@ -7,6 +7,7 @@ header('Content-Type: application/json');
 
 require_once '../session/session_manager.php';
 require '../session/db.php';
+require_once '../session/audit_trail.php';
 
 start_secure_session();
 
@@ -92,6 +93,27 @@ try {
     if (!$stmt->execute()) {
         throw new Exception("Failed to update reservation status");
     }
+
+    // Get unit details for audit log
+    $unitQuery = $conn->prepare("SELECT unit_no FROM property WHERE unit_id = ?");
+    $unitQuery->bind_param("i", $unit_rented);
+    $unitQuery->execute();
+    $unitResult = $unitQuery->get_result();
+    $unitData = $unitResult->fetch_assoc();
+
+    // Get user details for audit log
+    $userQuery = $conn->prepare("SELECT name FROM users WHERE user_id = ?");
+    $userQuery->bind_param("i", $user_id);
+    $userQuery->execute();
+    $userResult = $userQuery->get_result();
+    $userData = $userResult->fetch_assoc();
+
+    // Log the activity
+    logActivity(
+        $_SESSION['user_id'],
+        "Added New Unit to Tenant",
+        "Added unit {$unitData['unit_no']} for tenant {$userData['name']}"
+    );
 
     $conn->commit();
     ob_clean();

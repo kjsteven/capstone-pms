@@ -165,21 +165,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     try {
         if ($_GET['action'] === 'archive' && isset($_GET['id'])) {
             $tenant_id = (int)$_GET['id'];
-            $stmt = $conn->prepare("SELECT unit_rented FROM tenants WHERE tenant_id = ?");
+            
+            // Get tenant and unit details before archiving
+            $stmt = $conn->prepare("
+                SELECT t.*, u.name as tenant_name, p.unit_no 
+                FROM tenants t 
+                JOIN users u ON t.user_id = u.user_id 
+                JOIN property p ON t.unit_rented = p.unit_id 
+                WHERE t.tenant_id = ?
+            ");
             $stmt->bind_param("i", $tenant_id);
             $stmt->execute();
             $result = $stmt->get_result();
             $tenant = $result->fetch_assoc();
 
+            // Archive the tenant
             $archiveStmt = $conn->prepare("UPDATE tenants SET status = 'archived' WHERE tenant_id = ?");
             $archiveStmt->bind_param("i", $tenant_id);
             $archiveStmt->execute();
 
+            // Update unit status
             $updateUnitStatus = $conn->prepare("UPDATE property SET status = 'Available' WHERE unit_id = ?");
             $updateUnitStatus->bind_param("i", $tenant['unit_rented']);
             $updateUnitStatus->execute();
 
-            echo htmlspecialchars('Tenant successfully archived.', ENT_QUOTES, 'UTF-8');
+            // Log the activity
+            logActivity(
+                $_SESSION['user_id'],
+                'Archived Tenant',
+                "Archived tenant {$tenant['tenant_name']} from unit {$tenant['unit_no']}"
+            );
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Tenant successfully archived.'
+            ]);
         } elseif ($_GET['action'] === 'edit' && isset($_GET['id'])) {
             $tenant_id = (int)$_GET['id'];
             $stmt = $conn->prepare("SELECT * FROM tenants WHERE tenant_id = ?");
@@ -192,7 +212,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         }
     } catch (Exception $e) {
         http_response_code(500);
-        echo htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
     exit();
 }
@@ -570,33 +593,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         
     <script>
         // Show the modal for creating a new tenant
-        document.getElementById('newTenant').addEventListener('click', function() {
-            document.getElementById('tenantModal').classList.remove('hidden');
-            document.getElementById('modalTitle').textContent = 'New Tenant';
-            document.getElementById('tenantForm').reset();
-            document.getElementById('unit_rented').innerHTML = '<option value="" disabled selected>Select a user first</option>';
-        });
-
-        // Handle unit selection change
-        document.getElementById('unit_rented').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const rent = selectedOption.getAttribute('data-rent');
-            document.getElementById('monthly_rate').value = rent || '';
-        });
-
-        // Close the modal
-        function closeModal() {
-            document.getElementById('tenantModal').classList.add('hidden');
-        }
-
-
-      
-        
-       // Handle form submission for adding/editing tenants
     document.getElementById('tenantForm').addEventListener('submit', function(event) {
         event.preventDefault();
 
         const formData = new FormData(this);
+        const userId = document.getElementById('user_id').value;
+        const unitNo = document.getElementById('unit_rented').options[document.getElementById('unit_rented').selectedIndex].text;
 
         fetch('', {
             method: 'POST',
@@ -624,6 +626,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                     background: "#4CAF50"
                 }
             }).showToast();
+
+            // Log the activity separately
+            fetch('../session/log_activity.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'Added New Tenant',
+                    details: `Added new tenant for ${unitNo}`,
+                })
+            });
 
             // Reload the page after a delay
             setTimeout(() => {

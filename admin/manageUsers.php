@@ -3,6 +3,7 @@ require_once '../session/session_manager.php';
 require '../session/db.php';
 require '../vendor/autoload.php'; 
 require '../config/config.php';
+require_once '../session/audit_trail.php';
 
 start_secure_session();
 
@@ -49,39 +50,44 @@ $result_staff = $stmt_staff->get_result();
 
 // Check if a role change is requested
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['role'])) {
-    $user_id = $_POST['user_id'];
+    $user_id = (int)$_POST['user_id'];
     $role = $_POST['role'];
 
-    // Update the role in the database using a prepared statement
-    $query = "UPDATE users SET role = ? WHERE user_id = ?";
-    $stmt = mysqli_prepare($conn, $query);
-
-    if ($stmt === false) {
-        die('Error preparing the query: ' . mysqli_error($conn));
+    // Validate role
+    $allowed_roles = ['Admin', 'User'];
+    if (!in_array($role, $allowed_roles)) {
+        die('Invalid role specified');
     }
 
-    // Bind the parameters to the prepared statement
-    mysqli_stmt_bind_param($stmt, 'si', $role, $user_id);
+    // Get the old role before update
+    $old_role_query = "SELECT role FROM users WHERE user_id = ?";
+    $stmt = $conn->prepare($old_role_query);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $old_role = $result->fetch_assoc()['role'];
 
-    // Execute the prepared statement
-    if (mysqli_stmt_execute($stmt)) {
-        // Optionally, display a success message
-        $message = "Role updated successfully.";
-        // Re-fetch the updated user list after the role change
-        $query = "SELECT user_id, name, email, phone, role FROM users";
-        $result = mysqli_query($conn, $query);
-        if (!$result) {
-            die('Error: ' . mysqli_error($conn));
-        }
+    // Update the role
+    $update_query = "UPDATE users SET role = ? WHERE user_id = ?";
+    $stmt = $conn->prepare($update_query);
+    $stmt->bind_param("si", $role, $user_id);
+
+    if ($stmt->execute()) {
+        // Log the role change
+        $details = "Changed user (ID: $user_id) role from $old_role to $role";
+        logActivity($_SESSION['user_id'], "Update User Role", $details);
         
-        // Include the script to trigger the notification on the page
-        echo "<script>showNotification();</script>";
+        $message = "Role updated successfully.";
+        
+        // Refresh the users list
+        $query = "SELECT user_id, name, email, phone, role, status FROM users LIMIT ? OFFSET ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param('ii', $entriesPerPage, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
     } else {
-        $message = "Error updating role: " . mysqli_stmt_error($stmt);
+        $message = "Error updating role: " . $stmt->error;
     }
-
-    // Close the statement
-    mysqli_stmt_close($stmt);
 }
 
 ?>
@@ -160,12 +166,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                     <tr>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">User ID</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Name</th>
-                        <!-- Hidden columns -->
-                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Phone Number</th>
-                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Role</th>
-                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider sensitive-info hidden">Email</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider sensitive-info hidden">Phone Number</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider sensitive-info hidden">Role</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider sensitive-info hidden">Action</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white">
@@ -182,26 +187,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id'], $_POST['rol
                     <tr class="user-row hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['user_id']); ?></td>
                         <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200"><?php echo htmlspecialchars($row['name']); ?></td>
-                        <!-- Hidden columns -->
-                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 email-column"><?php echo htmlspecialchars($row['email']); ?></td>
-                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 phone-column"><?php echo htmlspecialchars($row['phone']); ?></td>
-                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 role-column"><?php echo htmlspecialchars($row['role']); ?></td>
-                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200 role-column">
-                            <!-- Role update form remains unchanged -->
-                            <form action="manageUsers.php" method="POST" class="flex items-center mt-3">
-                                <select name="role" class="border px-2 py-1 rounded mr-2">
-                                    <option value="Admin" <?php if ($row['role'] == 'Admin') echo 'selected'; ?>>Admin</option>
-                                    <option value="User" <?php if ($row['role'] == 'User') echo 'selected'; ?>>User</option>
-                                </select>
-                                <button type="submit" class="px-2 py-1 bg-blue-600 text-white rounded">Update</button>
-                            </form>
-                        </td>
-                        <!-- Updated Status Display -->
-                        <td class="hidden additional-info px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 sensitive-info hidden"><?php echo htmlspecialchars($row['email']); ?></td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 sensitive-info hidden"><?php echo htmlspecialchars($row['phone']); ?></td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 sensitive-info hidden"><?php echo htmlspecialchars($row['role']); ?></td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
                             <span class="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium <?php echo $statusBg . ' ' . $statusText; ?>">
                                 <span class="flex-shrink-0 w-2 h-2 mr-1.5 rounded-full <?php echo $statusDot; ?>"></span>
                                 <?php echo ucfirst($status); ?>
                             </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200 sensitive-info hidden">
+                            <form action="" method="POST" class="flex items-center space-x-2">
+                                <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($row['user_id']); ?>">
+                                <select name="role" class="border px-2 py-1 rounded">
+                                    <option value="Admin" <?php echo ($row['role'] == 'Admin') ? 'selected' : ''; ?>>Admin</option>
+                                    <option value="User" <?php echo ($row['role'] == 'User') ? 'selected' : ''; ?>>User</option>
+                                </select>
+                                <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    Update
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     <?php endwhile; ?>
@@ -414,7 +419,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const staffSearchButton = document.getElementById('search-button-staff');
     const staffTable = document.getElementById('staff-table');
 
-    // Function to toggle additional info columns
+    // Function to toggle sensitive info columns for users table
+    function toggleSensitiveColumns(show = false) {
+        const sensitiveColumns = document.querySelectorAll('.sensitive-info');
+        sensitiveColumns.forEach(column => {
+            if (show) {
+                column.classList.remove('hidden');
+            } else {
+                column.classList.add('hidden');
+            }
+        });
+    }
+
+    // Function to toggle additional info columns for staff table
     function toggleAdditionalColumns(table, show = false) {
         const additionalColumns = table.querySelectorAll('.additional-info');
         additionalColumns.forEach(column => {
@@ -422,55 +439,71 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to perform search
-    function performSearch(searchInput, table, rowClass) {
+    // Function to perform search for users table
+    function performUsersSearch(searchInput) {
         const searchTerm = searchInput.value.toLowerCase().trim();
-        const rows = table.querySelectorAll(`.${rowClass}`);
+        const rows = usersTable.querySelectorAll('.user-row');
 
         rows.forEach(row => {
-            // Find the name cell (second column)
+            const nameCell = row.children[1]; // Name is in second column
+            const name = nameCell.textContent.toLowerCase();
+
+            if (searchTerm === '') {
+                row.style.display = '';
+                toggleSensitiveColumns(false);
+            } else {
+                if (name.includes(searchTerm)) {
+                    row.style.display = '';
+                    toggleSensitiveColumns(true);
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Function to perform search for staff table
+    function performStaffSearch(searchInput) {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const rows = staffTable.querySelectorAll('.staff-row');
+
+        rows.forEach(row => {
             const nameCell = row.children[1];
             const name = nameCell.textContent.toLowerCase();
 
-            // If search term is empty, reset to initial state
             if (searchTerm === '') {
                 row.style.display = '';
-                toggleAdditionalColumns(table, false);
-                return;
-            }
-
-            // Show/hide rows based on search
-            if (name.includes(searchTerm)) {
-                row.style.display = '';
-                toggleAdditionalColumns(table, true);
+                toggleAdditionalColumns(staffTable, false);
             } else {
-                row.style.display = 'none';
+                if (name.includes(searchTerm)) {
+                    row.style.display = '';
+                    toggleAdditionalColumns(staffTable, true);
+                } else {
+                    row.style.display = 'none';
+                }
             }
         });
     }
 
     // Event listeners for users table search
     userSearchInput.addEventListener('input', function() {
-        performSearch(userSearchInput, usersTable, 'user-row');
+        performUsersSearch(userSearchInput);
     });
 
     userSearchButton.addEventListener('click', function() {
-        performSearch(userSearchInput, usersTable, 'user-row');
+        performUsersSearch(userSearchInput);
     });
 
     // Event listeners for staff table search
     staffSearchInput.addEventListener('input', function() {
-        performSearch(staffSearchInput, staffTable, 'staff-row');
+        performStaffSearch(staffSearchInput);
     });
 
     staffSearchButton.addEventListener('click', function() {
-        performSearch(staffSearchInput, staffTable, 'staff-row');
+        performStaffSearch(staffSearchInput);
     });
 });
-
 </script>
-
-
 
 <script>
     // Print Function
@@ -628,6 +661,9 @@ document.getElementById('editStaffForm').addEventListener('submit', function(e) 
     submitButton.innerHTML = 'Saving...';
     submitButton.disabled = true;
 
+    // Add the current user's ID to the form data
+    formData.append('current_user_id', <?php echo $_SESSION['user_id']; ?>);
+
     fetch('update_staff.php', {
         method: 'POST',
         body: formData
@@ -690,7 +726,10 @@ function confirmSuspend(staffId) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ staff_id: staffId })
+            body: JSON.stringify({ 
+                staff_id: staffId,
+                current_user_id: <?php echo $_SESSION['user_id']; ?>
+            })
         })
         .then(response => {
             if (!response.ok) {
@@ -762,6 +801,20 @@ function getStatusStyle(status) {
             };
     }
 }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    <?php if (isset($message)): ?>
+        Toastify({
+            text: "<?php echo addslashes($message); ?>",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "<?php echo strpos($message, 'successfully') !== false ? '#4CAF50' : '#F44336'; ?>",
+        }).showToast();
+    <?php endif; ?>
+});
 </script>
 
 </body>

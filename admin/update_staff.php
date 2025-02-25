@@ -3,7 +3,8 @@ require_once '../session/db.php';
 require_once '../session/session_manager.php';
 require_once '../session/audit_trail.php';
 
-start_secure_session();
+
+session_start();
 
 header('Content-Type: application/json');
 

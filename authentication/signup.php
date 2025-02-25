@@ -92,12 +92,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 // Execute the insert query
                 if ($stmt->execute()) {
-                    // Send verification email
+                    // Send verification email only
                     if (sendVerificationEmail($email, $verificationToken, $name)) {
-                        // Set success message in session
-                        $_SESSION['success'] = "Check your email for verification link.";
-                        // Redirect to the signup page to prevent form resubmission
-                        header("Location: " . $_SERVER['PHP_SELF']);
+                        $_SESSION['success'] = "Registration successful! Please check your email to verify your account.";
+                        header("Location: login.php");
                         exit();
                     } else {
                         $error = "Error sending verification email.";

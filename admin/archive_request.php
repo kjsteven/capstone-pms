@@ -3,7 +3,8 @@ ob_start();
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require '../session/audit_trail.php';
-start_secure_session();
+
+session_start();
 // Clear any previous output
 while (ob_get_level()) ob_end_clean();
 

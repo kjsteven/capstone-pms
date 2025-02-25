@@ -1,5 +1,6 @@
 <?php
-start_secure_session();
+
+session_start();
 ob_start();
 require_once '../session/session_manager.php';
 require '../session/db.php';

@@ -5,7 +5,8 @@ ini_set('display_errors', 1);
 
 require '../session/db.php';
 require_once '../session/session_manager.php';
-start_secure_session();
+
+session_start();
 
 // Check database connection
 if (!$conn) {

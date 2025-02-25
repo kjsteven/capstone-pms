@@ -2,7 +2,8 @@
 require '../session/db.php';
 require_once '../session/session_manager.php';
 
-start_secure_session();
+
+session_start();
 // Enable error reporting for debugging
 ini_set('display_errors', 1);
 error_reporting(E_ALL);

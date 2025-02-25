@@ -3,8 +3,8 @@ require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';
 
-// Start session before any output
-start_secure_session();
+
+session_start();
 
 // Clear any previous output
 ob_end_clean();

@@ -890,6 +890,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 }
             });
         });
+
+        // Show modal for new tenant
+        document.getElementById('newTenant').addEventListener('click', function() {
+            document.getElementById('tenantModal').classList.remove('hidden');
+            document.getElementById('modalTitle').textContent = 'New Tenant';
+            document.getElementById('tenantForm').reset();
+            document.getElementById('tenant_id').value = '';
+            document.getElementById('unit_rented').innerHTML = '<option value="" disabled selected>Select a user first</option>';
+        });
+
+        // Close modal function
+        function closeModal() {
+            document.getElementById('tenantModal').classList.add('hidden');
+        }
+
+        // Add event listener for unit selection to update monthly rate
+        document.getElementById('unit_rented').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const monthlyRate = selectedOption.getAttribute('data-rent');
+            document.getElementById('monthly_rate').value = monthlyRate;
+        });
     </script>
 
 

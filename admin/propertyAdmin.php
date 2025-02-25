@@ -3,8 +3,8 @@
 require '../session/db.php';
 require_once '../session/session_manager.php';
 
-start_secure_session();
 
+session_start();
 // Add at the top after session_start()
 require_once '../session/audit_trail.php';
 
@@ -335,48 +335,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     function archiveUnit(unitId) {
-    // Show confirmation dialog
-    if (confirm('Are you sure you want to archive this unit?')) {
-        // Prepare form data
+        if (!confirm('Are you sure you want to archive this unit?')) {
+            return;
+        }
+
         const formData = new FormData();
         formData.append('archive', 'true');
         formData.append('unit_id', unitId);
 
-        // Send AJAX request
         fetch(window.location.href, {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            // Display Toastify notification
-            if (data.status === 'success') {
-                Toastify({
-                    text: data.message,
-                    backgroundColor: "green",
-                    duration: 3000
-                }).showToast();
-
-                 // Reload the page after a successful archive operation
-                 setTimeout(() => {
-                    window.location.reload();
-                }, 1000); // 1000 ms = 1 second
-
-                // Remove the row from the table
-                const row = document.querySelector(`tr[data-unit-id="${unitId}"]`);
-                if (row) {
-                    row.remove();
-                }
-            } else {
-                Toastify({
-                    text: data.message,
-                    backgroundColor: "red",
-                    duration: 3000
-                }).showToast();
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
+            return response.json();
+        })
+        .then(data => {
+            // Show success notification
+            Toastify({
+                text: data.message || "Unit archived successfully",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: data.status === 'success' ? "#4CAF50" : "#f44336",
+                stopOnFocus: true
+            }).showToast();
+
+            if (data.status === 'success') {
+                // Reload the page after a brief delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
+        })
+        .catch(error => {
+            // Show error notification
+            Toastify({
+                text: "Error archiving unit: " + error.message,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#f44336",
+                stopOnFocus: true
+            }).showToast();
         });
     }
-}
 
 </script>
 

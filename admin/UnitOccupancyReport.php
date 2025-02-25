@@ -1,7 +1,8 @@
 <?php
 require '../session/db.php';
 require_once '../session/session_manager.php';
-start_secure_session();
+
+session_start();
 
 class UnitOccupancyReport {
     private $conn;

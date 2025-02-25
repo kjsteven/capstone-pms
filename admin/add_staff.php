@@ -17,7 +17,7 @@ header('Content-Type: application/json');
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-start_secure_session();
+session_start();
 
 function logError($message) {
     error_log(date('[Y-m-d H:i:s] ') . $message . "\n", 3, '../logs/error.log');

@@ -1,12 +1,14 @@
 <?php
 
-start_secure_session();
 
 date_default_timezone_set('Asia/Manila'); 
 
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require 'UnitOccupancyReport.php';
+
+
+session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'generate_report') {
     $reportType = $_POST['report_type'];
@@ -73,3 +75,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ]);
     }
 }
+?>

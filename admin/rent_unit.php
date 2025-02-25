@@ -9,7 +9,8 @@ require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';
 
-start_secure_session();
+
+session_start();
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);

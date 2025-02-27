@@ -1,7 +1,8 @@
 <?php
 require_once '../session/session_manager.php';
 require '../session/db.php';
-start_secure_session();
+
+session_start();
 
 try {
     if (!isset($_SESSION['staff_id'])) {

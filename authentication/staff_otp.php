@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 require '../session/db.php';
 require '../vendor/autoload.php';
@@ -108,6 +109,16 @@ if (isset($_POST["resendOTP"])) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Poppins', sans-serif; }
+        .timer {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        /* Responsive styles */
+        @media (max-width: 640px) {
+            .timer {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-cover bg-center flex items-center justify-center py-6 px-4" style="background-image: url('../images/bg3.jpg');">
@@ -115,6 +126,8 @@ if (isset($_POST["resendOTP"])) {
         <header class="mb-8 text-center">
             <h1 class="text-2xl font-bold mb-1 text-white">Staff OTP Verification</h1>
             <p class="text-[15px] text-slate-300">Enter the 6-digit verification code sent to your email.</p>
+            <!-- Add timer display -->
+            <p class="mt-4 text-slate-300">Time remaining: <span id="timer" class="timer text-blue-500">10:00</span></p>
         </header>
         <form id="otp-form" method="POST" action="">
             <div class="flex items-center justify-center gap-3">
@@ -130,7 +143,7 @@ if (isset($_POST["resendOTP"])) {
         <div class="text-sm text-slate-300 mt-4 text-center">
             Didn't receive code? 
             <form method="POST" style="display: inline;">
-                <button type="submit" name="resendOTP" class="font-medium text-indigo-500 hover:text-indigo-600">Resend</button>
+                <button type="submit" name="resendOTP" id="resendBtn" class="font-medium text-indigo-500 hover:text-indigo-600">Resend</button>
             </form>
         </div>
     </div>
@@ -165,6 +178,29 @@ if (isset($_POST["resendOTP"])) {
 
             inputs[0].focus();
         });
+
+        // Timer functionality for 10 minutes
+        let timeLeft = 600; // 10 minutes in seconds (10 * 60)
+        const timerDisplay = document.getElementById('timer');
+        const resendBtn = document.getElementById('resendBtn');
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+                timerDisplay.classList.remove('text-blue-500');
+                timerDisplay.classList.add('text-red-600');
+                timerDisplay.textContent = "00:00";
+            } else {
+                timeLeft--;
+            }
+        }
+
+        const timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();
     </script>
 </body>
 </html>

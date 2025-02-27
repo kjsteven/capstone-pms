@@ -1,10 +1,10 @@
 <?php
 
-
 require '../session/db.php';
 require_once '../session/session_manager.php';
+require_once '../session/audit_trail.php'; // Include audit trail functionality
 
-start_secure_session();
+session_start();
 
 
 // Check if the staff member is logged in
@@ -50,6 +50,8 @@ function changePassword($staff_id, $current_password, $new_password) {
     $stmt->bind_param("si", $hashed_password, $staff_id);
     
     if ($stmt->execute()) {
+        // Log the password change in the audit trail
+        logActivity($staff_id, 'Password Change', 'Staff member changed their password');
         return ['success' => true, 'message' => 'Password updated successfully'];
     }
     return ['success' => false, 'message' => 'Failed to update password'];

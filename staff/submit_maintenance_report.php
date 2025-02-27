@@ -255,6 +255,17 @@ try {
         throw new Exception('Database update failed: ' . $stmt->error);
     }
 
+    // Add audit logging
+    require_once '../session/audit_trail.php';
+    
+    // Log the maintenance report submission
+    $auditDetails = "Maintenance Report submitted for Request #$requestId. Status: $status";
+    logActivity($staffId, "Submit Maintenance Report", $auditDetails);
+    
+    // Log PDF generation
+    $pdfAuditDetails = "Generated maintenance report PDF: $pdfFileName";
+    logActivity($staffId, "Generate PDF", $pdfAuditDetails);
+
     // Clear any existing output
     ob_clean();
 

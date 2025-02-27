@@ -148,7 +148,12 @@ $recent_reports = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm">
-                <h3 class="text-lg font-semibold mb-4">Recent Reports</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Recent Reports</h3>
+                    <a href="exportReports.php" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md text-sm flex items-center">
+                        <i class="fas fa-file-excel mr-2"></i> Export to Excel
+                    </a>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
                         <thead>

@@ -1,4 +1,4 @@
-    <?php
+<?php
 
     require_once '../session/session_manager.php';
     require '../session/db.php';
@@ -266,10 +266,12 @@
                         <div class="mb-4">
                             <label for="viewingDate" class="block text-gray-700 font-medium">Preferred Viewing Date</label>
                             <input type="date" id="viewingDate" name="viewing_date" class="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none" required>
+                            <p id="dateError" class="text-red-500 text-sm mt-1 hidden">Please select a future date.</p>
                         </div>
                         <div class="mb-4">
-                            <label for="viewingTime" class="block text-gray-700 font-medium">Preferred Viewing Time</label>
+                            <label for="viewingTime" class="block text-gray-700 font-medium">Preferred Viewing Time (9:00 AM - 5:00 PM)</label>
                             <input type="time" id="viewingTime" name="viewing_time" class="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none" required>
+                            <p id="timeError" class="text-red-500 text-sm mt-1 hidden">Please select a time between 9:00 AM and 5:00 PM.</p>
                         </div>
                     </fieldset>
 
@@ -462,9 +464,64 @@
     // Search input event
     document.getElementById('search-dropdown').addEventListener('input', filterProperties);
 
+    // Set min date attribute for viewing date to today
+    function setMinDate() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const formattedDate = `${yyyy}-${mm}-${dd}`;
+        
+        document.getElementById('viewingDate').setAttribute('min', formattedDate);
+    }
+
+    // Validate viewing date
+    function validateViewingDate() {
+        const viewingDateInput = document.getElementById('viewingDate');
+        const dateError = document.getElementById('dateError');
+        
+        const selectedDate = new Date(viewingDateInput.value + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate <= today) {
+            dateError.classList.remove('hidden');
+            return false;
+        } else {
+            dateError.classList.add('hidden');
+            return true;
+        }
+    }
+
+    // Validate viewing time (9 AM to 5 PM)
+    function validateViewingTime() {
+        const viewingTimeInput = document.getElementById('viewingTime');
+        const timeError = document.getElementById('timeError');
+        
+        const selectedTime = viewingTimeInput.value;
+        const [hours, minutes] = selectedTime.split(':').map(Number);
+        
+        // Check if time is between 9 AM (09:00) and 5 PM (17:00)
+        if (hours < 9 || hours >= 17) {
+            timeError.classList.remove('hidden');
+            return false;
+        } else {
+            timeError.classList.add('hidden');
+            return true;
+        }
+    }
+
     // Form submission using Fetch API
     document.querySelector('#reservationForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        // Validate date and time before submission
+        const isDateValid = validateViewingDate();
+        const isTimeValid = validateViewingTime();
+        
+        if (!isDateValid || !isTimeValid) {
+            return; // Stop form submission if validation fails
+        }
 
         // Show loading indicator
         showLoading();
@@ -517,6 +574,10 @@
         });
     });
 
+    // Add event listeners for real-time validation
+    document.getElementById('viewingDate').addEventListener('change', validateViewingDate);
+    document.getElementById('viewingTime').addEventListener('change', validateViewingTime);
+
     // Initialize page
     window.onload = function() {
         showLoading();
@@ -524,6 +585,7 @@
             hideLoading();
             filterProperties(); // Initial filtering to set up the page
             preFillPersonalInfo();
+            setMinDate(); // Set minimum date for the date picker
         }, 1000);
     };
 </script>

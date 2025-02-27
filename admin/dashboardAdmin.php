@@ -33,17 +33,26 @@ if (!check_admin_role()) {
 }
 
 // Pagination settings
-$items_per_page = 10;
+$items_per_page = 20; // Changed from 10 to 20 (or any other number you prefer)
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $items_per_page;
 
-// Get total number of activities
+// Get total number of activities - Adding error handling and debugging info
 $total_query = "SELECT COUNT(*) as total FROM activity_logs";
 $total_result = mysqli_query($conn, $total_query);
-$total_rows = mysqli_fetch_assoc($total_result)['total'];
+if (!$total_result) {
+    // Log the error for debugging
+    error_log("Error in count query: " . mysqli_error($conn));
+    $total_rows = 0;
+} else {
+    $total_rows = mysqli_fetch_assoc($total_result)['total'];
+}
 $total_pages = ceil($total_rows / $items_per_page);
 
-// Modified query to handle both users and staff
+// Add debugging output (you can remove this later)
+echo "<!-- Total rows found: $total_rows, Pages: $total_pages -->";
+
+// Modified query to handle both users and staff - with error handling
 $activities_query = "SELECT a.*, 
                     COALESCE(u.name, s.name) as name,
                     a.user_role as role
@@ -52,7 +61,14 @@ $activities_query = "SELECT a.*,
                     LEFT JOIN staff s ON a.staff_id = s.staff_id 
                     ORDER BY a.timestamp DESC 
                     LIMIT $offset, $items_per_page";
-$activities = mysqli_query($conn, $activities_query)->fetch_all(MYSQLI_ASSOC);
+$activities_result = mysqli_query($conn, $activities_query);
+if (!$activities_result) {
+    // Log the error for debugging
+    error_log("Error in activities query: " . mysqli_error($conn));
+    $activities = [];
+} else {
+    $activities = $activities_result->fetch_all(MYSQLI_ASSOC);
+}
 
 ?>
 

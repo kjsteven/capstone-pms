@@ -51,29 +51,75 @@ try {
     $outstanding_balance = $total_rent - $downpayment_amount;
     $payable_months = ceil($outstanding_balance / $monthly_rate);
 
+    // Handle receipt file upload
+    $downpayment_receipt = null;
+    if (isset($_FILES['downpayment_receipt']) && $_FILES['downpayment_receipt']['error'] == 0) {
+        $upload_dir = '../uploads/receipts/';
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        
+        $file_extension = pathinfo($_FILES['downpayment_receipt']['name'], PATHINFO_EXTENSION);
+        $new_filename = 'receipt_' . time() . '_' . rand(1000, 9999) . '.' . $file_extension;
+        $upload_path = $upload_dir . $new_filename;
+        
+        if (!move_uploaded_file($_FILES['downpayment_receipt']['tmp_name'], $upload_path)) {
+            throw new Exception("Failed to upload receipt file");
+        }
+        $downpayment_receipt = $upload_path;
+    }
+
     $conn->begin_transaction();
 
-    // Insert rental record
-    $stmt = $conn->prepare(
-        "INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, 
-        outstanding_balance, downpayment_amount, payable_months, created_at, updated_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
-    );
+    // Adjust the SQL query to include downpayment_receipt
+    $sql = "INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, 
+            outstanding_balance, downpayment_amount, payable_months, created_at, updated_at";
     
-    $stmt->bind_param(
-        "isssdddi",
-        $user_id,
-        $unit_rented,
-        $rent_from,
-        $rent_until,
-        $monthly_rate,
-        $outstanding_balance,
-        $downpayment_amount,
-        $payable_months
-    );
+    if ($downpayment_receipt) {
+        $sql .= ", downpayment_receipt";
+    }
+    
+    $sql .= ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()";
+    
+    if ($downpayment_receipt) {
+        $sql .= ", ?";
+    }
+    
+    $sql .= ")";
+    
+    $stmt = $conn->prepare($sql);
+    
+    if ($downpayment_receipt) {
+        $stmt->bind_param(
+            "isssddids",
+            $user_id,
+            $unit_rented,
+            $rent_from,
+            $rent_until,
+            $monthly_rate,
+            $outstanding_balance,
+            $downpayment_amount,
+            $payable_months,
+            $downpayment_receipt
+        );
+    } else {
+        $stmt->bind_param(
+            "isssddi",
+            $user_id,
+            $unit_rented,
+            $rent_from,
+            $rent_until,
+            $monthly_rate,
+            $outstanding_balance,
+            $downpayment_amount,
+            $payable_months
+        );
+    }
     
     if (!$stmt->execute()) {
-        throw new Exception("Failed to insert rental record");
+        throw new Exception("Failed to insert rental record: " . $stmt->error);
     }
 
     // Update unit status
@@ -113,7 +159,8 @@ try {
     logActivity(
         $_SESSION['user_id'],
         "Added New Unit to Tenant",
-        "Added unit {$unitData['unit_no']} for tenant {$userData['name']}"
+        "Added unit {$unitData['unit_no']} for tenant {$userData['name']}" . 
+        ($downpayment_receipt ? " with receipt" : " without receipt")
     );
 
     $conn->commit();

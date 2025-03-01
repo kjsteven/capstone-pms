@@ -121,23 +121,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $total_rent = $months * $monthly_rate;
         $outstanding_balance = $total_rent - $downpayment_amount;
         $payable_months = ceil($outstanding_balance / $monthly_rate);
+        
+        // Handle receipt file upload
+        $downpayment_receipt = null;
+        if (isset($_FILES['downpayment_receipt']) && $_FILES['downpayment_receipt']['error'] == 0) {
+            $upload_dir = '../uploads/receipts/';
+            
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+            
+            $file_extension = pathinfo($_FILES['downpayment_receipt']['name'], PATHINFO_EXTENSION);
+            $new_filename = 'receipt_' . time() . '_' . rand(1000, 9999) . '.' . $file_extension;
+            $upload_path = $upload_dir . $new_filename;
+            
+            if (move_uploaded_file($_FILES['downpayment_receipt']['tmp_name'], $upload_path)) {
+                $downpayment_receipt = $upload_path;
+            }
+        }
 
         if (isset($_POST['tenant_id']) && !empty($_POST['tenant_id'])) {
             $tenant_id = (int)$_POST['tenant_id'];
-
-            $stmt = $conn->prepare(
-                "UPDATE tenants 
-                 SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, outstanding_balance = ?, downpayment_amount = ?, payable_months = ?, updated_at = CURRENT_TIMESTAMP 
-                 WHERE tenant_id = ?"
-            );
-            $stmt->bind_param("isssssidi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $payable_months, $tenant_id);
+            
+            // Add downpayment_receipt to the query only if a file was uploaded
+            if ($downpayment_receipt) {
+                $stmt = $conn->prepare(
+                    "UPDATE tenants 
+                     SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, 
+                     outstanding_balance = ?, downpayment_amount = ?, payable_months = ?, 
+                     downpayment_receipt = ?, updated_at = CURRENT_TIMESTAMP 
+                     WHERE tenant_id = ?"
+                );
+                $stmt->bind_param("isssssdisi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, 
+                              $outstanding_balance, $downpayment_amount, $payable_months, $downpayment_receipt, $tenant_id);
+            } else {
+                $stmt = $conn->prepare(
+                    "UPDATE tenants 
+                     SET user_id = ?, unit_rented = ?, rent_from = ?, rent_until = ?, monthly_rate = ?, 
+                     outstanding_balance = ?, downpayment_amount = ?, payable_months = ?, updated_at = CURRENT_TIMESTAMP 
+                     WHERE tenant_id = ?"
+                );
+                $stmt->bind_param("isssssdi", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, 
+                              $outstanding_balance, $downpayment_amount, $payable_months, $tenant_id);
+            }
             $stmt->execute();
         } else {
+            // Include downpayment_receipt in the INSERT query
             $stmt = $conn->prepare(
-                "INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, outstanding_balance, downpayment_amount, payable_months, created_at, updated_at) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
+                "INSERT INTO tenants (user_id, unit_rented, rent_from, rent_until, monthly_rate, 
+                outstanding_balance, downpayment_amount, payable_months, downpayment_receipt, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
             );
-            $stmt->bind_param("isssssid", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, $outstanding_balance, $downpayment_amount, $payable_months);
+            $stmt->bind_param("isssssdis", $user_id, $unit_rented, $rent_from, $rent_until, $monthly_rate, 
+                          $outstanding_balance, $downpayment_amount, $payable_months, $downpayment_receipt);
             $stmt->execute();
         }
 
@@ -302,6 +339,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 <th class="px-4 py-2 text-left border border-gray-300 extra-column">Rent Until</th>
                 <th class="px-4 py-2 text-left border border-gray-300 extra-column">Monthly Rate</th>
                 <th class="px-4 py-2 text-left border border-gray-300 extra-column">Downpayment Amount</th>
+                <th class="px-4 py-2 text-left border border-gray-300 extra-column">Downpayment Receipt</th>
                 <th class="px-4 py-2 text-left border border-gray-300 extra-column">Outstanding Balance</th>
                 <th class="px-4 py-2 text-left border border-gray-300 extra-column">Payable Months</th>
                 <th class="px-4 py-2 text-left border border-gray-300 extra-column">Registration Date</th>
@@ -318,6 +356,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['rent_until'] ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= isset($tenant['monthly_rate']) ? '₱' . number_format($tenant['monthly_rate'], 2) : '₱0.00' ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= isset($tenant['downpayment_amount']) ? '₱' . number_format($tenant['downpayment_amount'], 2) : '₱0.00' ?></td>
+                <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column">
+                    <?php if (!empty($tenant['downpayment_receipt'])): ?>
+                        <button type="button" class="text-blue-500 hover:text-blue-700 underline" 
+                                onclick="viewReceipt('<?= htmlspecialchars($tenant['downpayment_receipt'], ENT_QUOTES, 'UTF-8') ?>')">
+                            View Receipt
+                        </button>
+                    <?php else: ?>
+                        No Receipt
+                    <?php endif; ?>
+                </td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= isset($tenant['outstanding_balance']) ? '₱' . number_format($tenant['outstanding_balance'], 2) : '₱0.00' ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['payable_months'] ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['created_at'] ?></td>
@@ -354,7 +402,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 <div id="tenantModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
         <h2 id="modalTitle" class="text-xl font-semibold mb-4">New Tenant</h2>
-        <form id="tenantForm" method="POST">
+        <form id="tenantForm" method="POST" enctype="multipart/form-data">
             <input type="hidden" id="tenant_id" name="tenant_id">
             
             <div class="mb-4">
@@ -397,6 +445,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                        class="w-full px-4 py-2 border border-gray-300 rounded-md"
                        step="0.01" min="0">
             </div>
+            
+            <div class="mb-4">
+                <label for="downpayment_receipt" class="block text-sm font-semibold">Downpayment Receipt</label>
+                <input type="file" id="downpayment_receipt" name="downpayment_receipt" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md"
+                       accept="image/*">
+                <p class="text-xs text-gray-500 mt-1">Upload image of receipt (JPG, PNG)</p>
+            </div>
 
             <div class="flex justify-end">
                 <button type="button" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md mr-2" onclick="closeModal()">Cancel</button>
@@ -404,14 +460,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             </div>
         </form>
     </div>
-    </div>
+</div>
 
 
    <!-- Modal for Adding Unit to Existing Tenant -->
 <div id="existingTenantModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
         <h2 id="existingModalTitle" class="text-xl font-semibold mb-4">Add Unit for Existing Tenant</h2>
-        <form id="existingTenantForm">
+        <form id="existingTenantForm" enctype="multipart/form-data">
             <input type="hidden" id="existing_tenant_id" name="tenant_id">
             
             <div class="mb-4">
@@ -459,6 +515,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 <input type="number" id="existing_downpayment_amount" name="downpayment_amount" required 
                     class="w-full px-4 py-2 border border-gray-300 rounded-md"
                     step="0.01" min="0">
+            </div>
+
+            <div class="mb-4">
+                <label for="existing_downpayment_receipt" class="block text-sm font-semibold">Downpayment Receipt</label>
+                <input type="file" id="existing_downpayment_receipt" name="downpayment_receipt" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md"
+                       accept="image/*">
+                <p class="text-xs text-gray-500 mt-1">Upload image of receipt (JPG, PNG)</p>
             </div>
 
             <div class="flex justify-end">
@@ -913,6 +977,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         });
     </script>
 
+<!-- Add a receipt viewer modal -->
+<div id="receiptModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-5 rounded-lg shadow-lg w-full max-w-xl max-h-screen overflow-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">Downpayment Receipt</h3>
+            <button onclick="closeReceiptModal()" class="text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="flex justify-center">
+            <img id="receiptImage" src="" alt="Downpayment Receipt" class="max-w-full max-h-[70vh] object-contain">
+        </div>
+        <div class="mt-4 text-center">
+            <a id="downloadReceiptLink" href="#" download class="px-4 py-2 bg-blue-600 text-white rounded-lg">Download Receipt</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to view receipt
+    function viewReceipt(receiptPath) {
+        const modal = document.getElementById('receiptModal');
+        const receiptImage = document.getElementById('receiptImage');
+        const downloadLink = document.getElementById('downloadReceiptLink');
+        
+        // Set the image source
+        receiptImage.src = receiptPath;
+        
+        // Set the download link
+        downloadLink.href = receiptPath;
+        
+        // Get just the filename for the download attribute
+        const filename = receiptPath.substring(receiptPath.lastIndexOf('/') + 1);
+        downloadLink.setAttribute('download', filename);
+        
+        // Show the modal
+        modal.classList.remove('hidden');
+        
+        // Add event listener for image load error
+        receiptImage.onerror = function() {
+            receiptImage.src = '../images/image-not-found.png'; // Replace with a default image path
+            showToast('Receipt image could not be loaded', 'error');
+        };
+    }
+    
+    // Function to close the receipt modal
+    function closeReceiptModal() {
+        document.getElementById('receiptModal').classList.add('hidden');
+    }
+    
+    // Close the receipt modal if the user clicks outside of it
+    document.getElementById('receiptModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeReceiptModal();
+        }
+    });
+</script>
 
 </body>
 

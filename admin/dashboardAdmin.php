@@ -32,6 +32,37 @@ if (!check_admin_role()) {
     exit();
 }
 
+// Get property statistics - total properties
+$propertyCountQuery = "SELECT COUNT(*) as total FROM property WHERE position = 'active'";
+$propertyResult = $conn->query($propertyCountQuery);
+$totalProperties = $propertyResult->fetch_assoc()['total'];
+
+// Get property status counts for the chart
+$propertyStatusQuery = "SELECT status, COUNT(*) as count FROM property WHERE position = 'active' GROUP BY status";
+$statusResult = $conn->query($propertyStatusQuery);
+$statusCounts = [
+    'Available' => 0,
+    'Occupied' => 0,
+    'Maintenance' => 0,
+    'Reserved' => 0
+];
+
+while ($row = $statusResult->fetch_assoc()) {
+    $statusCounts[$row['status']] = (int)$row['count'];
+}
+
+// Calculate occupancy percentages for the chart
+$totalActiveProperties = array_sum($statusCounts);
+$occupancyData = [];
+$occupancyLabels = [];
+
+if ($totalActiveProperties > 0) {
+    foreach ($statusCounts as $status => $count) {
+        $occupancyLabels[] = $status;
+        $occupancyData[] = $count;
+    }
+}
+
 // Pagination settings
 $items_per_page = 20; // Changed from 10 to 20 (or any other number you prefer)
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -83,6 +114,21 @@ if (isset($_SESSION['user_id'])) {
     }
     $stmt->close();
 }
+
+// Get tenant count - Fixed to count from tenants table instead of users
+$tenantCountQuery = "SELECT COUNT(*) as total FROM tenants WHERE status = 'active'";
+$tenantResult = $conn->query($tenantCountQuery);
+$totalTenants = $tenantResult->fetch_assoc()['total'];
+
+// Get pending maintenance count
+$maintenanceQuery = "SELECT COUNT(*) as total FROM maintenance_requests WHERE status = 'pending'";
+$maintenanceResult = $conn->query($maintenanceQuery);
+$pendingMaintenance = $maintenanceResult ? $maintenanceResult->fetch_assoc()['total'] : 0;
+
+// Get pending reservations count
+$reservationQuery = "SELECT COUNT(*) as total FROM reservations WHERE status = 'pending'";
+$reservationResult = $conn->query($reservationQuery);
+$pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['total'] : 0;
 
 ?>
 
@@ -161,7 +207,7 @@ if (isset($_SESSION['user_id'])) {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Total Properties</p>
-                        <h3 class="text-2xl font-bold text-gray-700">24</h3>
+                        <h3 class="text-2xl font-bold text-gray-700"><?php echo $totalProperties; ?></h3>
                     </div>
                     <div class="p-3 bg-blue-100 rounded-full">
                         <svg data-feather="home" class="text-blue-600 w-6 h-6"></svg>
@@ -174,7 +220,7 @@ if (isset($_SESSION['user_id'])) {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Active Tenants</p>
-                        <h3 class="text-2xl font-bold text-gray-700">156</h3>
+                        <h3 class="text-2xl font-bold text-gray-700"><?php echo $totalTenants; ?></h3>
                     </div>
                     <div class="p-3 bg-green-100 rounded-full">
                         <svg data-feather="users" class="text-green-600 w-6 h-6"></svg>
@@ -187,7 +233,7 @@ if (isset($_SESSION['user_id'])) {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Pending Maintenance</p>
-                        <h3 class="text-2xl font-bold text-gray-700">8</h3>
+                        <h3 class="text-2xl font-bold text-gray-700"><?php echo $pendingMaintenance; ?></h3>
                     </div>
                     <div class="p-3 bg-yellow-100 rounded-full">
                         <svg data-feather="tool" class="text-yellow-600 w-6 h-6"></svg>
@@ -200,7 +246,7 @@ if (isset($_SESSION['user_id'])) {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Pending Reservation</p>
-                        <h3 class="text-2xl font-bold text-gray-700">20</h3>
+                        <h3 class="text-2xl font-bold text-gray-700"><?php echo $pendingReservations; ?></h3>
                     </div>
                     <div class="p-3 bg-indigo-200 rounded-full">
                         <svg data-feather="calendar" class="text-indigo-600 w-6 h-6"></svg>
@@ -379,18 +425,19 @@ if (isset($_SESSION['user_id'])) {
         }
     });
 
-    // Occupancy Chart
+    // Occupancy Chart with actual data
     const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
     new Chart(occupancyCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Occupied', 'Vacant', 'Under Maintenance'],
+            labels: <?php echo json_encode($occupancyLabels); ?>,
             datasets: [{
-                data: [75, 15, 10],
+                data: <?php echo json_encode($occupancyData); ?>,
                 backgroundColor: [
-                    'rgb(34, 197, 94)',
-                    'rgb(239, 68, 68)',
-                    'rgb(234, 179, 8)'
+                    'rgb(34, 197, 94)',   // Available - Green
+                    'rgb(99, 102, 241)',  // Occupied - Indigo
+                    'rgb(234, 179, 8)',   // Maintenance - Yellow
+                    'rgb(79, 70, 229)'    // Reserved - Purple
                 ]
             }]
         },

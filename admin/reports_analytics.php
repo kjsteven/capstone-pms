@@ -556,13 +556,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Received availability data:', data);
                     
                     const options = {
-                        // ... your existing propertyAvailabilityOptions ...
                         chart: { 
                             type: 'bar',
                             height: '100%',
-                            width: '100%'
+                            width: '100%',
+                            stacked: true,
+                            toolbar: {
+                                show: true
+                            }
                         },
-                        series: data.series,
+                        series: [
+                            {
+                                name: 'Occupied',
+                                data: data.series[0].data.map(item => item.occupied || 0),
+                                color: '#e74c3c'
+                            },
+                            {
+                                name: 'Available',
+                                data: data.series[0].data.map(item => item.available || 0),
+                                color: '#228b22'
+                            },
+                            {
+                                name: 'Under Maintenance',
+                                data: data.series[0].data.map(item => item.maintenance || 0),
+                                color: '#3498db'
+                            }
+                        ],
                         xaxis: {
                             categories: data.categories,
                             labels: {
@@ -580,11 +599,37 @@ document.addEventListener('DOMContentLoaded', function() {
                         dataLabels: {
                             enabled: true,
                             formatter: function (val) {
-                                return val.toString();
+                                return val > 0 ? val.toString() : '';  // Only show labels for non-zero values
                             },
-                            offsetY: -20
+                            style: {
+                                fontSize: '12px',
+                                colors: ['#fff']
+                            }
                         },
-                        colors: ['#2196f3']
+                        title: {
+                            text: 'Unit Status by Floor',
+                            align: 'center',
+                            style: {
+                                fontSize: '14px'
+                            }
+                        },
+                        yaxis: {
+                            title: {
+                                text: 'Number of Units'
+                            },
+                            min: 0
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: function(val) {
+                                    return val + " units";
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            horizontalAlign: 'center'
+                        }
                     };
 
                     if (propertyAvailabilityChart) {
@@ -607,45 +652,70 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<!-- Initialize Charts -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the tab buttons and content sections
-        const tabs = document.querySelectorAll('[id^="tab-"]');
-        const contentSections = document.querySelectorAll('.tab-content');
-        
-        // Add event listeners to the tabs
-        tabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                // Remove active classes from all tabs
-                tabs.forEach(tab => tab.classList.remove('border-blue-600', 'text-blue-600'));
-                // Add active class to the clicked tab
-                tab.classList.add('border-blue-600', 'text-blue-600');
-                
-                // Hide all content sections
-                contentSections.forEach(content => content.classList.add('hidden'));
-                
-                // Show the content corresponding to the clicked tab
-                const contentId = tab.id.replace('tab-', 'content-');
-                const contentToShow = document.getElementById(contentId);
-                contentToShow.classList.remove('hidden');
-            });
-        });
-
-        // Optionally, show the first tab's content by default
-        tabs[0].classList.add('border-blue-600', 'text-blue-600');
-        contentSections[0].classList.remove('hidden');
-        
+    // Tab switching logic
+    const tabs = document.querySelectorAll('[id^="tab-"]');
+    const contentSections = document.querySelectorAll('.tab-content');
     
-        // ApexCharts Data for Tenant Occupancy Report
-        var occupied = <?php echo $occupied; ?>;
-        var available = <?php echo $available; ?>;
-        var underMaintenance = <?php echo $underMaintenance; ?>;
-
-        // Calculate the total number of units
-        var totalUnits = occupied + available + underMaintenance;
-
-        var tenantOccupancyOptions = {
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active classes from all tabs
+            tabs.forEach(t => t.classList.remove('border-blue-600', 'text-blue-600'));
+            // Add active class to clicked tab
+            this.classList.add('border-blue-600', 'text-blue-600');
+            
+            // Hide all content sections
+            contentSections.forEach(content => content.classList.add('hidden'));
+            // Show content corresponding to clicked tab
+            const contentId = this.id.replace('tab-', 'content-');
+            document.getElementById(contentId).classList.remove('hidden');
+            
+            // Refresh charts when switching to analytics tab
+            if (this.id === 'tab-analytics') {
+                refreshAllCharts();
+            }
+        });
+    });
+    
+    // Set first tab active by default
+    tabs[0].classList.add('border-blue-600', 'text-blue-600');
+    contentSections[0].classList.remove('hidden');
+    
+    // Get the data from PHP
+    const occupied = <?php echo $occupied; ?>;
+    const available = <?php echo $available; ?>;
+    const underMaintenance = <?php echo $underMaintenance; ?>;
+    const years = <?php echo $years_json; ?> || [];
+    
+    // Chart variables in global scope
+    let tenantOccupancyChart;
+    let propertyAvailabilityChart;
+    let propertyMaintenanceChart;
+    let monthlyPaymentsChart;
+    let rentalBalanceChart;
+    
+    // Initialize all charts
+    initializeAllCharts();
+    
+    // Function to refresh all charts
+    function refreshAllCharts() {
+        if (propertyAvailabilityChart) {
+            initPropertyAvailabilityChart();
+        }
+        
+        if (years && years.length > 0) {
+            const yearFilter = document.getElementById('maintenance-year-filter');
+            fetchMaintenanceData(yearFilter.value)
+                .then(data => initMaintenanceChart(data, yearFilter.value))
+                .catch(error => console.error('Error refreshing maintenance chart:', error));
+        }
+    }
+    
+    // Initialize all charts function
+    function initializeAllCharts() {
+        // 1. Tenant Occupancy Chart
+        const tenantOccupancyOptions = {
             chart: { 
                 type: 'pie', 
                 height: '100%', 
@@ -653,299 +723,58 @@ document.addEventListener('DOMContentLoaded', function() {
                 toolbar: {
                     show: true,
                     tools: {
-                        download: true,  // Show the download button in the toolbar
+                        download: true
                     },
                     export: {
-                        csv: {
-                            filename: 'tenant_occupancy_report' // Customize the CSV file name
-                        },
-                        png: {
-                            filename: 'tenant_occupancy_report' // Customize the PNG file name
-                        },
-                        jpeg: {
-                            filename: 'tenant_occupancy_report' // Customize the JPG file name
-                        },
+                        csv: { filename: 'tenant_occupancy_report' },
+                        png: { filename: 'tenant_occupancy_report' },
+                        jpeg: { filename: 'tenant_occupancy_report' }
                     }
                 }
             },
             series: [occupied, available, underMaintenance],
-            labels: ['Occupied', 'Available', 'Under Maintenance', 'Total Units: ' + totalUnits], // Add total units to the labels
-            colors: ['#e74c3c', '#228b22', '#3498db', '#ffffff'], // Optionally add color for the total units label
+            labels: ['Occupied', 'Available', 'Under Maintenance'],
+            colors: ['#e74c3c', '#228b22', '#3498db'],
             legend: {
-                position: 'right', // Moves the legend to the right
-                horizontalAlign: 'center', // Centers the legend horizontally
-                verticalAlign: 'middle', // Centers the legend vertically
+                position: 'right',
+                horizontalAlign: 'center',
+                verticalAlign: 'middle',
                 floating: false,
-                offsetY: 0, // Aligns the legend vertically in the middle
+                offsetY: 0
             },
             plotOptions: {
                 pie: {
-                    customScale: 0.9, // Scales the pie chart to fit within the container
-                },
+                    customScale: 0.9
+                }
             },
             responsive: [{
-                breakpoint: 1024, // For smaller screens (e.g., tablets)
+                breakpoint: 1024,
                 options: {
-                    chart: { width: '100%' }, 
-                    legend: { position: 'bottom' }, // Moves the legend to the bottom
+                    chart: { width: '100%' },
+                    legend: { position: 'bottom' }
                 }
             }]
         };
-
-        // Render the Pie Chart
-        var tenantOccupancyChart = new ApexCharts(document.querySelector("#tenant-occupancy-chart"), tenantOccupancyOptions);
-        tenantOccupancyChart.render();
-
-
-
-        // ApexCharts Data for Property Availability
-        function initPropertyAvailabilityChart() {
-            fetch('get_availability_data.php')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Availability data:', data); // Debug log
-                    const propertyAvailabilityOptions = {
-                        chart: { 
-                            type: 'bar', 
-                            height: '100%',
-                            width: '100%',
-                            toolbar: {
-                                show: true
-                            }
-                        },
-                        series: data.series,
-                        xaxis: {
-                            categories: data.categories,
-                            labels: {
-                                rotate: -45,
-                                style: {
-                                    fontSize: '12px'
-                                }
-                            }
-                        },
-                        plotOptions: {
-                            bar: {
-                                horizontal: false,
-                                columnWidth: '55%',
-                                endingShape: 'rounded',
-                                dataLabels: {
-                                    position: 'top'
-                                }
-                            }
-                        },
-                        dataLabels: {
-                            enabled: true,
-                            formatter: function (val) {
-                                return val.toString();
-                            },
-                            offsetY: -20,
-                            style: {
-                                fontSize: '12px',
-                                colors: ['#304758']
-                            }
-                        },
-                        colors: ['#2196f3'],
-                        title: {
-                            text: 'Available Units by Floor',
-                            align: 'center',
-                            style: {
-                                fontSize: '14px'
-                            }
-                        },
-                        yaxis: {
-                            title: {
-                                text: 'Number of Available Units'
-                            },
-                            min: 0
-                        }
-                    };
-
-                    if (window.propertyAvailabilityChart) {
-                        window.propertyAvailabilityChart.updateOptions(propertyAvailabilityOptions);
-                    } else {
-                        window.propertyAvailabilityChart = new ApexCharts(
-                            document.querySelector("#property-availability-chart"), 
-                            propertyAvailabilityOptions
-                        );
-                        window.propertyAvailabilityChart.render();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading availability data:', error);
-                });
-        }
-
-        // Add this to your existing DOMContentLoaded event listener:
-        document.addEventListener('DOMContentLoaded', function() {
-            // ...existing code...
-            
-            // Initialize property availability chart
-            initPropertyAvailabilityChart();
-            
-            // Refresh chart when analytics tab is clicked
-            document.getElementById('tab-analytics').addEventListener('click', function() {
-                // ...existing code...
-                initPropertyAvailabilityChart();
-            });
-        });
-
-
-       
         
-      // Property Maintenance Chart Initialization
-        function fetchMaintenanceData(year) {
-            console.log('Fetching data for year:', year);
-            const url = `get_maintenance_data.php?year=${year}`;
-            console.log('Fetch URL:', url);
-            
-            return fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Received maintenance data:', data);
-                    if (!data.completed || !data.pending || !data.inProgress) {
-                        throw new Error('Invalid data format received');
-                    }
-                    return data;
-                });
-        }
-
-        let propertyMaintenanceChart;
-        const years = <?php echo $years_json; ?>;
-
-        function initMaintenanceChart(data, year) {
-            console.log('Initializing chart with data:', data); // Add this line to log the data being passed to the chart
-            const options = {
-                chart: { 
-                    type: 'line',
-                    height: '100%',
-                    width: '100%',
-                    toolbar: {
-                        show: true,
-                        tools: { download: true }
-                    }
-                },
-                series: [{
-                    name: 'Completed',
-                    data: data.completed,
-                    color: '#10B981'
-                }, {
-                    name: 'Pending',
-                    data: data.pending,
-                    color: '#F59E0B'
-                }, {
-                    name: 'In Progress',
-                    data: data.inProgress,
-                    color: '#3B82F6'
-                }],
-                xaxis: {
-                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                },
-                yaxis: {
-                    title: { text: 'Number of Requests' },
-                    min: 0,
-                    forceNiceScale: true
-                },
-                title: {
-                    text: `Maintenance Requests - ${year}`,
-                    align: 'center'
-                },
-                stroke: { 
-                    curve: 'smooth',
-                    width: 2
-                },
-                markers: {
-                    size: 4
-                },
-                legend: {
-                    position: 'top'
+        tenantOccupancyChart = new ApexCharts(
+            document.querySelector("#tenant-occupancy-chart"), 
+            tenantOccupancyOptions
+        );
+        tenantOccupancyChart.render();
+        
+        // 2. Property Availability Chart
+        initPropertyAvailabilityChart();
+        
+        // 3. Monthly Payments Chart
+        const monthlyPaymentsOptions = {
+            chart: { 
+                type: 'area', 
+                width: '100%', 
+                height: '100%',
+                toolbar: {
+                    show: true
                 }
-            };
-
-            if (propertyMaintenanceChart) {
-                propertyMaintenanceChart.updateOptions(options);
-            } else {
-                propertyMaintenanceChart = new ApexCharts(
-                    document.querySelector("#property-maintenance-chart"), 
-                    options
-                );
-                propertyMaintenanceChart.render();
-            }
-        }
-
-        // Load initial data when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            const yearFilter = document.getElementById('maintenance-year-filter');
-            
-            // Load initial data for the first year
-            if (years && years.length > 0) {
-                const initialYear = years[0];
-                yearFilter.value = initialYear;
-                fetchMaintenanceData(initialYear)
-                    .then(data => {
-                        initMaintenanceChart(data, initialYear);
-                    })
-                    .catch(error => {
-                        console.error('Error loading maintenance data:', error);
-                    });
-            }
-
-            // Handle year changes
-            yearFilter.addEventListener('change', function() {
-                const selectedYear = this.value;
-                fetchMaintenanceData(selectedYear)
-                    .then(data => {
-                        initMaintenanceChart(data, selectedYear);
-                    })
-                    .catch(error => {
-                        console.error('Error loading maintenance data:', error);
-                    });
-            });
-        });
-
-        // Add this console.log to check if years are available
-        console.log('Available years:', <?php echo $years_json; ?>);
-
-        // Initialize the chart when the analytics tab is shown
-        document.getElementById('tab-analytics').addEventListener('click', function() {
-            if (years && years.length > 0) {
-                const initialYear = years[0];
-                console.log('Loading data for initial year:', initialYear);
-                fetchMaintenanceData(initialYear)
-                    .then(data => {
-                        initMaintenanceChart(data, initialYear);
-                    })
-                    .catch(error => {
-                        console.error('Error loading maintenance data:', error);
-                    });
-            }
-        });
-
-        // Year filter change handler
-        document.getElementById('maintenance-year-filter').addEventListener('change', function() {
-            const selectedYear = this.value;
-            console.log('Year changed to:', selectedYear);
-            fetchMaintenanceData(selectedYear)
-                .then(data => {
-                    initMaintenanceChart(data, selectedYear);
-                })
-                .catch(error => {
-                    console.error('Error loading maintenance data:', error);
-                });
-        });
-
-        // ApexCharts Data for Monthly Payments Report
-        var monthlyPaymentsOptions = {
-            chart: { type: 'area', width: '100%', height: '100%' },
+            },
             series: [{
                 name: 'Payments',
                 data: [2500, 3600, 3500, 4000, 4500, 4700, 3300, 3700, 5000, 6000, 2300, 3000]
@@ -957,30 +786,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 position: 'top'
             }
         };
-        var monthlyPaymentsChart = new ApexCharts(document.querySelector("#monthly-payments-chart"), monthlyPaymentsOptions);
+        
+        monthlyPaymentsChart = new ApexCharts(
+            document.querySelector("#monthly-payments-chart"), 
+            monthlyPaymentsOptions
+        );
         monthlyPaymentsChart.render();
-
-       // ApexCharts Data for Rental Balance Report
-        var rentalBalanceOptions = {
+        
+        // 4. Rental Balance Chart
+        const rentalBalanceOptions = {
             chart: { 
                 type: 'donut', 
                 width: '100%', 
                 height: '100%',
                 toolbar: {
-                    show: true, // Show the toolbar
+                    show: true,
                     tools: {
-                        download: true,  // Show the download button in the toolbar
+                        download: true
                     },
                     export: {
-                        csv: {
-                            filename: 'rental_balance_report' // Customize the CSV file name
-                        },
-                        png: {
-                            filename: 'rental_balance_report' // Customize the PNG file name
-                        },
-                        jpeg: {
-                            filename: 'rental_balance_report' // Customize the JPG file name
-                        },
+                        csv: { filename: 'rental_balance_report' },
+                        png: { filename: 'rental_balance_report' },
+                        jpeg: { filename: 'rental_balance_report' }
                     }
                 }
             },
@@ -991,12 +818,221 @@ document.addEventListener('DOMContentLoaded', function() {
                 position: 'bottom'
             }
         };
-
-        var rentalBalanceChart = new ApexCharts(document.querySelector("#rental-balance-chart"), rentalBalanceOptions);
+        
+        rentalBalanceChart = new ApexCharts(
+            document.querySelector("#rental-balance-chart"), 
+            rentalBalanceOptions
+        );
         rentalBalanceChart.render();
+        
+        // 5. Maintenance Chart
+        if (years && years.length > 0) {
+            const yearFilter = document.getElementById('maintenance-year-filter');
+            const initialYear = years[0];
+            yearFilter.value = initialYear;
+            
+            // Set up year filter change handler
+            yearFilter.addEventListener('change', function() {
+                const selectedYear = this.value;
+                fetchMaintenanceData(selectedYear)
+                    .then(data => initMaintenanceChart(data, selectedYear))
+                    .catch(error => console.error('Error loading maintenance data:', error));
+            });
+            
+            // Load initial data
+            fetchMaintenanceData(initialYear)
+                .then(data => initMaintenanceChart(data, initialYear))
+                .catch(error => console.error('Error loading initial maintenance data:', error));
+        }
+    }
+    
+    // Property Availability Chart Function
+    function initPropertyAvailabilityChart() {
+        fetch('get_availability_data.php')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const propertyAvailabilityOptions = {
+                    chart: { 
+                        type: 'bar',
+                        height: '100%',
+                        width: '100%',
+                        stacked: true,
+                        toolbar: {
+                            show: true
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'Available',
+                            data: data.series[0].data,
+                            color: '#228b22' // Green
+                        },
+                        {
+                            name: 'Occupied',
+                            data: data.series[1].data,
+                            color: '#e74c3c' // Red
+                        },
+                        {
+                            name: 'Maintenance',
+                            data: data.series[2].data,
+                            color: '#3498db' // Blue
+                        }
+                    ],
+                    xaxis: {
+                        categories: data.categories,
+                        labels: {
+                            rotate: -45,
+                            style: {
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '55%',
+                            endingShape: 'rounded'
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val) {
+                            return val.toString();
+                        },
+                        style: {
+                            fontSize: '12px',
+                            colors: ['#fff']
+                        }
+                    },
+                    title: {
+                        text: 'Unit Status by Floor',
+                        align: 'center',
+                        style: {
+                            fontSize: '14px'
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Number of Units'
+                        },
+                        min: 0
+                    },
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'center'
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function (val) {
+                                return val + " units"
+                            }
+                        }
+                    }
+                };
 
-    });
+                if (propertyAvailabilityChart) {
+                    propertyAvailabilityChart.updateOptions(propertyAvailabilityOptions);
+                } else {
+                    propertyAvailabilityChart = new ApexCharts(
+                        document.querySelector("#property-availability-chart"), 
+                        propertyAvailabilityOptions
+                    );
+                    propertyAvailabilityChart.render();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading availability data:', error);
+            });
+    }
+    
+    // Maintenance Data Fetching Function
+    function fetchMaintenanceData(year) {
+        const url = `get_maintenance_data.php?year=${year}`;
+        
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.completed || !data.pending || !data.inProgress) {
+                    console.error('Invalid data format received:', data);
+                    throw new Error('Invalid data format received');
+                }
+                return data;
+            });
+    }
+    
+    // Initialize Maintenance Chart Function
+    function initMaintenanceChart(data, year) {
+        const options = {
+            chart: { 
+                type: 'line',
+                height: '100%',
+                width: '100%',
+                toolbar: {
+                    show: true,
+                    tools: { download: true }
+                }
+            },
+            series: [{
+                name: 'Completed',
+                data: data.completed,
+                color: '#10B981'
+            }, {
+                name: 'Pending',
+                data: data.pending,
+                color: '#F59E0B'
+            }, {
+                name: 'In Progress',
+                data: data.inProgress,
+                color: '#3B82F6'
+            }],
+            xaxis: {
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            },
+            yaxis: {
+                title: { text: 'Number of Requests' },
+                min: 0,
+                forceNiceScale: true
+            },
+            title: {
+                text: `Maintenance Requests - ${year}`,
+                align: 'center'
+            },
+            stroke: { 
+                curve: 'smooth',
+                width: 2
+            },
+            markers: {
+                size: 4
+            },
+            legend: {
+                position: 'top'
+            }
+        };
+
+        if (propertyMaintenanceChart) {
+            propertyMaintenanceChart.updateOptions(options);
+        } else {
+            propertyMaintenanceChart = new ApexCharts(
+                document.querySelector("#property-maintenance-chart"), 
+                options
+            );
+            propertyMaintenanceChart.render();
+        }
+    }
+});
+
 </script>
+
 
 </body>
 </html>

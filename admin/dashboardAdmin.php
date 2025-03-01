@@ -55,11 +55,14 @@ while ($row = $statusResult->fetch_assoc()) {
 $totalActiveProperties = array_sum($statusCounts);
 $occupancyData = [];
 $occupancyLabels = [];
+$occupancyPercentages = [];
 
 if ($totalActiveProperties > 0) {
     foreach ($statusCounts as $status => $count) {
-        $occupancyLabels[] = $status;
+        $percentage = round(($count / $totalActiveProperties) * 100, 1);
+        $occupancyLabels[] = $status . " (" . $percentage . "%)";
         $occupancyData[] = $count;
+        $occupancyPercentages[] = $percentage;
     }
 }
 
@@ -115,8 +118,11 @@ if (isset($_SESSION['user_id'])) {
     $stmt->close();
 }
 
-// Get tenant count - Fixed to count from tenants table instead of users
-$tenantCountQuery = "SELECT COUNT(*) as total FROM tenants WHERE status = 'active'";
+// Get tenant count - Fixed to use JOIN with users table to get unique names
+$tenantCountQuery = "SELECT COUNT(DISTINCT u.name) as total 
+                    FROM tenants t 
+                    JOIN users u ON t.user_id = u.user_id 
+                    WHERE t.status = 'active'";
 $tenantResult = $conn->query($tenantCountQuery);
 $totalTenants = $tenantResult->fetch_assoc()['total'];
 
@@ -425,7 +431,7 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
         }
     });
 
-    // Occupancy Chart with actual data
+    // Occupancy Chart with actual data and percentages
     const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
     new Chart(occupancyCtx, {
         type: 'doughnut',
@@ -451,6 +457,16 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
                         boxWidth: 12,
                         font: {
                             size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = <?php echo json_encode($occupancyPercentages); ?>[context.dataIndex];
+                            return `${label.split('(')[0].trim()}: ${value} (${percentage}%)`;
                         }
                     }
                 }

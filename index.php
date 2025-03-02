@@ -68,6 +68,23 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
                 opacity: 1;
             }
         }
+        
+        /* Image float animation for 3D building */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+        
+        .floating-image {
+            animation: float 6s ease-in-out infinite;
+        }
          
     </style>
 </head>
@@ -119,18 +136,46 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
     </header>
 
 
-    <!-- Hero Section -->
-    <section class="relative bg-no-repeat bg-cover py-16 pb-24" style="background-image: url('images/bg2.jpg');">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
-        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center relative z-10">
-            <div class="md:w-1/2 mb-6 md:mb-0 text-center md:text-left hero-content">
-                <h1 class="text-3xl md:text-5xl font-bold text-white mb-4" data-aos="fade-right" data-aos-delay="100">Simplify Your Living Experience with RentEase</h1>
-                <p class="text-lg md:text-xl text-white mb-8" data-aos="fade-right" data-aos-delay="200">Enjoy a seamless experience for managing your rental, from maintenance requests to secure payments, all in one place.</p>
-                <a href="#how-it-works" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-500" data-aos="fade-up" data-aos-delay="300">Discover How It Works</a>
+    <!-- Hero Section (Two-column layout) -->
+    <section class="py-16 bg-gradient-to-r from-blue-50 to-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col-reverse md:flex-row items-center">
+                <!-- Left Column (Text Content) -->
+                <div class="md:w-1/2 mt-8 md:mt-0 text-center md:text-left" data-aos="fade-right" data-aos-delay="100">
+                    <h1 class="text-3xl md:text-5xl font-bold text-blue-600 mb-4">Simplify Your Living Experience with PropertyWise</h1>
+                    <p class="text-lg md:text-xl text-gray-600 mb-8">Enjoy a seamless experience for managing your rental, from maintenance requests to secure payments, all in one place.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <a href="#how-it-works" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg shadow-lg hover:bg-blue-500 transition duration-300 transform hover:scale-105">
+                            Discover How It Works
+                        </a>
+                        <a href="#services" class="border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg text-lg shadow-md hover:bg-blue-600 hover:text-white transition duration-300">
+                            View Properties
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Right Column (3D Building Image) -->
+                <div class="md:w-1/2 flex justify-center" data-aos="fade-left" data-aos-delay="200">
+                    <div class="relative">
+                        <!-- Main building image -->
+                        <img 
+                            src="images/3d-building.png" 
+                            alt="Modern 3D Building" 
+                            class="w-full max-w-lg floating-image"
+                            onerror="this.onerror=null; this.src='images/3Dbuilding.png';"
+                        />
+                        
+                        <!-- Optional decorative elements (can be removed if not needed) -->
+                        <div class="absolute -bottom-4 w-full h-8 bg-gradient-to-t from-gray-100 to-transparent"></div>
+                        
+                        <!-- Circle decorations -->
+                        <div class="absolute top-1/4 -left-12 w-24 h-24 bg-blue-200 rounded-full opacity-30"></div>
+                        <div class="absolute bottom-1/3 -right-8 w-16 h-16 bg-blue-300 rounded-full opacity-20"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
-
 
 <!-- Features Section -->
 <section id="features" class="py-16 bg-gray-50">
@@ -248,13 +293,13 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 
 
      <!-- Modal -->
-     <div id="reserveModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-80">
-            <h2 class="text-lg font-semibold mb-4">Are you interested in renting?</h2>
-            <p class="text-sm text-gray-600 mb-6">Register now to proceed with your reservation.</p>
-            <div class="flex justify-end gap-4">
-                <button id="closeModal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Cancel</button>
-                <button id="signupButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Register Now</button>
+     <div id="reserveModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-lg p-5 w-full max-w-xs sm:max-w-sm md:max-w-md transition-all">
+            <h2 class="text-lg font-semibold mb-3">Are you interested in renting?</h2>
+            <p class="text-sm text-gray-600 mb-5">Register now to proceed with your reservation.</p>
+            <div class="flex flex-col sm:flex-row sm:justify-end gap-3">
+                <button id="closeModal" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 w-full sm:w-auto order-2 sm:order-1">Cancel</button>
+                <button id="signupButton" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full sm:w-auto order-1 sm:order-2 mb-2 sm:mb-0">Register Now</button>
             </div>
         </div>
     </div>

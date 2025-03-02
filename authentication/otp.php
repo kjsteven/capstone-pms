@@ -9,6 +9,12 @@ require '../config/config.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+// Verify staff is coming from login
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
 // OTP Verification logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["verify"])) {
     $userId = $_SESSION["user_id"];
@@ -179,25 +185,33 @@ if (isset($_POST["resendOTP"])) {
 </head>
 
 <body class="min-h-screen bg-cover bg-center flex items-center justify-center py-6 px-4" style="background-image: url('../images/bg3.jpg');">
-    <div class="max-w-md w-full bg-gray-900 rounded-2xl p-6 sm:p-8">
-        <header class="mb-8 text-center">
-            <h1 class="text-2xl font-bold mb-2 text-white">OTP Verification</h1>
-            <p class="text-[15px] text-slate-300">Enter the 6-digit verification code that was sent to your email.</p>
-            <!-- Add timer display -->
-            <p class="mt-4 text-slate-300">Time remaining: <span id="timer" class="timer text-blue-500">10:00</span></p>
-        </header>
-        <form id="otp-form" method="POST" action="">
-            <div class="flex items-center justify-center gap-3 otp-container">
-                <?php for ($i = 0; $i < 6; $i++): ?>
-                    <input type="text" name="otp<?php echo $i; ?>" class="otp-input w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" maxlength="1" />
-                <?php endfor; ?>
-            </div>
-            <input type="hidden" name="verify" value="true" />
-            <div class="max-w-[260px] mx-auto mt-4">
-                <button type="submit" class="w-full inline-flex justify-center whitespace-nowrap rounded-lg bg-indigo-500 px-3.5 py-2.5 text-sm font-medium text-white shadow-sm shadow-indigo-950/10 hover:bg-indigo-600 focus:outline-none focus:ring focus:ring-indigo-300 focus-visible:outline-none focus-visible:ring focus-visible:ring-indigo-300 transition-colors duration-150">Verify Account</button>
-            </div>
-        </form>
-        <div class="text-sm text-slate-300 mt-4 text-center">Didn't receive code? <button type="submit" name="resendOTP" form="otp-form" class="font-medium text-indigo-500 hover:text-indigo-600">Resend</button></div>
+    <div class="max-w-4xl w-full flex flex-col md:flex-row bg-gray-900 rounded-2xl overflow-hidden">
+        <!-- GIF Image container -->
+        <div class="md:w-1/2 flex items-center justify-center p-6 bg-gray-800">
+            <img src="../images/otp.gif" alt="OTP Verification" class="max-w-full h-auto rounded-lg" />
+        </div>
+        
+        <!-- OTP Form container -->
+        <div class="md:w-1/2 p-6 sm:p-8">
+            <header class="mb-8 text-center">
+                <h1 class="text-2xl font-bold mb-2 text-white">OTP Verification</h1>
+                <p class="text-[15px] text-slate-300">Enter the 6-digit verification code that was sent to your email.</p>
+                <!-- Add timer display -->
+                <p class="mt-4 text-slate-300">Time remaining: <span id="timer" class="timer text-blue-500">10:00</span></p>
+            </header>
+            <form id="otp-form" method="POST" action="">
+                <div class="flex items-center justify-center gap-3 otp-container">
+                    <?php for ($i = 0; $i < 6; $i++): ?>
+                        <input type="text" name="otp<?php echo $i; ?>" class="otp-input w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" maxlength="1" />
+                    <?php endfor; ?>
+                </div>
+                <input type="hidden" name="verify" value="true" />
+                <div class="max-w-[260px] mx-auto mt-4">
+                    <button type="submit" class="w-full inline-flex justify-center whitespace-nowrap rounded-lg bg-indigo-500 px-3.5 py-2.5 text-sm font-medium text-white shadow-sm shadow-indigo-950/10 hover:bg-indigo-600 focus:outline-none focus:ring focus:ring-indigo-300 focus-visible:outline-none focus-visible:ring focus-visible:ring-indigo-300 transition-colors duration-150">Verify Account</button>
+                </div>
+            </form>
+            <div class="text-sm text-slate-300 mt-4 text-center">Didn't receive code? <button type="submit" name="resendOTP" form="otp-form" class="font-medium text-indigo-500 hover:text-indigo-600">Resend</button></div>
+        </div>
     </div>
 
     <script>

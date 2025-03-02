@@ -174,77 +174,98 @@ $conn->close();
         body {
             font-family: 'Poppins', sans-serif;
         }
+        
+        /* Custom input width style */
+        .form-input-container {
+            width: 90%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen p-6">
 
-    <div class="min-h-screen bg-cover bg-center flex items-center justify-center py-6 px-4" style="background-image: url('../images/bg3.jpg');">
-        <div class="max-w-md w-full" style="background-color: #1f2937; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
-            <h2 class="text-white text-center text-2xl font-bold">Sign up</h2>
-            <form method="POST" class="mt-8 space-y-4">
-
-                <div>
-                    <label class="text-white text-sm mb-2 block">Full Name</label>
-                    <div class="relative flex items-center">
-                        <input name="name" type="text" id="name" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter full name" />
+    <div class="min-h-screen bg-cover bg-center flex items-center justify-center py-6 px-4">
+        <div class="w-full max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-2xl">
+                <!-- GIF Section (Now on Left) -->
+                <div class="w-full md:w-1/2 bg-gray-800 flex items-center justify-center">
+                    <div class="h-full w-full p-6 flex items-center justify-center">
+                        <img src="../images/signup.gif" alt="Signup Animation" class="rounded-xl max-w-full max-h-full object-cover">
                     </div>
                 </div>
+                
+                <!-- Form Section (Now on Right) -->
+                <div class="w-full md:w-1/2" style="background-color: #1f2937; padding: 2rem;">
+                    <h2 class="text-white text-center text-2xl font-bold">Sign up</h2>
+                    <form method="POST" class="mt-8 space-y-4">
+                        <div class="form-input-container">
+                            <label class="text-white text-sm mb-2 block">Full Name</label>
+                            <div class="relative flex items-center">
+                                <input name="name" type="text" id="name" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter full name" />
+                            </div>
+                        </div>
 
-                <div>
-                    <label class="text-white text-sm mb-2 block">Email</label>
-                    <div class="relative flex items-center">
-                        <input name="email" type="email" id="email" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter email" />
-                    </div>
+                        <div class="form-input-container">
+                            <label class="text-white text-sm mb-2 block">Email</label>
+                            <div class="relative flex items-center">
+                                <input name="email" type="email" id="email" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter email" />
+                            </div>
+                        </div>
+
+                        <div class="form-input-container">
+                            <label class="text-white text-sm mb-2 block">Phone Number</label>
+                            <div class="relative flex items-center">
+                                <input name="phone" type="tel" id="phone" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter phone number" />
+                            </div>
+                        </div>
+
+                        <div class="form-input-container">
+                            <label class="text-white text-sm mb-2 block">Password</label>
+                            <div class="relative flex items-center">
+                                <input type="password" id="password" name="password" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter password" />
+                                <button type="button" class="absolute right-2" onclick="togglePassword('password', 'togglePasswordIcon')">
+                                    <i id="togglePasswordIcon" class='bx bxs-show w-4 h-4 text-gray-400'></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-input-container">
+                            <label class="text-white text-sm mb-2 block">Confirm Password</label>
+                            <div class="relative flex items-center">
+                                <input type="password" id="confirmPassword" name="confirmPassword" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Confirm password" />
+                                <button type="button" class="absolute right-2" onclick="togglePassword('confirmPassword', 'toggleConfirmPasswordIcon')">
+                                    <i id="toggleConfirmPasswordIcon" class='bx bxs-show w-4 h-4 text-gray-400'></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-input-container flex items-center mb-4">
+                            <input type="checkbox" id="termsAccepted" name="termsAccepted" required class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="termsAccepted" class="text-white text-sm ml-2">
+                                I accept the 
+                                <a href="../asset/terms_condition.php" class="text-blue-500 hover:text-blue-700">terms and conditions</a>
+                            </label>
+                        </div>      
+
+                        <?php if (!empty($error)): ?>
+                            <div class="form-input-container text-red-500 text-sm mt-2"><?= $error; ?></div>
+                        <?php elseif (!empty($success)): ?>
+                            <div class="form-input-container text-green-500 text-sm mt-2"><?= $success; ?></div>
+                        <?php endif; ?>
+
+                        <div class="form-input-container">
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md">Sign Up</button>
+                        </div>
+
+                        <div class="form-input-container">
+                            <p class="mt-4 text-sm text-center text-white">
+                                Already have an account? <a href="login.php" class="text-blue-600 hover:underline ml-1 whitespace-nowrap font-semibold">Login here</a>
+                            </p>
+                        </div>
+                    </form>
                 </div>
-
-                <div>
-                    <label class="text-white text-sm mb-2 block">Phone Number</label>
-                    <div class="relative flex items-center">
-                        <input name="phone" type="tel" id="phone" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter phone number" />
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-white text-sm mb-2 block">Password</label>
-                    <div class="relative flex items-center">
-                        <input type="password" id="password" name="password" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter password" />
-                        <button type="button" class="absolute right-2" onclick="togglePassword('password', 'togglePasswordIcon')">
-                            <i id="togglePasswordIcon" class='bx bxs-show w-4 h-4 text-gray-400'></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-white text-sm mb-2 block">Confirm Password</label>
-                    <div class="relative flex items-center">
-                        <input type="password" id="confirmPassword" name="confirmPassword" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Confirm password" />
-                        <button type="button" class="absolute right-2" onclick="togglePassword('confirmPassword', 'toggleConfirmPasswordIcon')">
-                            <i id="toggleConfirmPasswordIcon" class='bx bxs-show w-4 h-4 text-gray-400'></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="flex items-center mb-4">
-                    <input type="checkbox" id="termsAccepted" name="termsAccepted" required class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <label for="termsAccepted" class="text-white text-sm ml-2">
-                        I accept the 
-                        <a href="../asset/terms_condition.php" class="text-blue-500 hover:text-blue-700">terms and conditions</a>
-                    </label>
-                </div>      
-
-
-                <?php if (!empty($error)): ?>
-                    <div class="text-red-500 text-sm mt-2"><?= $error; ?></div>
-                <?php elseif (!empty($success)): ?>
-                    <div class="text-green-500 text-sm mt-2"><?= $success; ?></div>
-                <?php endif; ?>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md">Sign Up</button>
-
-                <p class="mt-4 text-sm text-center text-white">
-                    Already have an account? <a href="login.php" class="text-blue-600 hover:underline ml-1 whitespace-nowrap font-semibold">Login here</a>
-                </p>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -263,9 +284,6 @@ $conn->close();
                 icon.classList.add('bxs-show');
             }
         }
-
-
-
     </script>
 </body>
 </html>

@@ -125,7 +125,7 @@
         <ul class="list-disc list-inside mb-4">
             <li>If you have previously agreed to us using your personal information for direct marketing purposes, you
                 may
-                change your mind at any time by writing to or emailing us at [email protected]</li>
+                change your mind at any time by writing to or emailing us at support@propertwise.com</li>
             <li>We will not sell, distribute, or lease your personal information to third parties unless we have your
                 permission
                 or are required by law to do so. We may use your personal information to send you promotional
@@ -133,7 +133,7 @@
                 about
                 third parties which we think you may find interesting if you tell us that you wish this to happen.</li>
             <li>You may request details of personal information which we hold about you. If you would like a copy of the
-                information held on you, please write to PropertyWise, 28th Street, Taguig City, Metro Manila, 1200 or email
+                information held on you, please write to PropertyWise, 28th Street Bonifacio Global City, Taguig City, Metro Manila, 1200 or email
                 support@propertwise.com</li>
             <li>If you believe that any information we are holding on you is incorrect or incomplete, please write to or
                 email

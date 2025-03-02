@@ -375,7 +375,7 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 <!-- Footer Section -->
 <footer class="bg-gray-50 mx-auto w-full max-w-container px-4 sm:px-6 lg:px-8">
     <div class="border-t border-slate-900/5 py-10">
-        <p class="mt-5 text-center text-sm leading-6 text-slate-500">&copy; 2024 PropertyWise. All Rights Reserved.</p>
+        <p class="mt-5 text-center text-sm leading-6 text-slate-500">&copy; 2025 PropertyWise. All Rights Reserved.</p>
         <div class="mt-8 flex items-center justify-center space-x-4 text-sm font-semibold leading-6 text-slate-700">
             <a href="./asset/privacy_policy.php" class="text-blue-600 hover:underline">Privacy Policy</a>
             <div class="h-4 w-px bg-slate-500/20"></div>

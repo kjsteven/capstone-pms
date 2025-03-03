@@ -121,15 +121,15 @@ if (isset($_POST["resendOTP"])) {
         }
     </style>
 </head>
-<body class="min-h-screen bg-cover bg-center flex items-center justify-center py-6 px-4" style="background-image: url('../images/bg3.jpg');">
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-6 px-4">
     <div class="max-w-4xl w-full flex flex-col md:flex-row bg-gray-900 rounded-2xl overflow-hidden">
         <!-- GIF Image container -->
-        <div class="md:w-1/2 flex items-center justify-center p-6 bg-gray-800">
+        <div class="md:w-1/2 flex items-center justify-center p-6 bg-gray-50 dark:bg-gray-800">
             <img src="../images/otp.gif" alt="Staff OTP Verification" class="max-w-full h-auto rounded-lg" />
         </div>
         
         <!-- OTP Form container -->
-        <div class="md:w-1/2 p-6 sm:p-8">
+        <div class="md:w-1/2 p-6 sm:p-8 bg-gray-50 dark:bg-gray-800">
             <header class="mb-8 text-center">
                 <h1 class="text-2xl font-bold mb-1 text-white">Staff OTP Verification</h1>
                 <p class="text-[15px] text-slate-300">Enter the 6-digit verification code sent to your email.</p>

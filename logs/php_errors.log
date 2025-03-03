@@ -1,0 +1,108 @@
+[03-Mar-2025 15:49:42 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:179
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(179): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250303-46...', 67500.0, '2025-03-15', '2025-03-30', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(89): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 179
+[03-Mar-2025 15:50:06 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:179
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(179): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250303-41...', 67500.0, '2025-03-15', '2025-03-30', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(89): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 179
+[03-Mar-2025 15:50:33 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:179
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(179): mysqli_stmt->bind_param('isdsss', 48, 'INV-20250303-66...', 90000.0, '2025-03-03', '2025-03-18', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(89): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 179
+[03-Mar-2025 15:57:09 Europe/Berlin] Starting invoice_actions.php with action: create
+[03-Mar-2025 15:57:09 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => rent
+    [amount] => 67500.00
+    [issue_date] => 2025-03-03
+    [due_date] => 2025-03-18
+    [description] => test
+    [line_items] => []
+)
+
+[03-Mar-2025 15:57:09 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:194
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(194): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250303-13...', 67500.0, '2025-03-03', '2025-03-18', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(99): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 194
+[03-Mar-2025 15:57:12 Europe/Berlin] Starting invoice_actions.php with action: create
+[03-Mar-2025 15:57:12 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => rent
+    [amount] => 67500.00
+    [issue_date] => 2025-03-03
+    [due_date] => 2025-03-18
+    [description] => test
+    [line_items] => []
+)
+
+[03-Mar-2025 15:57:12 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:194
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(194): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250303-61...', 67500.0, '2025-03-03', '2025-03-18', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(99): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 194
+[03-Mar-2025 15:57:22 Europe/Berlin] Starting invoice_actions.php with action: create
+[03-Mar-2025 15:57:22 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => rent
+    [amount] => 67500.00
+    [issue_date] => 2025-03-03
+    [due_date] => 2025-03-18
+    [description] => test
+    [line_items] => []
+)
+
+[03-Mar-2025 15:57:22 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:194
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(194): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250303-21...', 67500.0, '2025-03-03', '2025-03-18', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(99): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 194
+[03-Mar-2025 16:15:10 Europe/Berlin] Starting invoice_actions.php with action: create
+[03-Mar-2025 16:15:10 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => rent
+    [amount] => 67500.00
+    [issue_date] => 2025-03-03
+    [due_date] => 2025-03-18
+    [description] => test
+    [line_items] => []
+)
+
+[03-Mar-2025 16:15:10 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:194
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(194): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250303-26...', 67500.0, '2025-03-03', '2025-03-18', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(99): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 194
+[03-Mar-2025 16:15:13 Europe/Berlin] Starting invoice_actions.php with action: create
+[03-Mar-2025 16:15:13 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => rent
+    [amount] => 67500.00
+    [issue_date] => 2025-03-03
+    [due_date] => 2025-03-18
+    [description] => test
+    [line_items] => []
+)
+
+[03-Mar-2025 16:15:13 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:194
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(194): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250303-86...', 67500.0, '2025-03-03', '2025-03-18', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(99): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 194

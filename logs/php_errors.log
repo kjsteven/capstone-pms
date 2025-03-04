@@ -106,3 +106,105 @@ Stack trace:
 #1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(99): createInvoice()
 #2 {main}
   thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 194
+[04-Mar-2025 12:02:59 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[04-Mar-2025 12:03:02 Europe/Berlin] Starting invoice_actions.php with action: create
+[04-Mar-2025 12:03:02 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => rent
+    [amount] => 67500.00
+    [issue_date] => 2025-03-15
+    [due_date] => 2025-03-30
+    [description] => test
+    [line_items] => []
+)
+
+[04-Mar-2025 12:03:02 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:194
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(194): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250304-81...', 67500.0, '2025-03-15', '2025-03-30', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(99): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 194
+[04-Mar-2025 12:04:55 Europe/Berlin] Starting invoice_actions.php with action: create
+[04-Mar-2025 12:04:55 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => rent
+    [amount] => 67500.00
+    [issue_date] => 2025-03-15
+    [due_date] => 2025-03-30
+    [description] => test
+    [line_items] => []
+)
+
+[04-Mar-2025 12:04:55 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:194
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(194): mysqli_stmt->bind_param('isdsss', 42, 'INV-20250304-70...', 67500.0, '2025-03-15', '2025-03-30', 'test', 'rent')
+#1 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(99): createInvoice()
+#2 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 194
+[04-Mar-2025 12:11:13 Europe/Berlin] Starting invoice_actions.php with action: create
+[04-Mar-2025 12:11:13 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => rent
+    [amount] => 67500.00
+    [issue_date] => 2025-03-15
+    [due_date] => 2025-03-30
+    [description] => test
+    [line_items] => []
+)
+
+[04-Mar-2025 12:11:13 Europe/Berlin] Invoice created successfully with ID: 1 and invoice number: INV-20250304-1713
+[04-Mar-2025 12:11:18 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:11:23 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:11:35 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[04-Mar-2025 12:16:51 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:17:02 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:20:37 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:20:45 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:20:48 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:22:01 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:22:05 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:22:08 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:22:11 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:22:23 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[04-Mar-2025 12:23:20 Europe/Berlin] Starting invoice_actions.php with action: create
+[04-Mar-2025 12:23:20 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 42
+    [invoice_type] => utility
+    [amount] => 2000
+    [issue_date] => 2025-03-04
+    [due_date] => 2025-03-19
+    [description] => Water and Electric Bill
+    [line_items] => [{"name":"PVC Pipe","amount":500}]
+)
+
+[04-Mar-2025 12:23:21 Europe/Berlin] Invoice created successfully with ID: 2 and invoice number: INV-20250304-3030
+[04-Mar-2025 12:23:28 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:23:30 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:23:32 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:23:34 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:24:05 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[04-Mar-2025 12:25:00 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:25:04 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:25:08 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:28:03 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:28:06 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:42:11 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[04-Mar-2025 12:42:14 Europe/Berlin] Starting invoice_actions.php with action: create
+[04-Mar-2025 12:42:14 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 44
+    [invoice_type] => rent
+    [amount] => 45000.00
+    [issue_date] => 2025-03-15
+    [due_date] => 2025-03-30
+    [description] => Monthly rent and additional expenses
+    [line_items] => [{"name":"Maintenance Charges","amount":500}]
+)
+
+[04-Mar-2025 12:42:14 Europe/Berlin] Invoice created successfully with ID: 3 and invoice number: INV-20250304-9270
+[04-Mar-2025 12:42:20 Europe/Berlin] Starting invoice_actions.php with action: view
+[04-Mar-2025 12:42:47 Europe/Berlin] Starting invoice_actions.php with action: send_email

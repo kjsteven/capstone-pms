@@ -191,19 +191,14 @@ function createInvoice() {
             throw new Exception('Database prepare error: ' . $conn->error);
         }
         
-        $stmt->bind_param("isdsss", $tenant_id, $invoice_number, $amount, $issue_date, $due_date, $description, $invoice_type);
+        // Fix this line by adding one more 's' to the type definition string to match the 7 parameters
+        $stmt->bind_param("isdssss", $tenant_id, $invoice_number, $amount, $issue_date, $due_date, $description, $invoice_type);
         
         if (!$stmt->execute()) {
             throw new Exception('Database execute error: ' . $stmt->error);
         }
         
         $invoice_id = $conn->insert_id;
-        
-        $debugInfo[] = [
-            'type' => 'invoice_created',
-            'invoice_id' => $invoice_id,
-            'invoice_number' => $invoice_number
-        ];
         
         // Process line items if any
         if (isset($_POST['line_items'])) {
@@ -264,40 +259,48 @@ function createInvoice() {
             }
         }
         
-        // Create a default line item based on invoice type if no line items were provided
-        $checkItemsQuery = "SELECT COUNT(*) AS count FROM invoice_items WHERE invoice_id = ?";
-        $checkStmt = $conn->prepare($checkItemsQuery);
-        $checkStmt->bind_param("i", $invoice_id);
-        $checkStmt->execute();
-        $checkResult = $checkStmt->get_result();
-        $itemCount = $checkResult->fetch_assoc()['count'];
+        // Always create the main line item based on invoice type
+        $defaultItemName = '';
+        switch ($invoice_type) {
+            case 'rent':
+                $defaultItemName = 'Monthly Rent';
+                break;
+            case 'utility':
+                $defaultItemName = 'Utilities Payment';
+                break;
+            case 'other':
+            default:
+                $defaultItemName = 'Other Charges';
+                break;
+        }
         
-        if ($itemCount == 0) {
-            $defaultItemName = '';
-            switch ($invoice_type) {
-                case 'rent':
-                    $defaultItemName = 'Monthly Rent';
-                    break;
-                case 'utility':
-                    $defaultItemName = 'Utilities Payment';
-                    break;
-                case 'other':
-                default:
-                    $defaultItemName = 'Other Charges';
-                    break;
+        $defaultItemStmt = $conn->prepare(
+            "INSERT INTO invoice_items (invoice_id, item_name, amount) VALUES (?, ?, ?)"
+        );
+        $defaultItemStmt->bind_param("isd", $invoice_id, $defaultItemName, $amount);
+        $defaultItemStmt->execute();
+        
+        $debugInfo[] = [
+            'type' => 'default_line_item_created',
+            'name' => $defaultItemName,
+            'amount' => $amount
+        ];
+        
+        // Update the total amount to include both main item and additional line items
+        $totalAmount = $amount;
+        if (!empty($lineItems) && is_array($lineItems)) {
+            foreach ($lineItems as $item) {
+                if (isset($item['amount'])) {
+                    $totalAmount += (float)$item['amount'];
+                }
             }
             
-            $defaultItemStmt = $conn->prepare(
-                "INSERT INTO invoice_items (invoice_id, item_name, amount) VALUES (?, ?, ?)"
-            );
-            $defaultItemStmt->bind_param("isd", $invoice_id, $defaultItemName, $amount);
-            $defaultItemStmt->execute();
-            
-            $debugInfo[] = [
-                'type' => 'default_line_item_created',
-                'name' => $defaultItemName,
-                'amount' => $amount
-            ];
+            // Update the invoice with the new total if line items were added
+            if ($totalAmount != $amount) {
+                $updateStmt = $conn->prepare("UPDATE invoices SET amount = ? WHERE id = ?");
+                $updateStmt->bind_param("di", $totalAmount, $invoice_id);
+                $updateStmt->execute();
+            }
         }
         
         // Log activity

@@ -489,7 +489,7 @@ if ($tenantResult) {
                     </div>
                     
                     <div class="mt-6 text-gray-600">
-                        <p>Payment Methods: Bank Transfer, Cash, Check</p>
+                        <p>Payment Methods: Gcash and Cash</p>
                         <p>Payment Terms: Due within 15 days of receipt</p>
                     </div>
                 </div>
@@ -732,7 +732,7 @@ if ($tenantResult) {
         }
     }
     
-    // Generate invoice preview from form data
+    // Generate invoice preview from form data - Fix to show main item plus line items
     function generateInvoicePreview() {
         const tenantSelect = document.getElementById('tenant_id');
         const selectedTenant = tenantSelect.options[tenantSelect.selectedIndex];
@@ -762,11 +762,11 @@ if ($tenantResult) {
         const randomNum = Math.floor(10000 + Math.random() * 90000);
         document.getElementById('preview-invoice-number').textContent = `INV-${randomNum}`;
         
-        // Update line items
+        // Update line items - Modified to always show main invoice item plus additional items
         const lineItemsContainer = document.getElementById('preview-line-items');
         lineItemsContainer.innerHTML = '';
         
-        // Add the main invoice item
+        // Always add the main invoice item first
         const mainRow = document.createElement('tr');
         mainRow.innerHTML = `
             <td class="px-4 py-3 text-sm text-gray-700">
@@ -776,26 +776,35 @@ if ($tenantResult) {
         `;
         lineItemsContainer.appendChild(mainRow);
         
-        // Add additional line items if any
+        // Track total amount separately from the main amount
         let totalAmount = amount;
-        document.querySelectorAll('#line-items > div').forEach((item, index) => {
-            if (index === 0) return; // Skip the first default item
+        
+        // Add any additional line items
+        document.querySelectorAll('#line-items > div').forEach((item) => {
+            const nameInput = item.querySelector('input[type="text"]');
+            const amountInput = item.querySelector('input[type="number"]');
             
-            const itemName = item.querySelector('input[type="text"]').value;
-            const itemAmount = parseFloat(item.querySelector('input[type="number"]').value) || 0;
-            
-            if (itemName && itemAmount > 0) {
+            if (nameInput && amountInput && 
+                nameInput.value.trim() && 
+                amountInput.value.trim() && 
+                parseFloat(amountInput.value) > 0) {
+                
+                const itemName = nameInput.value.trim();
+                const itemAmount = parseFloat(amountInput.value);
+                
                 const lineRow = document.createElement('tr');
                 lineRow.innerHTML = `
                     <td class="px-4 py-3 text-sm text-gray-700">${itemName}</td>
                     <td class="px-4 py-3 text-sm text-gray-700 text-right">₱${itemAmount.toFixed(2)}</td>
                 `;
                 lineItemsContainer.appendChild(lineRow);
+                
+                // Add line item amounts to the total
                 totalAmount += itemAmount;
             }
         });
         
-        // Update total amount if line items were added
+        // Update total amount which now includes both main item and additional items
         document.getElementById('preview-total-amount').textContent = totalAmount.toFixed(2);
     }
     
@@ -814,17 +823,30 @@ if ($tenantResult) {
             return;
         }
         
-        // Add line items to form data - handle empty array case correctly
+        // Improved line items collection - collect ALL line items with values
         const lineItems = [];
-        let hasLineItems = false;
         
-        document.querySelectorAll('#line-items > div').forEach((item, index) => {
-            const itemName = item.querySelector('input[type="text"]').value;
-            const itemAmount = item.querySelector('input[type="number"]').value;
+        // Add main invoice type as a separate piece of information - not as a line item
+        const invoiceType = document.getElementById('invoice_type').value;
+        const mainAmount = parseFloat(document.getElementById('amount').value) || 0;
+        
+        // Track all additional line items separately
+        document.querySelectorAll('#line-items > div').forEach((item) => {
+            const nameInput = item.querySelector('input[type="text"]');
+            const amountInput = item.querySelector('input[type="number"]');
             
-            if (itemName && itemAmount) {
-                lineItems.push({ name: itemName, amount: itemAmount });
-                hasLineItems = true;
+            // Only add if both name and amount are provided and amount > 0
+            if (nameInput && amountInput && 
+                nameInput.value.trim() && 
+                amountInput.value.trim() && 
+                parseFloat(amountInput.value) > 0) {
+                
+                lineItems.push({
+                    name: nameInput.value.trim(),
+                    amount: parseFloat(amountInput.value)
+                });
+                
+                console.log(`Added line item: ${nameInput.value.trim()} - ${parseFloat(amountInput.value)}`);
             }
         });
         
@@ -1001,7 +1023,7 @@ if ($tenantResult) {
                             </div>
                             
                             <div class="mt-6 text-gray-600">
-                                <p>Payment Methods: Gcash, Cash, Check</p>
+                                <p>Payment Methods: Gcash, and Cash</p>
                                 <p>Payment Terms: Due within 15 days of receipt</p>
                                 <p class="mt-2">
                                     Status: 

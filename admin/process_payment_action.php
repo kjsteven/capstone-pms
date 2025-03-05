@@ -3,19 +3,27 @@ require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';
 
-start_secure_session();
+session_start();
 
 // Set the content type to JSON
 header('Content-Type: application/json');
 
 // Check if the user is logged in and is an admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
     echo json_encode([
         'success' => false,
         'message' => 'Unauthorized access'
     ]);
     exit();
 }
+
+// Get admin name from the database using session user_id
+$adminQuery = "SELECT name FROM users WHERE user_id = ?";
+$adminStmt = $conn->prepare($adminQuery);
+$adminStmt->bind_param("i", $_SESSION['user_id']);
+$adminStmt->execute();
+$adminResult = $adminStmt->get_result();
+$adminName = ($adminResult->num_rows > 0) ? $adminResult->fetch_assoc()['name'] : 'Admin';
 
 // Check if it's a POST request
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -80,11 +88,11 @@ try {
         $updateStmt = $conn->prepare(
             "UPDATE payments
              SET status = 'Received',
-                 processed_date = CURRENT_TIMESTAMP,
+                 updated_at = CURRENT_TIMESTAMP,
                  processed_by = ?
              WHERE payment_id = ?"
         );
-        $updateStmt->bind_param("ii", $_SESSION['user_id'], $payment_id);
+        $updateStmt->bind_param("si", $adminName, $payment_id);
         $updateStmt->execute();
         
         // Update tenant's outstanding balance
@@ -113,11 +121,11 @@ try {
         $updateStmt = $conn->prepare(
             "UPDATE payments
              SET status = 'Rejected',
-                 processed_date = CURRENT_TIMESTAMP,
+                 updated_at = CURRENT_TIMESTAMP,
                  processed_by = ?
              WHERE payment_id = ?"
         );
-        $updateStmt->bind_param("ii", $_SESSION['user_id'], $payment_id);
+        $updateStmt->bind_param("si", $adminName, $payment_id);
         $updateStmt->execute();
         
         // Log activity
@@ -146,9 +154,7 @@ try {
     
 } catch (Exception $e) {
     // Rollback transaction on error
-    if ($conn->inTransaction()) {
-        $conn->rollback();
-    }
+    $conn->rollback();
     
     echo json_encode([
         'success' => false,

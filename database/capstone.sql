@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 05, 2025 at 06:46 PM
+-- Generation Time: Mar 05, 2025 at 11:08 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -198,7 +198,9 @@ INSERT INTO `activity_logs` (`log_id`, `user_id`, `staff_id`, `user_role`, `acti
 (230, 23, NULL, 'User', 'Login', 'User logged in successfully', '::1', '2025-03-06 01:19:39'),
 (231, 23, NULL, 'User', 'Payment Submission', 'Payment of PHP 22,500.00 submitted for review (Reference: 2012120513868)', '::1', '2025-03-06 01:21:26'),
 (232, 23, NULL, 'User', 'Logout', 'User logged out', '::1', '2025-03-06 01:23:55'),
-(233, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-06 01:24:10');
+(233, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-06 01:24:10'),
+(234, 1, NULL, 'Admin', 'Approved Payment', 'Approved payment of ₱22,500.00 for Conrad Palma (Unit 205)', '::1', '2025-03-06 02:16:14'),
+(235, 1, NULL, 'Admin', 'Logout', 'User logged out', '::1', '2025-03-06 02:19:12');
 
 -- --------------------------------------------------------
 
@@ -354,6 +356,7 @@ CREATE TABLE `payments` (
   `notes` text DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `processed_by` varchar(255) NOT NULL,
   `payment_type` varchar(50) NOT NULL,
   `bill_item` varchar(100) NOT NULL,
   `bill_description` text DEFAULT NULL
@@ -363,14 +366,14 @@ CREATE TABLE `payments` (
 -- Dumping data for table `payments`
 --
 
-INSERT INTO `payments` (`payment_id`, `tenant_id`, `amount`, `payment_date`, `reference_number`, `receipt_image`, `gcash_number`, `status`, `notes`, `created_at`, `updated_at`, `payment_type`, `bill_item`, `bill_description`) VALUES
-(16, 45, 46000.00, '2025-03-04 22:01:47', '2012120513868', 'uploads/receipts/receipt_67c707cb7c38e_1741096907.jpg', '09510974884', 'Received', NULL, '2025-03-04 22:01:47', '2025-03-06 01:11:16', 'rent', '', NULL),
-(17, 44, 45000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-05 23:18:27', '2025-03-06 01:11:11', 'rent', '', NULL),
-(18, 51, 78750.00, '2025-03-05 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741189292_4485.jpg', '09210929331', 'Received', '', '2025-03-05 23:41:32', '2025-03-06 01:11:07', 'rent', '', NULL),
-(19, 47, 90000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-05 23:59:45', '2025-03-06 01:10:57', 'rent', '', NULL),
-(20, 42, 1000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-06 00:27:48', '2025-03-06 00:27:48', 'other', 'Maintenance Charges', 'Maintenance fee for fixing broken AC'),
-(21, 42, 5000.00, '2025-03-05 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741194767_5948.jpg', '09310973342', 'Received', '', '2025-03-06 01:12:47', '2025-03-06 01:12:47', 'other', 'Utilities', 'Water and Electric Bill'),
-(22, 21, 22500.00, '2025-03-06 01:21:26', '2012120513868', 'uploads/receipts/receipt_67c888167fc27_1741195286.jpg', '09610974334', 'Pending', NULL, '2025-03-06 01:21:26', '2025-03-06 01:45:21', 'rent', '', NULL);
+INSERT INTO `payments` (`payment_id`, `tenant_id`, `amount`, `payment_date`, `reference_number`, `receipt_image`, `gcash_number`, `status`, `notes`, `created_at`, `updated_at`, `processed_by`, `payment_type`, `bill_item`, `bill_description`) VALUES
+(16, 45, 46000.00, '2025-03-04 22:01:47', '2012120513868', 'uploads/receipts/receipt_67c707cb7c38e_1741096907.jpg', '09510974884', 'Received', NULL, '2025-03-04 22:01:47', '2025-03-06 01:11:16', '', 'rent', '', NULL),
+(17, 44, 45000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-05 23:18:27', '2025-03-06 01:11:11', '', 'rent', '', NULL),
+(18, 51, 78750.00, '2025-03-05 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741189292_4485.jpg', '09210929331', 'Received', '', '2025-03-05 23:41:32', '2025-03-06 01:11:07', '', 'rent', '', NULL),
+(19, 47, 90000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-05 23:59:45', '2025-03-06 01:10:57', '', 'rent', '', NULL),
+(20, 42, 1000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-06 00:27:48', '2025-03-06 00:27:48', '', 'other', 'Maintenance Charges', 'Maintenance fee for fixing broken AC'),
+(21, 42, 5000.00, '2025-03-05 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741194767_5948.jpg', '09310973342', 'Received', '', '2025-03-06 01:12:47', '2025-03-06 01:12:47', '', 'other', 'Utilities', 'Water and Electric Bill'),
+(22, 21, 22500.00, '2025-03-06 01:21:26', '2012120513868', 'uploads/receipts/receipt_67c888167fc27_1741195286.jpg', '09610974334', 'Received', NULL, '2025-03-06 01:21:26', '2025-03-06 02:16:14', 'Jhon Bautista', 'rent', '', NULL);
 
 -- --------------------------------------------------------
 
@@ -517,7 +520,7 @@ CREATE TABLE `tenants` (
 
 INSERT INTO `tenants` (`tenant_id`, `user_id`, `unit_rented`, `rent_from`, `rent_until`, `monthly_rate`, `outstanding_balance`, `registration_date`, `created_at`, `updated_at`, `downpayment_amount`, `payable_months`, `status`, `contract_file`, `contract_upload_date`, `downpayment_receipt`) VALUES
 (20, 11, '3', '2024-12-29', '2026-05-20', 33750.00, 440000.00, '0000-00-00', '2024-12-09 13:52:32', '2025-02-16 12:37:46', 100000.00, 14, 'active', 'uploads/contracts/67b1dc1a23042_20_Rental_Agreement.pdf', '2025-02-16 20:37:46', NULL),
-(21, 23, '10', '2024-12-10', '2026-12-20', 22500.00, 440000.00, '0000-00-00', '2024-12-10 04:27:46', '2025-02-23 14:04:34', 100000.00, 20, 'active', NULL, NULL, NULL),
+(21, 23, '10', '2024-12-10', '2026-12-20', 22500.00, 417500.00, '0000-00-00', '2024-12-10 04:27:46', '2025-03-05 18:16:14', 100000.00, 20, 'active', NULL, NULL, NULL),
 (42, 24, '6', '2024-12-31', '2026-10-31', 67500.00, 1385000.00, '0000-00-00', '2024-12-31 08:43:13', '2024-12-31 08:43:13', 100000.00, 21, 'active', NULL, NULL, NULL),
 (43, 11, '4', '2025-01-03', '2027-11-24', 22500.00, 665000.00, '0000-00-00', '2025-01-03 15:08:01', '2025-02-25 15:18:53', 100000.00, 30, 'active', NULL, NULL, NULL),
 (44, 23, '5', '2025-01-23', '2027-10-03', 45000.00, 895000.00, '0000-00-00', '2025-01-03 15:12:16', '2025-03-05 15:18:27', 500000.00, 21, 'active', NULL, NULL, NULL),
@@ -559,7 +562,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `profile_image`, `role`, `OTP`, `OTP_used`, `OTP_expiration`, `token`, `is_verified`, `created_at`, `updated_at`, `phone`, `ResetToken`, `login_attempts`, `last_attempt`, `status`) VALUES
-(1, 'Jhon Bautista', 'kjstevenpalma@gmail.com', '$2y$10$IbNu.ni4K.fxIYaIbyFqnekQgBR9RykaYNiTAbmUPa9obcBHlDxWG', NULL, 'Admin', '940281', 0, '2025-03-05 18:34:06', NULL, 1, '2024-10-22 08:59:15', '2025-03-05 17:24:06', '09510973323', '25974df077c253efd20cab82d9270e27fe1fd5238d4fea9ac2794aec23671076', 0, '2025-03-05 17:24:06', 'active'),
+(1, 'Jhon Bautista', 'kjstevenpalma@gmail.com', '$2y$10$IbNu.ni4K.fxIYaIbyFqnekQgBR9RykaYNiTAbmUPa9obcBHlDxWG', NULL, 'Admin', '940281', 0, '2025-03-05 18:34:06', NULL, 1, '2024-10-22 08:59:15', '2025-03-05 18:19:12', '09510973323', '25974df077c253efd20cab82d9270e27fe1fd5238d4fea9ac2794aec23671076', 0, '2025-03-05 17:24:06', 'inactive'),
 (11, 'David Fuentes', 'kjstevengaming@gmail.com', '$2y$10$vq8FbgmhOjIfSu5BBi5UA.Sk4wynt6P.s2FAbGG9DsuCmH3U6q0cq', 'uploads/67bdb549d211a-145218582_429580515129022_8609296071987312843_n.jpg', 'User', '382116', 0, '2025-03-04 15:03:01', NULL, 1, '2024-10-22 09:34:53', '2025-03-04 13:53:01', '09510973444', NULL, 0, '2025-03-04 13:53:01', 'active'),
 (23, 'Conrad Palma', 'kjstevenpalma18@gmail.com', '$2y$10$ePCz3ES5ycuXMIvghHlbS.Tp7vI8DHmRz8VbXRiSwGmb9S5yz3p/a', NULL, 'User', '489455', 0, '2025-03-05 18:29:34', NULL, 1, '2024-12-10 04:21:37', '2025-03-05 17:23:55', '09616733509', NULL, 0, '2025-03-05 17:19:34', 'inactive'),
 (24, 'Anora Hidson', 'freshplayz18@gmail.com', '$2y$10$mKVkrd7ZtB4yXrdmUPN.DO7.msB12SEcdbM1tp7MsZQtko5WOQctK', NULL, 'User', '160895', 0, '2025-02-25 06:57:36', NULL, 1, '2024-12-25 07:47:13', '2025-02-25 05:47:36', '09212973327', NULL, 0, '2025-02-25 05:47:36', 'active'),
@@ -669,7 +672,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=234;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=236;
 
 --
 -- AUTO_INCREMENT for table `generated_reports`

@@ -218,3 +218,5 @@ Stack trace:
 [05-Mar-2025 17:15:31 Europe/Berlin] Starting invoice_actions.php with action: view
 [05-Mar-2025 17:15:41 Europe/Berlin] Starting invoice_actions.php with action: update_status
 [05-Mar-2025 17:15:42 Europe/Berlin] Starting invoice_actions.php with action: update_status
+[05-Mar-2025 18:18:44 Europe/Berlin] Starting invoice_actions.php with action: update_status
+[05-Mar-2025 18:18:46 Europe/Berlin] Starting invoice_actions.php with action: update_status

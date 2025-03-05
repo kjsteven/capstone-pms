@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 04, 2025 at 11:59 AM
+-- Generation Time: Mar 05, 2025 at 06:46 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -165,7 +165,40 @@ INSERT INTO `activity_logs` (`log_id`, `user_id`, `staff_id`, `user_role`, `acti
 (197, 11, NULL, 'User', 'Login', 'User logged in successfully', '::1', '2025-03-04 00:17:53'),
 (198, 11, NULL, 'User', 'Logout', 'User logged out', '::1', '2025-03-04 00:23:27'),
 (199, NULL, 15, 'Staff', 'Staff Login', 'Staff member logged in successfully', '::1', '2025-03-04 00:23:39'),
-(200, NULL, 15, 'Staff', 'Staff  Logout', 'Staff member logged out successfully', '::1', '2025-03-04 00:33:30');
+(200, NULL, 15, 'Staff', 'Staff  Logout', 'Staff member logged out successfully', '::1', '2025-03-04 00:33:30'),
+(201, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-04 19:00:38'),
+(202, 1, NULL, 'Admin', 'Created Invoice', 'Created invoice #INV-20250304-1713 for tenant #42', '::1', '2025-03-04 19:11:13'),
+(203, 1, NULL, 'Admin', 'Sent Invoice Email', 'Sent invoice #INV-20250304-1713 to Anora Hidson (freshplayz18@gmail.com)', '::1', '2025-03-04 19:11:38'),
+(204, 1, NULL, 'Admin', 'Sent Invoice Email', 'Sent invoice #INV-20250304-1713 to Anora Hidson (freshplayz18@gmail.com)', '::1', '2025-03-04 19:22:27'),
+(205, 1, NULL, 'Admin', 'Created Invoice', 'Created invoice #INV-20250304-3030 for tenant #42', '::1', '2025-03-04 19:23:21'),
+(206, 1, NULL, 'Admin', 'Sent Invoice Email', 'Sent invoice #INV-20250304-3030 to Anora Hidson (freshplayz18@gmail.com)', '::1', '2025-03-04 19:24:09'),
+(207, 1, NULL, 'Admin', 'Logout', 'User logged out', '::1', '2025-03-04 19:32:06'),
+(208, 11, NULL, 'User', 'Login', 'User logged in successfully', '::1', '2025-03-04 19:32:20'),
+(209, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-04 19:40:20'),
+(210, 1, NULL, 'Admin', 'Created Invoice', 'Created invoice #INV-20250304-9270 for tenant #44', '::1', '2025-03-04 19:42:14'),
+(211, 1, NULL, 'Admin', 'Sent Invoice Email', 'Sent invoice #INV-20250304-9270 to Conrad Palma (kjstevenpalma18@gmail.com)', '::1', '2025-03-04 19:42:51'),
+(212, 11, NULL, 'User', 'Login', 'User logged in successfully', '::1', '2025-03-04 21:53:06'),
+(213, 11, NULL, 'User', 'Payment Submission', 'Payment of PHP 46,000.00 submitted for review (Reference: 2012120513868)', '::1', '2025-03-04 22:01:47'),
+(214, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-05 17:32:20'),
+(215, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-05 21:38:44'),
+(216, 1, NULL, 'Admin', 'Logout', 'User logged out', '::1', '2025-03-05 22:29:14'),
+(217, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-05 22:29:28'),
+(218, 1, NULL, 'Admin', 'Approved Payment', 'Approved payment of ₱46,000.00 for David Fuentes (Unit 701)', '::1', '2025-03-05 23:08:19'),
+(219, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash payment of ₱45,000.00 for Conrad Palma (Unit 106)', '::1', '2025-03-05 23:18:27'),
+(220, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded GCash payment of ₱78,750.00 for Conrad Palma (Unit 801)', '::1', '2025-03-05 23:41:32'),
+(221, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash payment of ₱90,000.00 for David Fuentes (Unit 807)', '::1', '2025-03-05 23:59:45'),
+(222, 1, NULL, 'Admin', 'Updated Invoice Status', 'Updated invoice #INV-20250304-1713 status to paid', '::1', '2025-03-06 00:15:27'),
+(223, 1, NULL, 'Admin', 'Updated Invoice Status', 'Updated invoice #INV-20250304-3030 status to paid', '::1', '2025-03-06 00:15:41'),
+(224, 1, NULL, 'Admin', 'Updated Invoice Status', 'Updated invoice #INV-20250304-9270 status to paid', '::1', '2025-03-06 00:15:42'),
+(225, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash payment of ₱1,000.00 for Maintenance Charges - Anora Hidson (Unit 107)', '::1', '2025-03-06 00:27:48'),
+(226, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded GCash payment of ₱5,000.00 for Utilities - Anora Hidson (Unit 107)', '::1', '2025-03-06 01:12:47'),
+(227, 1, NULL, 'Admin', 'Updated Invoice Status', 'Updated invoice #INV-20250304-9270 status to unpaid', '::1', '2025-03-06 01:18:44'),
+(228, 1, NULL, 'Admin', 'Updated Invoice Status', 'Updated invoice #INV-20250304-9270 status to paid', '::1', '2025-03-06 01:18:46'),
+(229, 1, NULL, 'Admin', 'Logout', 'User logged out', '::1', '2025-03-06 01:19:10'),
+(230, 23, NULL, 'User', 'Login', 'User logged in successfully', '::1', '2025-03-06 01:19:39'),
+(231, 23, NULL, 'User', 'Payment Submission', 'Payment of PHP 22,500.00 submitted for review (Reference: 2012120513868)', '::1', '2025-03-06 01:21:26'),
+(232, 23, NULL, 'User', 'Logout', 'User logged out', '::1', '2025-03-06 01:23:55'),
+(233, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-06 01:24:10');
 
 -- --------------------------------------------------------
 
@@ -218,6 +251,15 @@ CREATE TABLE `invoices` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `invoices`
+--
+
+INSERT INTO `invoices` (`id`, `tenant_id`, `invoice_number`, `amount`, `issue_date`, `due_date`, `status`, `invoice_type`, `description`, `email_sent`, `email_sent_date`, `created_at`, `updated_at`) VALUES
+(1, 42, 'INV-20250304-1713', 67500.00, '2025-03-15', '2025-03-30', 'paid', 'rent', 'test', 1, '2025-03-04 19:22:27', '2025-03-04 11:11:13', '2025-03-05 16:15:27'),
+(2, 42, 'INV-20250304-3030', 2000.00, '2025-03-04', '2025-03-19', 'paid', 'utility', 'Water and Electric Bill', 1, '2025-03-04 19:24:09', '2025-03-04 11:23:20', '2025-03-05 16:15:41'),
+(3, 44, 'INV-20250304-9270', 45500.00, '2025-03-15', '2025-03-30', 'paid', 'rent', 'Monthly rent and additional expenses', 1, '2025-03-04 19:42:51', '2025-03-04 11:42:14', '2025-03-05 17:18:46');
+
 -- --------------------------------------------------------
 
 --
@@ -230,6 +272,16 @@ CREATE TABLE `invoice_items` (
   `item_name` varchar(255) NOT NULL,
   `amount` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `invoice_items`
+--
+
+INSERT INTO `invoice_items` (`id`, `invoice_id`, `item_name`, `amount`) VALUES
+(1, 1, 'Monthly Rent', 67500.00),
+(2, 2, 'PVC Pipe', 500.00),
+(3, 3, 'Maintenance Charges', 500.00),
+(4, 3, 'Monthly Rent', 45000.00);
 
 -- --------------------------------------------------------
 
@@ -283,6 +335,42 @@ CREATE TABLE `notifications` (
   `status` enum('Unread','Read') DEFAULT 'Unread',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payments`
+--
+
+CREATE TABLE `payments` (
+  `payment_id` int(11) NOT NULL,
+  `tenant_id` int(11) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `payment_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `reference_number` varchar(100) NOT NULL,
+  `receipt_image` varchar(255) DEFAULT NULL,
+  `gcash_number` varchar(20) NOT NULL,
+  `status` enum('Pending','Received') NOT NULL DEFAULT 'Pending',
+  `notes` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `payment_type` varchar(50) NOT NULL,
+  `bill_item` varchar(100) NOT NULL,
+  `bill_description` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`payment_id`, `tenant_id`, `amount`, `payment_date`, `reference_number`, `receipt_image`, `gcash_number`, `status`, `notes`, `created_at`, `updated_at`, `payment_type`, `bill_item`, `bill_description`) VALUES
+(16, 45, 46000.00, '2025-03-04 22:01:47', '2012120513868', 'uploads/receipts/receipt_67c707cb7c38e_1741096907.jpg', '09510974884', 'Received', NULL, '2025-03-04 22:01:47', '2025-03-06 01:11:16', 'rent', '', NULL),
+(17, 44, 45000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-05 23:18:27', '2025-03-06 01:11:11', 'rent', '', NULL),
+(18, 51, 78750.00, '2025-03-05 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741189292_4485.jpg', '09210929331', 'Received', '', '2025-03-05 23:41:32', '2025-03-06 01:11:07', 'rent', '', NULL),
+(19, 47, 90000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-05 23:59:45', '2025-03-06 01:10:57', 'rent', '', NULL),
+(20, 42, 1000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-06 00:27:48', '2025-03-06 00:27:48', 'other', 'Maintenance Charges', 'Maintenance fee for fixing broken AC'),
+(21, 42, 5000.00, '2025-03-05 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741194767_5948.jpg', '09310973342', 'Received', '', '2025-03-06 01:12:47', '2025-03-06 01:12:47', 'other', 'Utilities', 'Water and Electric Bill'),
+(22, 21, 22500.00, '2025-03-06 01:21:26', '2012120513868', 'uploads/receipts/receipt_67c888167fc27_1741195286.jpg', '09610974334', 'Pending', NULL, '2025-03-06 01:21:26', '2025-03-06 01:45:21', 'rent', '', NULL);
 
 -- --------------------------------------------------------
 
@@ -432,12 +520,12 @@ INSERT INTO `tenants` (`tenant_id`, `user_id`, `unit_rented`, `rent_from`, `rent
 (21, 23, '10', '2024-12-10', '2026-12-20', 22500.00, 440000.00, '0000-00-00', '2024-12-10 04:27:46', '2025-02-23 14:04:34', 100000.00, 20, 'active', NULL, NULL, NULL),
 (42, 24, '6', '2024-12-31', '2026-10-31', 67500.00, 1385000.00, '0000-00-00', '2024-12-31 08:43:13', '2024-12-31 08:43:13', 100000.00, 21, 'active', NULL, NULL, NULL),
 (43, 11, '4', '2025-01-03', '2027-11-24', 22500.00, 665000.00, '0000-00-00', '2025-01-03 15:08:01', '2025-02-25 15:18:53', 100000.00, 30, 'active', NULL, NULL, NULL),
-(44, 23, '5', '2025-01-23', '2027-10-03', 45000.00, 940000.00, '0000-00-00', '2025-01-03 15:12:16', '2025-01-03 15:12:16', 500000.00, 21, 'active', NULL, NULL, NULL),
-(45, 11, '23', '2025-02-18', '2027-09-23', 90000.00, 2290000.00, '0000-00-00', '2025-02-18 12:20:19', '2025-02-18 12:24:28', 500000.00, 26, 'active', 'uploads/contracts/67b47bfcb7e70_45_Rental_Agreement.pdf', '2025-02-18 20:24:28', NULL),
-(47, 11, '20', '2025-02-28', '2028-10-26', 90000.00, 3370000.00, '0000-00-00', '2025-02-23 14:37:52', '2025-02-25 15:24:56', 500000.00, 38, 'active', NULL, NULL, NULL),
+(44, 23, '5', '2025-01-23', '2027-10-03', 45000.00, 895000.00, '0000-00-00', '2025-01-03 15:12:16', '2025-03-05 15:18:27', 500000.00, 21, 'active', NULL, NULL, NULL),
+(45, 11, '23', '2025-02-18', '2027-09-23', 90000.00, 2244000.00, '0000-00-00', '2025-02-18 12:20:19', '2025-03-05 15:08:19', 500000.00, 26, 'active', 'uploads/contracts/67b47bfcb7e70_45_Rental_Agreement.pdf', '2025-02-18 20:24:28', NULL),
+(47, 11, '20', '2025-02-28', '2028-10-26', 90000.00, 3280000.00, '0000-00-00', '2025-02-23 14:37:52', '2025-03-05 15:59:45', 500000.00, 38, 'active', NULL, NULL, NULL),
 (48, 24, '29', '2025-03-06', '2027-09-30', 90000.00, 2200000.00, '0000-00-00', '2025-02-25 05:49:53', '2025-02-25 05:49:53', 500000.00, 25, 'active', NULL, NULL, NULL),
 (50, 11, '25', '2025-04-30', '2026-12-30', 90000.00, 1400000.00, '0000-00-00', '2025-02-25 16:20:51', '2025-02-25 16:20:51', 400000.00, 16, 'active', NULL, NULL, NULL),
-(51, 23, '27', '2025-03-10', '2027-05-30', 78750.00, 1547500.00, '0000-00-00', '2025-03-01 15:25:07', '2025-03-01 15:25:07', 500000.00, 20, 'active', NULL, NULL, '../uploads/receipts/receipt_1740842707_6543.jpg');
+(51, 23, '27', '2025-03-10', '2027-05-30', 78750.00, 1468750.00, '0000-00-00', '2025-03-01 15:25:07', '2025-03-05 15:41:32', 500000.00, 20, 'active', NULL, NULL, '../uploads/receipts/receipt_1740842707_6543.jpg');
 
 -- --------------------------------------------------------
 
@@ -471,9 +559,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `profile_image`, `role`, `OTP`, `OTP_used`, `OTP_expiration`, `token`, `is_verified`, `created_at`, `updated_at`, `phone`, `ResetToken`, `login_attempts`, `last_attempt`, `status`) VALUES
-(1, 'Jhon Bautista', 'kjstevenpalma@gmail.com', '$2y$10$IbNu.ni4K.fxIYaIbyFqnekQgBR9RykaYNiTAbmUPa9obcBHlDxWG', NULL, 'Admin', '662690', 0, '2025-03-03 17:22:29', NULL, 1, '2024-10-22 08:59:15', '2025-03-03 16:17:40', '09510973323', '25974df077c253efd20cab82d9270e27fe1fd5238d4fea9ac2794aec23671076', 0, '2025-03-03 16:12:29', 'inactive'),
-(11, 'David Fuentes', 'kjstevengaming@gmail.com', '$2y$10$vq8FbgmhOjIfSu5BBi5UA.Sk4wynt6P.s2FAbGG9DsuCmH3U6q0cq', 'uploads/67bdb549d211a-145218582_429580515129022_8609296071987312843_n.jpg', 'User', '224469', 0, '2025-03-03 17:27:49', NULL, 1, '2024-10-22 09:34:53', '2025-03-03 16:23:27', '09510973444', NULL, 0, '2025-03-03 16:17:49', 'inactive'),
-(23, 'Conrad Palma', 'kjstevenpalma18@gmail.com', '$2y$10$ePCz3ES5ycuXMIvghHlbS.Tp7vI8DHmRz8VbXRiSwGmb9S5yz3p/a', NULL, 'User', '746820', 0, '2025-03-01 16:32:55', NULL, 1, '2024-12-10 04:21:37', '2025-03-01 15:22:55', '09616733509', NULL, 0, '2025-03-01 15:22:55', 'active'),
+(1, 'Jhon Bautista', 'kjstevenpalma@gmail.com', '$2y$10$IbNu.ni4K.fxIYaIbyFqnekQgBR9RykaYNiTAbmUPa9obcBHlDxWG', NULL, 'Admin', '940281', 0, '2025-03-05 18:34:06', NULL, 1, '2024-10-22 08:59:15', '2025-03-05 17:24:06', '09510973323', '25974df077c253efd20cab82d9270e27fe1fd5238d4fea9ac2794aec23671076', 0, '2025-03-05 17:24:06', 'active'),
+(11, 'David Fuentes', 'kjstevengaming@gmail.com', '$2y$10$vq8FbgmhOjIfSu5BBi5UA.Sk4wynt6P.s2FAbGG9DsuCmH3U6q0cq', 'uploads/67bdb549d211a-145218582_429580515129022_8609296071987312843_n.jpg', 'User', '382116', 0, '2025-03-04 15:03:01', NULL, 1, '2024-10-22 09:34:53', '2025-03-04 13:53:01', '09510973444', NULL, 0, '2025-03-04 13:53:01', 'active'),
+(23, 'Conrad Palma', 'kjstevenpalma18@gmail.com', '$2y$10$ePCz3ES5ycuXMIvghHlbS.Tp7vI8DHmRz8VbXRiSwGmb9S5yz3p/a', NULL, 'User', '489455', 0, '2025-03-05 18:29:34', NULL, 1, '2024-12-10 04:21:37', '2025-03-05 17:23:55', '09616733509', NULL, 0, '2025-03-05 17:19:34', 'inactive'),
 (24, 'Anora Hidson', 'freshplayz18@gmail.com', '$2y$10$mKVkrd7ZtB4yXrdmUPN.DO7.msB12SEcdbM1tp7MsZQtko5WOQctK', NULL, 'User', '160895', 0, '2025-02-25 06:57:36', NULL, 1, '2024-12-25 07:47:13', '2025-02-25 05:47:36', '09212973327', NULL, 0, '2025-02-25 05:47:36', 'active'),
 (26, 'Genalyn Palma', 'palmagenalyn17@gmail.com', '$2y$10$5w8ADIL9AijXhs.JVBw1X.olYGpZT8HL7W6TIe4lad3IJSgNtX6Ve', NULL, 'User', '461341', 0, '2025-02-25 17:29:11', NULL, 1, '2025-02-25 16:18:33', '2025-02-25 16:22:00', '09516733408', NULL, 0, '2025-02-25 16:19:11', 'inactive');
 
@@ -529,6 +617,15 @@ ALTER TABLE `notifications`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `payments`
+--
+ALTER TABLE `payments`
+  ADD PRIMARY KEY (`payment_id`),
+  ADD KEY `tenant_id` (`tenant_id`),
+  ADD KEY `idx_payments_status` (`status`),
+  ADD KEY `idx_payments_date` (`payment_date`);
+
+--
 -- Indexes for table `property`
 --
 ALTER TABLE `property`
@@ -572,7 +669,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=201;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=234;
 
 --
 -- AUTO_INCREMENT for table `generated_reports`
@@ -584,13 +681,13 @@ ALTER TABLE `generated_reports`
 -- AUTO_INCREMENT for table `invoices`
 --
 ALTER TABLE `invoices`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `invoice_items`
 --
 ALTER TABLE `invoice_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `maintenance_requests`
@@ -603,6 +700,12 @@ ALTER TABLE `maintenance_requests`
 --
 ALTER TABLE `notifications`
   MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `payments`
+--
+ALTER TABLE `payments`
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `property`
@@ -669,6 +772,12 @@ ALTER TABLE `maintenance_requests`
 --
 ALTER TABLE `notifications`
   ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `payments`
+--
+ALTER TABLE `payments`
+  ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `reservations`

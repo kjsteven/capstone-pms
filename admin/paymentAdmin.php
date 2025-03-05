@@ -888,15 +888,17 @@ if ($tenantsResult) {
                 `;
             });
     }
-    // Approve pending payment
-    function approvePayment(paymentId, tenantId, amount) {
+
+    
+ // Approve pending payment
+ function approvePayment(paymentId, tenantId, amount) {
         if (confirm('Are you sure you want to approve this payment?')) {
             // Show loading indicator on the button
             const approveButton = document.querySelector(`#payment-row-${paymentId} .text-green-600`);
             const originalHTML = approveButton.innerHTML;
             approveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             approveButton.disabled = true;
-            
+
             fetch('process_payment_action.php', {
                 method: 'POST',
                 headers: {
@@ -909,11 +911,11 @@ if ($tenantsResult) {
                 if (data.success) {
                     // Show success toast
                     showToast(data.message, 'success');
-                    
+
                     // Update the payment row
                     const row = document.getElementById(`payment-row-${paymentId}`);
                     row.classList.add('fade-out');
-                    
+
                     // Reload the page after animation completes
                     setTimeout(() => {
                         window.location.reload();
@@ -925,14 +927,14 @@ if ($tenantsResult) {
             .catch(error => {
                 console.error('Error:', error);
                 showToast(error.message, 'error');
-                
+
                 // Reset button state
                 approveButton.innerHTML = originalHTML;
                 approveButton.disabled = false;
             });
         }
     }
-    
+
     // Reject pending payment
     function rejectPayment(paymentId) {
         if (confirm('Are you sure you want to reject this payment?')) {
@@ -941,7 +943,7 @@ if ($tenantsResult) {
             const originalHTML = rejectButton.innerHTML;
             rejectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             rejectButton.disabled = true;
-            
+
             fetch('process_payment_action.php', {
                 method: 'POST',
                 headers: {
@@ -954,11 +956,11 @@ if ($tenantsResult) {
                 if (data.success) {
                     // Show success toast
                     showToast(data.message, 'success');
-                    
+
                     // Update the payment row
                     const row = document.getElementById(`payment-row-${paymentId}`);
                     row.classList.add('fade-out');
-                    
+
                     // Reload the page after animation completes
                     setTimeout(() => {
                         window.location.reload();
@@ -970,14 +972,14 @@ if ($tenantsResult) {
             .catch(error => {
                 console.error('Error:', error);
                 showToast(error.message, 'error');
-                
+
                 // Reset button state
                 rejectButton.innerHTML = originalHTML;
                 rejectButton.disabled = false;
             });
         }
     }
-    
+
     // Export payment report
     function exportReport() {
         const formData = new FormData(document.getElementById('exportForm'));
@@ -990,6 +992,10 @@ if ($tenantsResult) {
         toggleExportModal(false);
     }
     
+
+
+
+
     // Apply filters to payments table
     function applyFilters() {
         const statusFilter = document.getElementById('status-filter').value.toLowerCase();

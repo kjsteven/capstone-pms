@@ -1,0 +1,158 @@
+<?php
+require_once '../session/session_manager.php';
+require '../session/db.php';
+require_once '../session/audit_trail.php';
+
+start_secure_session();
+
+// Set the content type to JSON
+header('Content-Type: application/json');
+
+// Check if the user is logged in and is an admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unauthorized access'
+    ]);
+    exit();
+}
+
+// Check if it's a POST request
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid request method'
+    ]);
+    exit();
+}
+
+try {
+    // Validate required fields
+    if (!isset($_POST['action']) || empty($_POST['action'])) {
+        throw new Exception("Missing required field: action");
+    }
+    
+    if (!isset($_POST['payment_id']) || empty($_POST['payment_id'])) {
+        throw new Exception("Missing required field: payment_id");
+    }
+    
+    $action = $_POST['action'];
+    $payment_id = (int)$_POST['payment_id'];
+    
+    // Begin transaction
+    $conn->begin_transaction();
+    
+    // Get payment details
+    $paymentStmt = $conn->prepare(
+        "SELECT p.*, t.user_id, u.name as tenant_name, pr.unit_no
+         FROM payments p
+         JOIN tenants t ON p.tenant_id = t.tenant_id
+         JOIN users u ON t.user_id = u.user_id
+         JOIN property pr ON t.unit_rented = pr.unit_id
+         WHERE p.payment_id = ?"
+    );
+    $paymentStmt->bind_param("i", $payment_id);
+    $paymentStmt->execute();
+    $paymentResult = $paymentStmt->get_result();
+    
+    if ($paymentResult->num_rows === 0) {
+        throw new Exception("Payment not found");
+    }
+    
+    $payment = $paymentResult->fetch_assoc();
+    
+    // Check payment status - only pending payments can be approved or rejected
+    if ($payment['status'] !== 'Pending') {
+        throw new Exception("Only pending payments can be processed");
+    }
+    
+    // Process action
+    if ($action === 'approve') {
+        // Additional validation for approving payment
+        if (!isset($_POST['tenant_id']) || !isset($_POST['amount'])) {
+            throw new Exception("Missing required fields for approval");
+        }
+        
+        $tenant_id = (int)$_POST['tenant_id'];
+        $amount = (float)$_POST['amount'];
+        
+        // Update payment status to Received
+        $updateStmt = $conn->prepare(
+            "UPDATE payments
+             SET status = 'Received',
+                 processed_date = CURRENT_TIMESTAMP,
+                 processed_by = ?
+             WHERE payment_id = ?"
+        );
+        $updateStmt->bind_param("ii", $_SESSION['user_id'], $payment_id);
+        $updateStmt->execute();
+        
+        // Update tenant's outstanding balance
+        $balanceStmt = $conn->prepare(
+            "UPDATE tenants 
+             SET outstanding_balance = GREATEST(0, outstanding_balance - ?) 
+             WHERE tenant_id = ?"
+        );
+        $balanceStmt->bind_param("di", $amount, $tenant_id);
+        $balanceStmt->execute();
+        
+        // Log activity
+        $activityDetails = "Approved payment of ₱" . number_format($payment['amount'], 2) . 
+                           " for " . $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ")";
+        
+        logActivity(
+            $_SESSION['user_id'],
+            'Approved Payment',
+            $activityDetails
+        );
+        
+        $message = "Payment approved successfully";
+    } 
+    elseif ($action === 'reject') {
+        // Update payment status to Rejected
+        $updateStmt = $conn->prepare(
+            "UPDATE payments
+             SET status = 'Rejected',
+                 processed_date = CURRENT_TIMESTAMP,
+                 processed_by = ?
+             WHERE payment_id = ?"
+        );
+        $updateStmt->bind_param("ii", $_SESSION['user_id'], $payment_id);
+        $updateStmt->execute();
+        
+        // Log activity
+        $activityDetails = "Rejected payment of ₱" . number_format($payment['amount'], 2) . 
+                           " for " . $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ")";
+        
+        logActivity(
+            $_SESSION['user_id'],
+            'Rejected Payment',
+            $activityDetails
+        );
+        
+        $message = "Payment rejected";
+    }
+    else {
+        throw new Exception("Invalid action");
+    }
+    
+    // Commit transaction
+    $conn->commit();
+    
+    echo json_encode([
+        'success' => true,
+        'message' => $message
+    ]);
+    
+} catch (Exception $e) {
+    // Rollback transaction on error
+    if ($conn->inTransaction()) {
+        $conn->rollback();
+    }
+    
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
+}
+?>

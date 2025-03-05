@@ -197,6 +197,8 @@ if ($tenantsResult) {
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bill Item</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference #</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -207,7 +209,7 @@ if ($tenantsResult) {
                     <tbody class="bg-white divide-y divide-gray-200" id="payments-table-body">
                         <?php if (empty($payments)) : ?>
                         <tr>
-                            <td colspan="9" class="px-6 py-4 text-center text-gray-500">No payments found</td>
+                            <td colspan="11" class="px-6 py-4 text-center text-gray-500">No payments found</td>
                         </tr>
                         <?php else : ?>
                             <?php foreach ($payments as $payment) : ?>
@@ -216,6 +218,12 @@ if ($tenantsResult) {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?= htmlspecialchars($payment['tenant_name']) ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?= htmlspecialchars($payment['unit_no']) ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">₱<?= number_format($payment['amount'], 2) ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    <?= isset($payment['payment_type']) && $payment['payment_type'] === 'rent' ? 'Rent Payment' : 'Other Bill' ?>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    <?= !empty($payment['bill_item']) ? htmlspecialchars($payment['bill_item']) : 'N/A' ?>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                     <?php if (!empty($payment['gcash_number'])) : ?>
                                         <span class="inline-flex items-center">
@@ -346,6 +354,34 @@ if ($tenantsResult) {
                     </select>
                 </div>
                 
+                <!-- Payment Type Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
+                    <div class="space-y-2">
+                        <div class="flex items-center">
+                            <input type="radio" id="payment_type_rent" name="payment_type" value="rent" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <label for="payment_type_rent" class="ml-2 block text-sm text-gray-700">Rent Payment</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="payment_type_other" name="payment_type" value="other" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <label for="payment_type_other" class="ml-2 block text-sm text-gray-700">Other Bill</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bill Item fields (initially hidden) -->
+                <div id="bill-item-fields" class="space-y-4 hidden">
+                    <div>
+                        <label for="bill_item" class="block text-sm font-medium text-gray-700 mb-1">Bill Item</label>
+                        <input type="text" id="bill_item" name="bill_item" placeholder="e.g. Maintenance, Repair, etc." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="bill_description" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                        <textarea id="bill_description" name="bill_description" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Describe the bill item"></textarea>
+                    </div>
+                </div>
+                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount (₱)</label>
@@ -405,7 +441,7 @@ if ($tenantsResult) {
                         <i class="fas fa-info-circle mr-1"></i>
                         Current outstanding balance: <span id="current-balance" class="font-medium">₱0.00</span>
                     </p>
-                    <p class="text-sm text-blue-800 mt-1">
+                    <p id="balance-update-info" class="text-sm text-blue-800 mt-1">
                         Balance after payment: <span id="after-payment-balance" class="font-medium">₱0.00</span>
                     </p>
                 </div>
@@ -571,6 +607,27 @@ if ($tenantsResult) {
             });
         });
         
+        // Toggle bill item fields visibility based on payment type selection
+        document.querySelectorAll('input[name="payment_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const billItemFields = document.getElementById('bill-item-fields');
+                const balanceInfo = document.getElementById('balance-info');
+                const balanceUpdateInfo = document.getElementById('balance-update-info');
+                
+                if (this.value === 'other') {
+                    billItemFields.classList.remove('hidden');
+                    // Hide the "after payment" balance info for other bills
+                    if (balanceInfo.classList.contains('hidden') === false) {
+                        balanceUpdateInfo.classList.add('hidden');
+                    }
+                } else {
+                    billItemFields.classList.add('hidden');
+                    // Show the "after payment" balance info for rent payments
+                    balanceUpdateInfo.classList.remove('hidden');
+                }
+            });
+        });
+        
         // Show balance info when tenant is selected
         document.getElementById('tenant_id').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
@@ -580,11 +637,21 @@ if ($tenantsResult) {
                 document.getElementById('current-balance').textContent = '₱' + balance.toFixed(2);
                 document.getElementById('balance-info').classList.remove('hidden');
                 
-                // Update "after payment" balance when amount changes
+                // Check if currently selected payment type is 'rent'
+                const isRentPayment = document.getElementById('payment_type_rent').checked;
+                if (!isRentPayment) {
+                    document.getElementById('balance-update-info').classList.add('hidden');
+                } else {
+                    document.getElementById('balance-update-info').classList.remove('hidden');
+                }
+                
+                // Update "after payment" balance when amount changes (only for rent payments)
                 document.getElementById('amount').addEventListener('input', function() {
-                    const amount = parseFloat(this.value) || 0;
-                    const newBalance = Math.max(0, balance - amount);
-                    document.getElementById('after-payment-balance').textContent = '₱' + newBalance.toFixed(2);
+                    if (isRentPayment) {
+                        const amount = parseFloat(this.value) || 0;
+                        const newBalance = Math.max(0, balance - amount);
+                        document.getElementById('after-payment-balance').textContent = '₱' + newBalance.toFixed(2);
+                    }
                 });
                 
                 // Trigger input event to calculate initial after-payment balance
@@ -596,6 +663,16 @@ if ($tenantsResult) {
         // Handle manual payment form submission
         document.getElementById('manualPaymentForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // Extra validation for 'other' payment type
+            if (document.getElementById('payment_type_other').checked) {
+                const billItem = document.getElementById('bill_item').value.trim();
+                if (!billItem) {
+                    showToast('Please enter a bill item', 'error');
+                    return;
+                }
+            }
+            
             submitManualPayment();
         });
         
@@ -686,8 +763,8 @@ if ($tenantsResult) {
         });
     }
     
-    // View payment details
-    function viewPayment(paymentId) {
+     // View payment details
+     function viewPayment(paymentId) {
         // Show loading state
         toggleViewModal(true);
         document.getElementById('payment-details').innerHTML = `
@@ -811,7 +888,6 @@ if ($tenantsResult) {
                 `;
             });
     }
-    
     // Approve pending payment
     function approvePayment(paymentId, tenantId, amount) {
         if (confirm('Are you sure you want to approve this payment?')) {
@@ -939,17 +1015,24 @@ if ($tenantsResult) {
             
             const tenant = row.cells[1].textContent.toLowerCase();
             const unit = row.cells[2].textContent.toLowerCase();
-            const method = row.cells[4].textContent.toLowerCase();
-            const reference = row.cells[5].textContent.toLowerCase();
-            const dateText = row.cells[6].textContent;
+            const amount = row.cells[3].textContent.toLowerCase();
+            const type = row.cells[4].textContent.toLowerCase();
+            const billItem = row.cells[5].textContent.toLowerCase();
+            const method = row.cells[6].textContent.toLowerCase();
+            const reference = row.cells[7].textContent.toLowerCase();
+            const dateText = row.cells[8].textContent;
             const paymentDate = new Date(dateText);
-            const status = row.cells[7].textContent.trim().toLowerCase();
+            const status = row.cells[9].textContent.trim().toLowerCase();
             
             // Check if the row matches all active filters
             const matchesStatus = !statusFilter || status === statusFilter;
             const matchesSearch = !searchInput || 
                 tenant.includes(searchInput) || 
                 unit.includes(searchInput) || 
+                amount.includes(searchInput) || 
+                type.includes(searchInput) || 
+                billItem.includes(searchInput) || 
+                method.includes(searchInput) || 
                 reference.includes(searchInput);
             const matchesDate = !startDate || !endDate || 
                 (paymentDate >= startDate && paymentDate <= endDate);

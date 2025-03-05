@@ -208,3 +208,13 @@ Stack trace:
 [04-Mar-2025 12:42:14 Europe/Berlin] Invoice created successfully with ID: 3 and invoice number: INV-20250304-9270
 [04-Mar-2025 12:42:20 Europe/Berlin] Starting invoice_actions.php with action: view
 [04-Mar-2025 12:42:47 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[05-Mar-2025 17:01:15 Europe/Berlin] Starting invoice_actions.php with action: view
+[05-Mar-2025 17:01:25 Europe/Berlin] Starting invoice_actions.php with action: view
+[05-Mar-2025 17:02:03 Europe/Berlin] Starting invoice_actions.php with action: view
+[05-Mar-2025 17:04:00 Europe/Berlin] Starting invoice_actions.php with action: view
+[05-Mar-2025 17:07:10 Europe/Berlin] Starting invoice_actions.php with action: view
+[05-Mar-2025 17:07:21 Europe/Berlin] Starting invoice_actions.php with action: view
+[05-Mar-2025 17:15:27 Europe/Berlin] Starting invoice_actions.php with action: update_status
+[05-Mar-2025 17:15:31 Europe/Berlin] Starting invoice_actions.php with action: view
+[05-Mar-2025 17:15:41 Europe/Berlin] Starting invoice_actions.php with action: update_status
+[05-Mar-2025 17:15:42 Europe/Berlin] Starting invoice_actions.php with action: update_status

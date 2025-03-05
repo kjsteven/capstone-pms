@@ -77,7 +77,7 @@ try {
     header('Content-Type: application/json');
 
     // Define allowed actions
-    $allowedActions = ['create', 'view', 'delete', 'send_email'];
+    $allowedActions = ['create', 'view', 'delete', 'send_email', 'update_status'];
 
     // Get the requested action
     $action = isset($_GET['action']) ? $_GET['action'] : '';
@@ -106,6 +106,9 @@ try {
             break;
         case 'send_email':
             sendInvoiceEmail();
+            break;
+        case 'update_status':
+            updateInvoiceStatus();
             break;
         default:
             throw new Exception('Action not implemented');
@@ -694,6 +697,69 @@ function sendInvoiceEmail() {
     catch (Exception $e) {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        exit;
+    }
+}
+
+// Update invoice status
+function updateInvoiceStatus() {
+    global $conn;
+    
+    try {
+        // Check required parameters
+        if (!isset($_POST['invoice_id']) || !isset($_POST['status'])) {
+            throw new Exception('Invoice ID and status are required');
+        }
+        
+        $invoice_id = (int)$_POST['invoice_id'];
+        $status = $_POST['status'];
+        
+        // Validate status value (only 'paid' or 'unpaid' are allowed)
+        if ($status !== 'paid' && $status !== 'unpaid') {
+            throw new Exception('Invalid status value. Must be "paid" or "unpaid"');
+        }
+        
+        // Get invoice details for logging
+        $stmt = $conn->prepare("SELECT invoice_number, tenant_id FROM invoices WHERE id = ?");
+        $stmt->bind_param("i", $invoice_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            throw new Exception('Invoice not found');
+        }
+        
+        $invoice = $result->fetch_assoc();
+        
+        // Update the invoice status
+        $updateStmt = $conn->prepare("UPDATE invoices SET status = ? WHERE id = ?");
+        $updateStmt->bind_param("si", $status, $invoice_id);
+        
+        if (!$updateStmt->execute()) {
+            throw new Exception('Failed to update invoice status: ' . $updateStmt->error);
+        }
+        
+        // Log activity
+        logActivity(
+            $_SESSION['user_id'], 
+            'Updated Invoice Status', 
+            "Updated invoice #{$invoice['invoice_number']} status to {$status}"
+        );
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Invoice status updated successfully',
+            'new_status' => $status
+        ]);
+        exit;
+    } 
+    catch (Exception $e) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
         exit;
     }
 }

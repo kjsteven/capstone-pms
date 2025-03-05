@@ -47,6 +47,7 @@ try {
     // Build query based on filters
     $query = "SELECT p.payment_id, p.amount, p.payment_date, p.status, p.gcash_number, 
                      p.reference_number, p.created_at, p.updated_at,
+                     p.payment_type, p.bill_item, p.bill_description,
                      u.name AS tenant_name, pr.unit_no
               FROM payments p
               JOIN tenants t ON p.tenant_id = t.tenant_id
@@ -145,7 +146,9 @@ function exportCSV($payments, $fromDate, $toDate, $reportType, $totalReceived, $
         'Payment ID', 
         'Tenant', 
         'Unit', 
-        'Amount (PHP)', 
+        'Amount (PHP)',
+        'Payment Type',
+        'Bill Item', 
         'Payment Method', 
         'Reference Number', 
         'Payment Date', 
@@ -162,11 +165,19 @@ function exportCSV($payments, $fromDate, $toDate, $reportType, $totalReceived, $
         // Fix reference number by adding a single quote prefix to force Excel to treat it as text
         $reference = !empty($payment['reference_number']) ? "'".$payment['reference_number'] : 'N/A';
         
+        // Format payment type
+        $paymentType = $payment['payment_type'] === 'rent' ? 'Rent Payment' : 'Other Bill';
+        
+        // Get bill item or mark as N/A for rent payments
+        $billItem = $payment['payment_type'] === 'rent' ? 'N/A' : $payment['bill_item'];
+        
         fputcsv($tempFile, [
             $paymentId,
             $payment['tenant_name'],
             $payment['unit_no'],
             number_format($payment['amount'], 2), // Remove PHP symbol, just use the number
+            $paymentType,
+            $billItem,
             $method,
             $reference,  // Modified to prevent scientific notation
             date('M d, Y', strtotime($payment['payment_date'])),

@@ -113,6 +113,25 @@ if ($tenantResult) {
         .table-cell-highlight:hover {
             background-color: rgba(243, 244, 246, 0.5);
         }
+        /* Print specific styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-container, #print-container * {
+                visibility: visible;
+            }
+            #print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50"> 
@@ -211,7 +230,7 @@ if ($tenantResult) {
                                         $status_text = 'Unpaid';
                                     }
                                     ?>
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>" id="status-badge-<?= $invoice['id'] ?>">
                                         <?= $status_text ?>
                                     </span>
                                 </td>
@@ -222,6 +241,13 @@ if ($tenantResult) {
                                         </button>
                                         <button class="text-indigo-600 hover:text-indigo-900" onclick="sendInvoice(<?= $invoice['id'] ?>)">
                                             <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                        <!-- New status toggle icon -->
+                                        <button class="<?= $invoice['status'] === 'paid' ? 'text-green-600 hover:text-green-900' : 'text-yellow-600 hover:text-yellow-900' ?>" 
+                                                onclick="toggleInvoiceStatus(<?= $invoice['id'] ?>, '<?= $invoice['status'] === 'paid' ? 'unpaid' : 'paid' ?>')" 
+                                                title="<?= $invoice['status'] === 'paid' ? 'Mark as Unpaid' : 'Mark as Paid' ?>"
+                                                id="status-icon-<?= $invoice['id'] ?>">
+                                            <i class="fas <?= $invoice['status'] === 'paid' ? 'fa-times-circle' : 'fa-check-circle' ?>"></i>
                                         </button>
                                         <button class="text-red-600 hover:text-red-900" onclick="deleteInvoice(<?= $invoice['id'] ?>)">
                                             <i class="fas fa-trash-alt"></i>
@@ -510,7 +536,7 @@ if ($tenantResult) {
 <!-- View Invoice Modal -->
 <div id="viewInvoiceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-screen overflow-y-auto">
-        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200 no-print">
             <h3 class="text-xl font-semibold text-gray-800">Invoice Details</h3>
             <button class="text-gray-400 hover:text-gray-500" onclick="toggleViewModal(false)">
                 <i class="fas fa-times"></i>
@@ -518,22 +544,25 @@ if ($tenantResult) {
         </div>
         
         <div class="p-6">
-            <div class="invoice-preview">
-                <!-- Invoice content will be loaded here -->
-                <div id="view-invoice-content" class="animate-pulse">
-                    <div class="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-                    <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                    <div class="h-4 bg-gray-200 rounded w-1/3 mb-6"></div>
-                    
-                    <div class="space-y-2 mb-4">
-                        <div class="h-4 bg-gray-200 rounded w-full"></div>
-                        <div class="h-4 bg-gray-200 rounded w-full"></div>
-                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+            <!-- Wrapper div for print functionality -->
+            <div id="print-container">
+                <div class="invoice-preview">
+                    <!-- Invoice content will be loaded here -->
+                    <div id="view-invoice-content" class="animate-pulse">
+                        <div class="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/3 mb-6"></div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <div class="h-4 bg-gray-200 rounded w-full"></div>
+                            <div class="h-4 bg-gray-200 rounded w-full"></div>
+                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6">
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 mt-6 no-print">
                 <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="toggleViewModal(false)">
                     Close
                 </button>
@@ -1064,6 +1093,80 @@ if ($tenantResult) {
             });
     }
     
+    // Fixed print invoice function
+    function printInvoice() {
+        // Directly print the container without opening a new window
+        window.print();
+    }
+    
+    // Toggle invoice status (new function)
+    function toggleInvoiceStatus(invoiceId, newStatus) {
+        // Show confirmation dialog
+        const confirmMessage = newStatus === 'paid' ? 
+            'Are you sure you want to mark this invoice as paid?' : 
+            'Are you sure you want to mark this invoice as unpaid?';
+            
+        if (!confirm(confirmMessage)) {
+            return; // User cancelled
+        }
+        
+        // Send AJAX request to update status
+        fetch('invoice_actions.php?action=update_status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `invoice_id=${invoiceId}&status=${newStatus}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI to reflect new status
+                updateStatusUI(invoiceId, newStatus);
+                
+                // Show success message
+                showToast(`Invoice marked as ${newStatus}`, 'success');
+            } else {
+                throw new Error(data.message || 'Error updating status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error: ' + error.message, 'error');
+        });
+    }
+    
+    // Update status UI elements
+    function updateStatusUI(invoiceId, status) {
+        // Update status badge
+        const statusBadge = document.getElementById(`status-badge-${invoiceId}`);
+        if (statusBadge) {
+            if (status === 'paid') {
+                statusBadge.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800';
+                statusBadge.textContent = 'Paid';
+            } else {
+                statusBadge.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800';
+                statusBadge.textContent = 'Unpaid';
+            }
+        }
+        
+        // Update status icon
+        const statusIcon = document.getElementById(`status-icon-${invoiceId}`);
+        if (statusIcon) {
+            if (status === 'paid') {
+                statusIcon.className = 'text-green-600 hover:text-green-900';
+                statusIcon.title = 'Mark as Unpaid';
+                statusIcon.querySelector('i').className = 'fas fa-times-circle';
+                statusIcon.onclick = () => toggleInvoiceStatus(invoiceId, 'unpaid');
+            } else {
+                statusIcon.className = 'text-yellow-600 hover:text-yellow-900';
+                statusIcon.title = 'Mark as Paid';
+                statusIcon.querySelector('i').className = 'fas fa-check-circle';
+                statusIcon.onclick = () => toggleInvoiceStatus(invoiceId, 'paid');
+            }
+        }
+    }
+    
     // Send invoice email
     function prepareEmailModal() {
         const invoiceId = document.getElementById('email-invoice-btn').dataset.invoiceId;
@@ -1137,56 +1240,8 @@ if ($tenantResult) {
     
     // Print invoice
     function printInvoice() {
-        const content = document.getElementById('view-invoice-content').cloneNode(true);
-        const printWindow = window.open('', '_blank');
-        
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Invoice</title>
-                    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-                    <style>
-                        body {
-                            font-family: 'Poppins', sans-serif;
-                            padding: 20px;
-                            max-width: 800px;
-                            margin: 0 auto;
-                        }
-                        .invoice-preview-header {
-                            background-color: #f9fafb;
-                            border-bottom: 1px solid #e5e7eb;
-                            padding: 24px;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                        }
-                        th, td {
-                            padding: 12px 16px;
-                            text-align: left;
-                            border-bottom: 1px solid #e5e7eb;
-                        }
-                        th {
-                            font-weight: 600;
-                        }
-                        .text-right {
-                            text-align: right;
-                        }
-                        @media print {
-                            body {
-                                print-color-adjust: exact;
-                                -webkit-print-color-adjust: exact;
-                            }
-                        }
-                    </style>
-                </head>
-                <body onload="window.print(); window.close();">
-                    ${content.outerHTML}
-                </body>
-            </html>
-        `);
-        
-        printWindow.document.close();
+        // Directly print the container without opening a new window
+        window.print();
     }
     
     // Delete invoice

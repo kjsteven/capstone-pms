@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
     // Validate required fields
-    $required_fields = ['tenant_id', 'amount', 'payment_date', 'payment_method'];
+    $required_fields = ['tenant_id', 'amount', 'payment_date', 'payment_method', 'payment_type'];
     foreach ($required_fields as $field) {
         if (!isset($_POST[$field]) || empty($_POST[$field])) {
             throw new Exception("Missing required field: $field");
@@ -50,7 +50,19 @@ try {
     $amount = (float)$_POST['amount'];
     $payment_date = $_POST['payment_date'];
     $payment_method = $_POST['payment_method'];
+    $payment_type = $_POST['payment_type']; // 'rent' or 'other'
     $notes = isset($_POST['notes']) ? $_POST['notes'] : null;
+    
+    // Get bill item details if payment type is 'other'
+    $bill_item = null;
+    $bill_description = null;
+    if ($payment_type === 'other') {
+        if (!isset($_POST['bill_item']) || empty($_POST['bill_item'])) {
+            throw new Exception('Bill item is required for other payment types');
+        }
+        $bill_item = $_POST['bill_item'];
+        $bill_description = isset($_POST['bill_description']) ? $_POST['bill_description'] : null;
+    }
     
     // Additional validation for GCash payments
     $gcash_number = '';
@@ -102,20 +114,19 @@ try {
     // Begin transaction
     $conn->begin_transaction();
     
-    // Fixed INSERT query to match table structure - IMPORTANT CHANGE HERE
-    // Adjusted parameter count and removed created_at (which has default value)
+    // Updated INSERT query to include payment_type, bill_item and bill_description
     $stmt = $conn->prepare(
         "INSERT INTO payments 
-        (tenant_id, amount, payment_date, status, gcash_number, reference_number, receipt_image, notes) 
-        VALUES (?, ?, ?, 'Received', ?, ?, ?, ?)"
+        (tenant_id, amount, payment_date, status, gcash_number, reference_number, receipt_image, notes, payment_type, bill_item, bill_description) 
+        VALUES (?, ?, ?, 'Received', ?, ?, ?, ?, ?, ?, ?)"
     );
     
     // Make sure reference_number is never null (use empty string if null)
     if ($reference_number === null) $reference_number = '';
     
-    // Fixed bind_param types to match the parameters (i=integer, d=double/float, s=string)
-    $stmt->bind_param("idsssss", $tenant_id, $amount, $payment_date, $gcash_number, $reference_number, 
-                      $receipt_image, $notes);
+    // Updated bind_param with additional fields
+    $stmt->bind_param("idssssssss", $tenant_id, $amount, $payment_date, $gcash_number, $reference_number, 
+                      $receipt_image, $notes, $payment_type, $bill_item, $bill_description);
     
     if (!$stmt->execute()) {
         throw new Exception('Database error: ' . $stmt->error);
@@ -124,14 +135,16 @@ try {
     // Get the payment ID
     $payment_id = $conn->insert_id;
     
-    // Update tenant's outstanding balance
-    $balanceStmt = $conn->prepare(
-        "UPDATE tenants 
-        SET outstanding_balance = GREATEST(0, outstanding_balance - ?) 
-        WHERE tenant_id = ?"
-    );
-    $balanceStmt->bind_param("di", $amount, $tenant_id);
-    $balanceStmt->execute();
+    // Update tenant's outstanding balance only if payment type is rent
+    if ($payment_type === 'rent') {
+        $balanceStmt = $conn->prepare(
+            "UPDATE tenants 
+            SET outstanding_balance = GREATEST(0, outstanding_balance - ?) 
+            WHERE tenant_id = ?"
+        );
+        $balanceStmt->bind_param("di", $amount, $tenant_id);
+        $balanceStmt->execute();
+    }
     
     // Get tenant info for logging
     $tenantInfoStmt = $conn->prepare(
@@ -149,8 +162,15 @@ try {
     // Log activity
     $adminName = $_SESSION['name'] ?? 'Admin';
     $paymentMethodText = ($payment_method === 'gcash') ? 'GCash' : 'Cash';
-    $activityDetails = "Recorded $paymentMethodText payment of ₱" . number_format($amount, 2) . 
-                      " for " . $tenant['tenant_name'] . " (Unit " . $tenant['unit_no'] . ")";
+    
+    // Different activity details for rent vs other payments
+    if ($payment_type === 'rent') {
+        $activityDetails = "Recorded $paymentMethodText rent payment of ₱" . number_format($amount, 2) . 
+                          " for " . $tenant['tenant_name'] . " (Unit " . $tenant['unit_no'] . ")";
+    } else {
+        $activityDetails = "Recorded $paymentMethodText payment of ₱" . number_format($amount, 2) . 
+                          " for " . $bill_item . " - " . $tenant['tenant_name'] . " (Unit " . $tenant['unit_no'] . ")";
+    }
     
     logActivity(
         $_SESSION['user_id'],

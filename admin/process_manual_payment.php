@@ -41,6 +41,7 @@ try {
     require_once '../session/session_manager.php';
     require '../session/db.php';
     require_once '../session/audit_trail.php';
+    require_once '../utils/email_sender.php';
 
     // Use start_secure_session instead of session_start
     start_secure_session();
@@ -251,7 +252,7 @@ try {
     
     // Get tenant info for logging
     $tenantInfoStmt = $conn->prepare(
-        "SELECT t.tenant_id, u.name AS tenant_name, p.unit_no
+        "SELECT t.tenant_id, u.name AS tenant_name, p.unit_no, u.email
          FROM tenants t
          JOIN users u ON t.user_id = u.user_id
          JOIN property p ON t.unit_rented = p.unit_id
@@ -267,6 +268,36 @@ try {
     
     if (!$tenant) {
         throw new Exception('Tenant information not found');
+    }
+    
+    // Prepare payment data for email
+    $paymentData = [
+        'payment_id' => $payment_id,
+        'amount' => $amount,
+        'payment_date' => $payment_date,
+        'gcash_number' => $gcash_number,
+        'reference_number' => $reference_number,
+        'payment_type' => $payment_type,
+        'bill_item' => $bill_item,
+        'status' => 'Received'
+    ];
+    
+    // Send email confirmation to tenant
+    if (!empty($tenant['email'])) {
+        $emailSent = sendPaymentConfirmationEmail(
+            $tenant['email'],
+            $paymentData,
+            $tenant['tenant_name'],
+            $tenant['unit_no']
+        );
+        
+        if (!$emailSent) {
+            // Log the failure but don't interrupt the process
+            error_log("Failed to send payment confirmation email to: " . $tenant['email']);
+        } else {
+            // Log success
+            error_log("Payment confirmation email sent successfully to: " . $tenant['email']);
+        }
     }
     
     // Log activity
@@ -295,7 +326,8 @@ try {
     return_json_response(true, 'Payment recorded successfully', [
         'payment_id' => $payment_id,
         'tenant_name' => $tenant['tenant_name'],
-        'unit_no' => $tenant['unit_no']
+        'unit_no' => $tenant['unit_no'],
+        'email_sent' => isset($emailSent) ? $emailSent : false
     ]);
     
 } catch (Exception $e) {

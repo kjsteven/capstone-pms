@@ -234,3 +234,6 @@ Stack trace:
 [09-Mar-2025 06:16:44 Europe/Berlin] Preparing to insert payment for tenant ID: 55, amount: 90000, processed by: 1
 [09-Mar-2025 06:21:01 Europe/Berlin] Processing manual payment. User: 1, Method: POST
 [09-Mar-2025 06:21:01 Europe/Berlin] Preparing to insert payment for tenant ID: 55, amount: 90000, processed by: 1
+[09-Mar-2025 06:32:59 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Mar-2025 06:32:59 Europe/Berlin] Preparing to insert payment for tenant ID: 53, amount: 36000, processed by: 1
+[09-Mar-2025 06:33:03 Europe/Berlin] Payment confirmation email sent successfully to: palmagenalyn17@gmail.com

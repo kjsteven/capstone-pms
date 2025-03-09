@@ -41,11 +41,34 @@ try {
     }
 
     // Get form data
-    $unit_id = $_POST['unit_id'];
-    $amount = $_POST['amount'];
-    $reference_number = $_POST['reference_number'];
-    $gcash_number = $_POST['gcash_number'];
-    $user_id = $_SESSION['user_id'];
+    $unit_id = $_POST['unit_id'] ?? null;
+    $amount = $_POST['amount'] ?? null;
+    $gcash_number = $_POST['gcash_number'] ?? null;
+    $reference_number = $_POST['reference_number'] ?? null;
+
+    // Get the new fields
+    $payment_type = $_POST['payment_type'] ?? 'rent';
+    $bill_item = ($payment_type === 'rent') ? null : ($_POST['bill_item'] ?? null);
+
+    // Validate required fields
+    if (!$unit_id || !$amount || !$gcash_number || !$reference_number) {
+        $response = array(
+            'status' => 'error',
+            'message' => 'Missing required fields.'
+        );
+        echo json_encode($response);
+        exit;
+    }
+
+    // For non-rent payments, bill item is required
+    if ($payment_type !== 'rent' && empty($bill_item)) {
+        $response = array(
+            'status' => 'error',
+            'message' => 'Bill item is required for non-rent payments.'
+        );
+        echo json_encode($response);
+        exit;
+    }
 
     // Validate GCash number format (Philippine mobile number starting with 09)
     if (!preg_match('/^09\d{9}$/', $gcash_number)) {
@@ -55,7 +78,7 @@ try {
     // Get tenant_id using unit_id and user_id
     $query = "SELECT tenant_id FROM tenants WHERE user_id = ? AND unit_rented = ? AND status = 'active'";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("ii", $user_id, $unit_id);
+    $stmt->bind_param("ii", $_SESSION['user_id'], $unit_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -114,10 +137,12 @@ try {
     $transaction_started = true;
 
     // Insert payment record in database
-    $query = "INSERT INTO payments (tenant_id, amount, payment_date, reference_number, receipt_image, gcash_number, status) 
-              VALUES (?, ?, NOW(), ?, ?, ?, 'Pending')";
+    $query = "INSERT INTO payments (tenant_id, amount, payment_date, reference_number, receipt_image, gcash_number, status, payment_type, bill_item) 
+              VALUES (?, ?, NOW(), ?, ?, ?, 'Pending', ?, ?)";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("idsss", $tenant_id, $amount, $reference_number, $db_file_path, $gcash_number);
+    
+    // Fix: add an extra 's' to the type definition string to match the 7 parameters
+    $stmt->bind_param("idsssss", $tenant_id, $amount, $reference_number, $db_file_path, $gcash_number, $payment_type, $bill_item);
 
     if (!$stmt->execute()) {
         // Roll back transaction on error

@@ -30,7 +30,7 @@ $result = $stmt->get_result();
 $units = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Fetch payment history - modified to clearly include unit_no
+// Fetch payment history - modified to include payment type and method
 $query = "
     SELECT 
         p.payment_id,
@@ -39,6 +39,9 @@ $query = "
         p.reference_number,
         p.status,
         p.receipt_image,
+        p.gcash_number,
+        p.payment_type,
+        p.bill_item,
         pr.unit_no
     FROM payments p
     JOIN tenants t ON p.tenant_id = t.tenant_id
@@ -199,6 +202,39 @@ $stmt->close();
                     </select>
                 </div>
 
+                <!-- Payment Type Selection -->
+                <div>
+                    <label for="payment-type" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-tag mr-2 text-blue-500"></i>Payment Type
+                    </label>
+                    <select 
+                        id="payment-type" 
+                        name="payment_type"
+                        required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
+                        onchange="toggleBillItemField()"
+                    >
+                        <option value="rent">Rent Payment</option>
+                        <option value="maintenance">Maintenance Fee</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="other">Other Payment</option>
+                    </select>
+                </div>
+
+                <!-- Bill Item Field (initially hidden) -->
+                <div id="bill-item-container" class="hidden">
+                    <label for="bill-item" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-file-invoice mr-2 text-blue-500"></i>Bill Item
+                    </label>
+                    <input 
+                        type="text" 
+                        id="bill-item" 
+                        name="bill_item"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
+                        placeholder="Enter bill description (e.g., Water Bill, Electric Bill)"
+                    >
+                </div>
+
                 <div>
                     <label for="gcash-number" class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-mobile-alt mr-2 text-blue-500"></i>GCash Number
@@ -337,6 +373,9 @@ $stmt->close();
                         <tr class="bg-gray-200">
                             <th class="py-2 px-4 border">Unit No</th>
                             <th class="py-2 px-4 border">Amount (PHP)</th>
+                            <th class="py-2 px-4 border">Type</th>
+                            <th class="py-2 px-4 border">Bill Item</th>
+                            <th class="py-2 px-4 border">Method</th>
                             <th class="py-2 px-4 border">Date of Payment</th>
                             <th class="py-2 px-4 border">Reference No</th> 
                             <th class="py-2 px-4 border">Status</th>
@@ -349,6 +388,34 @@ $stmt->close();
                                 <tr>
                                     <td class="py-2 px-4 border"><?php echo htmlspecialchars($payment['unit_no']); ?></td>
                                     <td class="py-2 px-4 border">PHP <?php echo number_format($payment['amount'], 2); ?></td>
+                                    <td class="py-2 px-4 border">
+                                        <?php 
+                                            $paymentType = $payment['payment_type'] ?? 'rent';
+                                            echo ucfirst(htmlspecialchars($paymentType));
+                                        ?>
+                                    </td>
+                                    <td class="py-2 px-4 border">
+                                        <?php 
+                                            if (!empty($payment['bill_item'])) {
+                                                echo htmlspecialchars($payment['bill_item']);
+                                            } else {
+                                                echo $paymentType === 'rent' ? 'Monthly Rent' : 'N/A';
+                                            }
+                                        ?>
+                                    </td>
+                                    <td class="py-2 px-4 border">
+                                        <?php if (!empty($payment['gcash_number'])): ?>
+                                            <span class="flex items-center">
+                                                <img src="../images/gcash.png" alt="GCash" class="w-4 h-4 mr-1">
+                                                GCash
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="flex items-center">
+                                                <i class="fas fa-money-bill-wave text-green-600 mr-1"></i>
+                                                Cash
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="py-2 px-4 border"><?php echo date('Y-m-d', strtotime($payment['payment_date'])); ?></td>
                                     <td class="py-2 px-4 border"><?php echo htmlspecialchars($payment['reference_number']); ?></td>
                                     <td class="py-2 px-4 border">
@@ -374,7 +441,7 @@ $stmt->close();
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="py-4 text-center text-gray-500">No payment history found</td>
+                                <td colspan="9" class="py-4 text-center text-gray-500">No payment history found</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -502,9 +569,24 @@ $stmt->close();
             
             // Basic form validation
             const unitId = document.getElementById('unit-no').value;
+            const paymentType = document.getElementById('payment-type').value;
             const gcashNumber = document.getElementById('gcash-number').value;
             const amount = document.getElementById('amount').value;
             const referenceNumber = document.getElementById('reference-number').value;
+            
+            // Validate bill item if not a rent payment
+            if (paymentType !== 'rent' && !document.getElementById('bill-item').value.trim()) {
+                Toastify({
+                    text: "Please enter a bill item description",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                    stopOnFocus: true
+                }).showToast();
+                return;
+            }
             
             if (!unitId || !gcashNumber || !amount || !referenceNumber || !receiptFile.files[0]) {
                 Toastify({
@@ -634,14 +716,20 @@ $stmt->close();
             Array.from(tableRows).forEach(row => {
                 const unitNo = row.cells[0]?.textContent.toLowerCase() || '';
                 const amount = row.cells[1]?.textContent.toLowerCase() || '';
-                const date = row.cells[2]?.textContent.toLowerCase() || '';
-                const reference = row.cells[3]?.textContent.toLowerCase() || '';
-                const status = row.cells[4]?.textContent.toLowerCase() || '';
+                const paymentType = row.cells[2]?.textContent.toLowerCase() || '';
+                const billItem = row.cells[3]?.textContent.toLowerCase() || '';
+                const method = row.cells[4]?.textContent.toLowerCase() || '';
+                const date = row.cells[5]?.textContent.toLowerCase() || '';
+                const reference = row.cells[6]?.textContent.toLowerCase() || '';
+                const status = row.cells[7]?.textContent.toLowerCase() || '';
                 
                 const matchesStatus = !statusFilter || status.includes(statusFilter);
                 const matchesKeyword = !searchKeyword || 
                     unitNo.includes(searchKeyword) || 
                     amount.includes(searchKeyword) || 
+                    paymentType.includes(searchKeyword) || 
+                    billItem.includes(searchKeyword) || 
+                    method.includes(searchKeyword) || 
                     date.includes(searchKeyword) || 
                     reference.includes(searchKeyword);
                 
@@ -658,9 +746,9 @@ $stmt->close();
                 if (row.style.display === 'none') {
                     row.parentNode.removeChild(row);
                 } else {
-                    const lastCell = row.cells[row.cells.length - 1];
-                    const hasReceipt = lastCell.querySelector('.view-receipt') !== null;
-                    lastCell.innerHTML = hasReceipt ? 'Available' : 'Not available';
+                    const receiptCell = row.cells[row.cells.length - 1];
+                    const hasReceipt = receiptCell.querySelector('.view-receipt') !== null;
+                    receiptCell.innerHTML = hasReceipt ? 'Available' : 'Not available';
                 }
             });
             
@@ -687,6 +775,7 @@ $stmt->close();
                                 border: 1px solid #ddd;
                                 padding: 8px;
                                 text-align: left;
+                                font-size: 12px;
                             }
                             th {
                                 background-color: #f2f2f2;
@@ -701,6 +790,10 @@ $stmt->close();
                                 text-align: right;
                                 margin-bottom: 20px;
                                 font-size: 12px;
+                            }
+                            @media print {
+                                table { page-break-inside: auto; }
+                                tr { page-break-inside: avoid; page-break-after: auto; }
                             }
                         </style>
                     </head>
@@ -744,6 +837,40 @@ $stmt->close();
             if (e.target === this) {
                 this.classList.add('hidden');
             }
+        });
+
+        // Toggle bill item field based on payment type
+        function toggleBillItemField() {
+            const paymentType = document.getElementById('payment-type').value;
+            const billItemContainer = document.getElementById('bill-item-container');
+            const billItemInput = document.getElementById('bill-item');
+            
+            if (paymentType === 'rent') {
+                billItemContainer.classList.add('hidden');
+                billItemInput.removeAttribute('required');
+            } else {
+                billItemContainer.classList.remove('hidden');
+                billItemInput.setAttribute('required', 'required');
+                
+                // Set default bill item label based on payment type
+                switch(paymentType) {
+                    case 'maintenance':
+                        billItemInput.placeholder = "Enter maintenance description (e.g., Plumbing, AC repair)";
+                        break;
+                    case 'utilities':
+                        billItemInput.placeholder = "Enter utility type (e.g., Water Bill, Electric Bill)";
+                        break;
+                    case 'other':
+                        billItemInput.placeholder = "Enter payment description";
+                        break;
+                }
+            }
+        }
+
+        // Initialize bill item field on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize payment type field
+            toggleBillItemField();
         });
     </script>
 </body>

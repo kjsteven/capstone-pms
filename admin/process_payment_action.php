@@ -2,6 +2,7 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';
+require_once '../utils/email_sender.php';
 
 session_start();
 
@@ -139,6 +140,36 @@ try {
             );
             $updateTenantStmt->bind_param("iii", $payable_months, $payment_id, $tenant_id);
             $updateTenantStmt->execute();
+        }
+        
+        // Get tenant email for sending confirmation
+        $emailStmt = $conn->prepare(
+            "SELECT u.email 
+             FROM users u 
+             JOIN tenants t ON u.user_id = t.user_id 
+             WHERE t.tenant_id = ?"
+        );
+        $emailStmt->bind_param("i", $tenant_id);
+        $emailStmt->execute();
+        $emailResult = $emailStmt->get_result();
+        $tenantEmail = ($emailResult->num_rows > 0) ? $emailResult->fetch_assoc()['email'] : '';
+        
+        if (!empty($tenantEmail)) {
+            // Send payment confirmation email
+            $emailSent = sendPaymentConfirmationEmail(
+                $tenantEmail,
+                $payment,
+                $payment['tenant_name'],
+                $payment['unit_no']
+            );
+            
+            if (!$emailSent) {
+                // Log the failure but don't interrupt the process
+                error_log("Failed to send payment confirmation email to: $tenantEmail");
+            } else {
+                // Log success
+                error_log("Payment confirmation email sent successfully to: $tenantEmail");
+            }
         }
         
         // Log activity

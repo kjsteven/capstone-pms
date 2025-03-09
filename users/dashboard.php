@@ -34,6 +34,37 @@ $result = mysqli_stmt_get_result($stmt);
 // Fetch the user data
 $user = mysqli_fetch_assoc($result);
 
+// Get payment data for chart - fetch rent payments by month for the current year
+$current_year = date('Y');
+$payment_query = "
+    SELECT 
+        MONTH(p.payment_date) as month,
+        SUM(p.amount) as total_amount
+    FROM payments p
+    JOIN tenants t ON p.tenant_id = t.tenant_id
+    WHERE t.user_id = ? 
+    AND YEAR(p.payment_date) = ?
+    AND p.status = 'Received'
+    GROUP BY MONTH(p.payment_date)
+    ORDER BY MONTH(p.payment_date)
+";
+
+$stmt = mysqli_prepare($conn, $payment_query);
+mysqli_stmt_bind_param($stmt, "ii", $_SESSION['user_id'], $current_year);
+mysqli_stmt_execute($stmt);
+$payment_result = mysqli_stmt_get_result($stmt);
+
+// Initialize array with zeros for all 12 months
+$monthly_payments = array_fill(0, 12, 0);
+
+// Fill in actual payment data
+while ($row = mysqli_fetch_assoc($payment_result)) {
+    $month_index = $row['month'] - 1; // Convert 1-12 to 0-11 for array index
+    $monthly_payments[$month_index] = (float)$row['total_amount'];
+}
+
+// Convert to JSON for use in JavaScript
+$payment_data_json = json_encode($monthly_payments);
 
 ?>
 
@@ -265,7 +296,7 @@ $user = mysqli_fetch_assoc($result);
     var options = {
         series: [{
             name: "Rent Payments",
-            data: [500, 600, 700, 650, 800, 750, 900, 950, 1100, 1200, 1300, 1400] // Sample rent payment amounts for each month
+            data: <?php echo $payment_data_json; ?> // Use actual payment data from database
         }],
         chart: {
             height: 350,
@@ -288,6 +319,23 @@ $user = mysqli_fetch_assoc($result);
         },
         xaxis: {
             categories: monthNames,
+        },
+        yaxis: {
+            title: {
+                text: 'Amount (PHP)'
+            },
+            labels: {
+                formatter: function(value) {
+                    return "₱" + value.toFixed(2);
+                }
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function(value) {
+                    return "₱" + value.toFixed(2);
+                }
+            }
         }
     };
 

@@ -66,6 +66,59 @@ if ($totalActiveProperties > 0) {
     }
 }
 
+// Get monthly revenue data for the past 6 months
+$revenueData = [];
+$revenueLabels = [];
+
+// Get current month and year
+$currentMonth = date('n'); // 1-12
+$currentYear = date('Y');
+
+// SQL query to get monthly revenue for the past 6 months
+$revenueQuery = "SELECT 
+                    YEAR(payment_date) as year, 
+                    MONTH(payment_date) as month, 
+                    SUM(amount) as total 
+                 FROM payments 
+                 WHERE status = 'Received' 
+                 AND payment_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+                 GROUP BY YEAR(payment_date), MONTH(payment_date) 
+                 ORDER BY year ASC, month ASC";
+
+$revenueResult = $conn->query($revenueQuery);
+
+// Initialize monthly data array with zeros for past 6 months
+for ($i = 5; $i >= 0; $i--) {
+    $month = ($currentMonth - $i) > 0 ? ($currentMonth - $i) : (12 + ($currentMonth - $i));
+    $year = ($currentMonth - $i) > 0 ? $currentYear : ($currentYear - 1);
+    $monthName = date('M', mktime(0, 0, 0, $month, 1, $year));
+    $revenueLabels[] = $monthName;
+    $revenueData[$year . '-' . $month] = 0;
+}
+
+// Fill in actual revenue data
+if ($revenueResult) {
+    while ($row = $revenueResult->fetch_assoc()) {
+        $key = $row['year'] . '-' . $row['month'];
+        if (isset($revenueData[$key])) {
+            $revenueData[$key] = (float)$row['total'];
+        }
+    }
+}
+
+// Convert associative array to indexed array for Chart.js
+$chartRevenueData = array_values($revenueData);
+
+// Calculate total monthly revenue (for the card display)
+$monthlyRevenueQuery = "SELECT SUM(amount) as total 
+                        FROM payments 
+                        WHERE status = 'Received' 
+                        AND YEAR(payment_date) = YEAR(CURRENT_DATE()) 
+                        AND MONTH(payment_date) = MONTH(CURRENT_DATE())";
+$monthlyRevenueResult = $conn->query($monthlyRevenueQuery);
+$monthlyRevenue = $monthlyRevenueResult ? $monthlyRevenueResult->fetch_assoc()['total'] : 0;
+$monthlyRevenue = $monthlyRevenue ?: 0; // Set to 0 if null
+
 // Pagination settings
 $items_per_page = 20; // Changed from 10 to 20 (or any other number you prefer)
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -216,7 +269,7 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
                         <h3 class="text-2xl font-bold text-gray-700"><?php echo $totalProperties; ?></h3>
                     </div>
                     <div class="p-3 bg-blue-100 rounded-full">
-                        <svg data-feather="home" class="text-blue-600 w-6 h-6"></svg>
+                    <img width="28" height="28" src="https://img.icons8.com/fluency/48/mortgage.png" alt="mortgage"/>
                     </div>
                 </div>
             </div>
@@ -229,7 +282,7 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
                         <h3 class="text-2xl font-bold text-gray-700"><?php echo $totalTenants; ?></h3>
                     </div>
                     <div class="p-3 bg-green-100 rounded-full">
-                        <svg data-feather="users" class="text-green-600 w-6 h-6"></svg>
+                    <img width="28" height="28" src="https://img.icons8.com/fluency/48/groups--v2.png" alt="groups--v2"/>
                     </div>
                 </div>
             </div>
@@ -242,7 +295,7 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
                         <h3 class="text-2xl font-bold text-gray-700"><?php echo $pendingMaintenance; ?></h3>
                     </div>
                     <div class="p-3 bg-yellow-100 rounded-full">
-                        <svg data-feather="tool" class="text-yellow-600 w-6 h-6"></svg>
+                    <img width="28" height="28" src="https://img.icons8.com/fluency/48/maintenance--v1.png" alt="maintenance--v1"/>
                     </div>
                 </div>
             </div>
@@ -255,20 +308,20 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
                         <h3 class="text-2xl font-bold text-gray-700"><?php echo $pendingReservations; ?></h3>
                     </div>
                     <div class="p-3 bg-indigo-200 rounded-full">
-                        <svg data-feather="calendar" class="text-indigo-600 w-6 h-6"></svg>
+                    <img width="28" height="28" src="https://img.icons8.com/fluency/48/overtime--v1.png" alt="overtime--v1"/>
                     </div>
                 </div>
             </div>
 
-            <!-- Revenue Card -->
+            <!-- Revenue Card - Updated with real data -->
             <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition duration-300">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Monthly Revenue</p>
-                        <h3 class="text-2xl font-bold text-gray-700">$52,680</h3>
+                        <h3 class="text-2xl font-bold text-gray-700">₱<?php echo number_format($monthlyRevenue, 2); ?></h3>
                     </div>
                     <div class="p-3 bg-purple-100 rounded-full">
-                        <svg data-feather="dollar-sign" class="text-purple-600 w-6 h-6"></svg>
+                    <img width="28" height="28" src="https://img.icons8.com/fluency/48/peso-symbol.png" alt="peso-symbol"/>
                     </div>
                 </div>
             </div>
@@ -384,15 +437,15 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
     // Initialize Feather Icons
     feather.replace();
 
-    // Revenue Chart
+    // Revenue Chart - Updated with real data
     const revenueCtx = document.getElementById('revenueChart').getContext('2d');
     new Chart(revenueCtx, {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: <?php echo json_encode($revenueLabels); ?>,
             datasets: [{
                 label: 'Monthly Revenue',
-                data: [42000, 49000, 52000, 47000, 53000, 52680],
+                data: <?php echo json_encode($chartRevenueData); ?>,
                 borderColor: 'rgb(99, 102, 241)',
                 tension: 0.1
             }]
@@ -409,6 +462,17 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
                             size: 11
                         }
                     }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.raw;
+                            return 'Revenue: ₱' + value.toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                    }
                 }
             },
             scales: {
@@ -417,6 +481,12 @@ $pendingReservations = $reservationResult ? $reservationResult->fetch_assoc()['t
                     ticks: {
                         font: {
                             size: 10
+                        },
+                        callback: function(value, index, values) {
+                            return '₱' + value.toLocaleString('en-US', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
                         }
                     }
                 },

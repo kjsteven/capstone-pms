@@ -155,7 +155,7 @@ try {
 
     // Log the payment using the audit_trail function
     $actionDetails = "Payment of PHP " . number_format($amount, 2) . " submitted for review (Reference: $reference_number)";
-    logActivity($user_id, 'Payment Submission', $actionDetails);
+    logActivity($_SESSION['user_id'], 'Payment Submission', $actionDetails);
 
     // Commit transaction
     $conn->commit();

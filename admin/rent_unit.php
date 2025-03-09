@@ -41,20 +41,34 @@ try {
     $monthly_rate = (float)$input['monthly_rate'];
     $downpayment_amount = (float)$input['downpayment_amount'];
 
-    // Calculate rental details
+    // Calculate rental details - UPDATED CALCULATION
     $date1 = new DateTime($rent_from);
     $date2 = new DateTime($rent_until);
-    $interval = $date1->diff($date2);
-    $months = $interval->m + ($interval->y * 12);
     
-    $total_rent = $months * $monthly_rate;
+    // Calculate exact days between dates
+    $interval = $date1->diff($date2);
+    $totalDays = $interval->days;
+    
+    // Calculate months more precisely (average month = 365.25/12 days)
+    $exactMonths = $totalDays / (365.25/12);
+    
+    // Calculate total rent based on exact months
+    $total_rent = $exactMonths * $monthly_rate;
+    
+    // Calculate outstanding balance
     $outstanding_balance = $total_rent - $downpayment_amount;
+    
+    // Calculate payable months - ensure this is consistent with outstanding balance
     $payable_months = ceil($outstanding_balance / $monthly_rate);
+    
+    // Recalculate outstanding balance to ensure consistency with payable months
+    $outstanding_balance = $payable_months * $monthly_rate;
 
     // Handle receipt file upload
     $downpayment_receipt = null;
     if (isset($_FILES['downpayment_receipt']) && $_FILES['downpayment_receipt']['error'] == 0) {
-        $upload_dir = '../uploads/receipts/';
+        // Change this directory path to match the one in tenantAdmin.php
+        $upload_dir = '../uploads/downpayment/'; // Previously '../uploads/receipts/'
         
         // Create directory if it doesn't exist
         if (!file_exists($upload_dir)) {

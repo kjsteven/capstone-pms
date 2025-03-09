@@ -113,19 +113,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $monthly_rate = (float)$_POST['monthly_rate'];
         $downpayment_amount = (float)$_POST['downpayment_amount'];
 
+        // Convert dates to DateTime objects
         $date1 = new DateTime($rent_from);
         $date2 = new DateTime($rent_until);
+        
+        // Calculate exact days between dates
         $interval = $date1->diff($date2);
-        $months = $interval->m + ($interval->y * 12);
-
-        $total_rent = $months * $monthly_rate;
+        $totalDays = $interval->days;
+        
+        // Calculate months more precisely (average month = 365.25/12 days)
+        $exactMonths = $totalDays / (365.25/12);
+        
+        // For display purposes, round to 2 decimal places
+        $displayMonths = round($exactMonths, 2);
+        
+        // Calculate total rent based on exact months
+        $total_rent = $exactMonths * $monthly_rate;
+        
+        // Calculate outstanding balance
         $outstanding_balance = $total_rent - $downpayment_amount;
+        
+        // Calculate payable months - ensure this is consistent with outstanding balance
+        // This will be a whole number of months the tenant needs to pay
         $payable_months = ceil($outstanding_balance / $monthly_rate);
+        
+        // Recalculate outstanding balance to ensure consistency with payable months
+        // This ensures that outstanding_balance = payable_months * monthly_rate
+        $outstanding_balance = $payable_months * $monthly_rate;
         
         // Handle receipt file upload
         $downpayment_receipt = null;
         if (isset($_FILES['downpayment_receipt']) && $_FILES['downpayment_receipt']['error'] == 0) {
-            $upload_dir = '../uploads/receipts/';
+            $upload_dir = '../uploads/downpayment/';
             
             // Create directory if it doesn't exist
             if (!file_exists($upload_dir)) {

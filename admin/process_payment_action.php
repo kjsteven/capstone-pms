@@ -95,18 +95,55 @@ try {
         $updateStmt->bind_param("si", $adminName, $payment_id);
         $updateStmt->execute();
         
-        // Update tenant's outstanding balance
-        $balanceStmt = $conn->prepare(
-            "UPDATE tenants 
-             SET outstanding_balance = GREATEST(0, outstanding_balance - ?) 
-             WHERE tenant_id = ?"
-        );
-        $balanceStmt->bind_param("di", $amount, $tenant_id);
-        $balanceStmt->execute();
+        // Check if this is a rent payment (only update balances for rent payments)
+        $paymentTypeStmt = $conn->prepare("SELECT payment_type FROM payments WHERE payment_id = ?");
+        $paymentTypeStmt->bind_param("i", $payment_id);
+        $paymentTypeStmt->execute();
+        $paymentTypeResult = $paymentTypeStmt->get_result();
+        $paymentType = $paymentTypeResult->fetch_assoc()['payment_type'];
+        
+        if ($paymentType === 'rent') {
+            // Get tenant's monthly rate
+            $getTenantStmt = $conn->prepare("SELECT monthly_rate FROM tenants WHERE tenant_id = ?");
+            $getTenantStmt->bind_param("i", $tenant_id);
+            $getTenantStmt->execute();
+            $tenantResult = $getTenantStmt->get_result();
+            $monthly_rate = $tenantResult->fetch_assoc()['monthly_rate'];
+            
+            // Update tenant's outstanding balance
+            $balanceStmt = $conn->prepare(
+                "UPDATE tenants 
+                SET outstanding_balance = GREATEST(0, outstanding_balance - ?) 
+                WHERE tenant_id = ?"
+            );
+            $balanceStmt->bind_param("di", $amount, $tenant_id);
+            $balanceStmt->execute();
+            
+            // Get updated balance to recalculate payable months
+            $getBalanceStmt = $conn->prepare("SELECT outstanding_balance FROM tenants WHERE tenant_id = ?");
+            $getBalanceStmt->bind_param("i", $tenant_id);
+            $getBalanceStmt->execute();
+            $balanceResult = $getBalanceStmt->get_result();
+            $balanceData = $balanceResult->fetch_assoc();
+            $new_balance = $balanceData['outstanding_balance'];
+            
+            // Recalculate payable months
+            $payable_months = ceil($new_balance / $monthly_rate);
+            
+            // Update payable months and last payment date
+            $updateTenantStmt = $conn->prepare(
+                "UPDATE tenants 
+                SET payable_months = ?, 
+                    last_payment_date = (SELECT payment_date FROM payments WHERE payment_id = ?) 
+                WHERE tenant_id = ?"
+            );
+            $updateTenantStmt->bind_param("iii", $payable_months, $payment_id, $tenant_id);
+            $updateTenantStmt->execute();
+        }
         
         // Log activity
         $activityDetails = "Approved payment of ₱" . number_format($payment['amount'], 2) . 
-                           " for " . $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ")";
+                          " for " . $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ")";
         
         logActivity(
             $_SESSION['user_id'],

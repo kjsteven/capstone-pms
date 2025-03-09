@@ -220,3 +220,17 @@ Stack trace:
 [05-Mar-2025 17:15:42 Europe/Berlin] Starting invoice_actions.php with action: update_status
 [05-Mar-2025 18:18:44 Europe/Berlin] Starting invoice_actions.php with action: update_status
 [05-Mar-2025 18:18:46 Europe/Berlin] Starting invoice_actions.php with action: update_status
+[09-Mar-2025 05:21:15 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Mar-2025 05:21:15 Europe/Berlin] Preparing to insert payment for tenant ID: 43, amount: 22500, processed by: 1
+[09-Mar-2025 05:21:15 Europe/Berlin] PHP error in manual payment: The number of elements in the type definition string must match the number of bind variables - #0 C:\xampp\htdocs\capstone-pms\admin\process_manual_payment.php(178): mysqli_stmt->bind_param('idsssssssi', 43, 22500.0, '2025-03-09', '', '', '', '', 'rent', '', '', 1)
+#1 {main}
+[09-Mar-2025 05:23:22 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Mar-2025 05:23:22 Europe/Berlin] Preparing to insert payment for tenant ID: 43, amount: 22500, processed by: 1
+[09-Mar-2025 06:05:39 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Mar-2025 06:05:39 Europe/Berlin] Preparing to insert payment for tenant ID: 55, amount: 90000, processed by: 1
+[09-Mar-2025 06:15:30 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Mar-2025 06:15:30 Europe/Berlin] Preparing to insert payment for tenant ID: 53, amount: 36000, processed by: 1
+[09-Mar-2025 06:16:44 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Mar-2025 06:16:44 Europe/Berlin] Preparing to insert payment for tenant ID: 55, amount: 90000, processed by: 1
+[09-Mar-2025 06:21:01 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Mar-2025 06:21:01 Europe/Berlin] Preparing to insert payment for tenant ID: 55, amount: 90000, processed by: 1

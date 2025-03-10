@@ -48,7 +48,7 @@
         <p class="mb-4">We reserve the right to update or modify these terms at any time. Any changes will be posted on this page with the date of the latest update. Continued use of the platform after such changes constitutes your acceptance of the new terms.</p>
 
         <h2 class="text-2xl font-semibold mb-4">9. Governing Law</h2>
-        <p class="mb-4">These terms and conditions shall be governed by and construed in accordance with the laws of [Your Country/State]. Any disputes arising from these terms shall be resolved in the courts of [Your Country/State].</p>
+        <p class="mb-4">These terms and conditions shall be governed by and construed in accordance with the laws of the Philippines. Any disputes arising from these terms shall be resolved in the courts of the Philippines.</p>
 
         <h2 class="text-2xl font-semibold mb-4">10. Contact Us</h2>
         <p class="mb-4">If you have any questions or concerns regarding these terms, please contact us at <a href="mailto:support@propertywise.com" class="text-blue-600 hover:underline">support@propertywise.com</a>.</p>

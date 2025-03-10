@@ -181,6 +181,84 @@ $conn->close();
             max-width: 400px;
             margin: 0 auto;
         }
+
+        /* Modal styles */
+        .modal {
+            visibility: hidden;
+            opacity: 0;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            transition: all 0.4s;
+            z-index: 9999;
+        }
+
+        .modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            width: 800px;
+            background: white;
+            position: relative;
+            transform: scale(0.8);
+            transition: all 0.4s;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            padding: 1.5rem;
+            flex: 1;
+        }
+
+        .modal-tabs {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .modal-tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .modal-tab.active {
+            color: #3b82f6;
+            border-bottom: 3px solid #3b82f6;
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen p-6">
@@ -244,7 +322,7 @@ $conn->close();
                             <input type="checkbox" id="termsAccepted" name="termsAccepted" required class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                             <label for="termsAccepted" class="text-white text-sm ml-2">
                                 I accept the 
-                                <a href="../asset/terms_condition.php" class="text-blue-500 hover:text-blue-700">terms and conditions</a>
+                                <a href="#" id="openTermsModal" class="text-blue-500 hover:text-blue-700">terms and conditions</a>
                             </label>
                         </div>      
 
@@ -269,6 +347,116 @@ $conn->close();
         </div>
     </div>
 
+    <!-- Modal -->
+    <div id="legalModal" class="modal">
+        <div class="modal-content shadow-2xl">
+            <!-- Close Button -->
+            <div class="p-4 flex justify-end">
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal Tabs -->
+            <div class="modal-tabs">
+                <div class="modal-tab active" data-tab="terms">Terms and Conditions</div>
+                <div class="modal-tab" data-tab="privacy">Privacy Policy</div>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="modal-body">
+                <!-- Terms and Conditions Content -->
+                <div id="terms-content" class="tab-content active">
+                    <h2 class="text-2xl font-semibold mb-4">1. Introduction</h2>
+                    <p class="mb-4">Welcome to PropertyWise. By accessing and using our platform, you agree to comply with and be bound by the following terms and conditions. Please read them carefully before using our services.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">2. Services</h2>
+                    <p class="mb-4">PropertyWise provides property management services including, but not limited to, tenant management, lease management, maintenance requests, and payment processing. The use of these services is subject to the terms and conditions outlined here.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">3. User Responsibilities</h2>
+                    <p class="mb-4">As a user, you are responsible for maintaining the confidentiality of your account information, including your username and password. You agree to notify us immediately if there is any unauthorized use of your account.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">4. Privacy and Data Protection</h2>
+                    <p class="mb-4">Your privacy is important to us. Please review our Privacy Policy to understand how we collect, use, and protect your data.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">5. Payments</h2>
+                    <p class="mb-4">By using our platform, you agree to pay the applicable fees for the services provided. Payments will be processed through the designated payment gateway, and you agree to adhere to the payment terms outlined by the service provider.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">6. Termination</h2>
+                    <p class="mb-4">We reserve the right to suspend or terminate your account at any time if you violate these terms and conditions. Upon termination, you will no longer have access to our services, and you agree to cease using the platform immediately.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">7. Liability</h2>
+                    <p class="mb-4">PropertyWise is not responsible for any damages, losses, or liabilities arising from the use of our services, except as required by law. You use the platform at your own risk.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">8. Changes to Terms</h2>
+                    <p class="mb-4">We reserve the right to update or modify these terms at any time. Any changes will be posted on this page with the date of the latest update. Continued use of the platform after such changes constitutes your acceptance of the new terms.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">9. Governing Law</h2>
+                    <p class="mb-4">These terms and conditions shall be governed by and construed in accordance with the laws of the Philippines. Any disputes arising from these terms shall be resolved in the courts of the Philippines.</p>
+
+                    <h2 class="text-2xl font-semibold mb-4">10. Contact Us</h2>
+                    <p class="mb-4">If you have any questions or concerns regarding these terms, please contact us at <a href="mailto:support@propertywise.com" class="text-blue-600 hover:underline">support@propertywise.com</a>.</p>
+                </div>
+                
+                <!-- Privacy Policy Content -->
+                <div id="privacy-content" class="tab-content">
+                    <h1 class="text-3xl font-bold mb-4">Privacy Policy</h1>
+
+                    <p class="mb-4">
+                        This privacy policy sets out how our website uses and protects any information that you give us when you use
+                        this website.
+                    </p>
+
+                    <h2 class="text-2xl font-bold mb-2">Information We Collect</h2>
+
+                    <p class="mb-4">
+                        We may collect the following information:
+                    </p>
+
+                    <ul class="list-disc list-inside mb-4">
+                        <li>Your name and contact information</li>
+                        <li>Demographic information</li>
+                        <li>Other information relevant to customer surveys and/or offers</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-bold mb-2">How We Use the Information</h2>
+
+                    <p class="mb-4">
+                        We require this information to understand your needs and provide you with a better service, and in
+                        particular for the following reasons:
+                    </p>
+
+                    <ul class="list-disc list-inside mb-4">
+                        <li>Internal record keeping</li>
+                        <li>Improving our products and services</li>
+                        <li>Sending promotional emails about new products, special offers, or other information which we think you
+                            may find interesting</li>
+                        <li>From time to time, we may also use your information to contact you for market research purposes. We may
+                            contact you by email, phone, or mail. We may use the information to customize the website according to your
+                            interests.</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-bold mb-2">Security</h2>
+
+                    <p class="mb-4">
+                        We are committed to ensuring that your information is secure. In order to prevent unauthorized access or
+                        disclosure, we have put in place suitable physical, electronic, and managerial procedures to safeguard and secure the
+                        information we collect online.
+                    </p>
+
+                    <h2 class="text-2xl font-bold mb-2">Cookies</h2>
+
+                    <p class="mb-4">
+                        A cookie is a small file that asks permission to be placed on your computer's hard drive. Once you agree,
+                        the file is added, and the cookie helps analyze web traffic or lets you know when you visit a particular site.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Function to toggle password visibility
         function togglePassword(passwordFieldId, iconId) {
@@ -284,6 +472,56 @@ $conn->close();
                 icon.classList.add('bxs-show');
             }
         }
+
+        // Modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get modal elements
+            const modal = document.getElementById('legalModal');
+            const openModalBtn = document.getElementById('openTermsModal');
+            const closeModalBtn = document.getElementById('closeModal');
+            const modalTabs = document.querySelectorAll('.modal-tab');
+            
+            // Open modal
+            openModalBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            });
+            
+            // Close modal
+            closeModalBtn.addEventListener('click', function() {
+                modal.classList.remove('show');
+                document.body.style.overflow = ''; // Re-enable scrolling
+            });
+            
+            // Close modal if clicked outside content
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // Tab functionality
+            modalTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    modalTabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show selected tab content
+                    const tabId = this.getAttribute('data-tab') + '-content';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
     </script>
 </body>
 </html>

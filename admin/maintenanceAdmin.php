@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     <?php endfor; ?>
                 <?php endif; ?>
             </div>
-        </div>
+    </div>
 
 <!-- Modal for Editing -->
 <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">

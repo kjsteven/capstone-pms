@@ -57,7 +57,7 @@ if (isset($_GET['token'])) {
         window.onload = function() {
             <?php if ($redirect): ?>
                 setTimeout(function() {
-                    window.location.href = 'login.php';
+                    window.location.href = '../authentication/login.php';
                 }, 5000); // Redirect after 5 seconds
             <?php endif; ?>
         };

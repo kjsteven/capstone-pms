@@ -185,28 +185,69 @@ try {
         $message = "Payment approved successfully";
     } 
     elseif ($action === 'reject') {
+        // Get rejection reason if provided
+        $rejectionReason = isset($_POST['rejection_reason']) ? trim($_POST['rejection_reason']) : '';
+        
         // Update payment status to Rejected
         $updateStmt = $conn->prepare(
             "UPDATE payments
              SET status = 'Rejected',
                  updated_at = CURRENT_TIMESTAMP,
-                 processed_by = ?
+                 processed_by = ?,
+                 notes = CASE 
+                          WHEN ? != '' THEN CONCAT(IFNULL(notes, ''), ' [Rejection Reason: ', ?, ']')
+                          ELSE CONCAT(IFNULL(notes, ''), ' [Payment rejected by admin]')
+                        END
              WHERE payment_id = ?"
         );
-        $updateStmt->bind_param("si", $adminName, $payment_id);
+        $updateStmt->bind_param("sssi", $adminName, $rejectionReason, $rejectionReason, $payment_id);
         $updateStmt->execute();
         
         // Log activity
         $activityDetails = "Rejected payment of ₱" . number_format($payment['amount'], 2) . 
                            " for " . $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ")";
+        if (!empty($rejectionReason)) {
+            $activityDetails .= " - Reason: " . $rejectionReason;
+        }
         
         logActivity(
             $_SESSION['user_id'],
             'Rejected Payment',
             $activityDetails
         );
+
+        // Get tenant email for sending rejection notice
+        $emailStmt = $conn->prepare(
+            "SELECT u.email 
+             FROM users u 
+             JOIN tenants t ON u.user_id = t.user_id 
+             WHERE t.tenant_id = ?"
+        );
+        $emailStmt->bind_param("i", $payment['tenant_id']);
+        $emailStmt->execute();
+        $emailResult = $emailStmt->get_result();
+        $tenantEmail = ($emailResult->num_rows > 0) ? $emailResult->fetch_assoc()['email'] : '';
         
-        $message = "Payment rejected";
+        if (!empty($tenantEmail)) {
+            // Send payment rejection email
+            $emailSent = sendPaymentRejectionEmail(
+                $tenantEmail,
+                $payment,
+                $payment['tenant_name'],
+                $payment['unit_no'],
+                $rejectionReason
+            );
+            
+            if (!$emailSent) {
+                // Log the failure but don't interrupt the process
+                error_log("Failed to send payment rejection email to: $tenantEmail");
+            } else {
+                // Log success
+                error_log("Payment rejection email sent successfully to: $tenantEmail");
+            }
+        }
+        
+        $message = "Payment rejected successfully";
     }
     else {
         throw new Exception("Invalid action");

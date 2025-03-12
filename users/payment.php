@@ -421,10 +421,13 @@ $stmt->close();
                                     <td class="py-2 px-4 border">
                                         <?php if ($payment['status'] === 'Received'): ?>
                                             <span class="text-green-600">Received</span>
-                                        <?php else: ?>
+                                        <?php elseif ($payment['status'] === 'Pending'): ?>
                                             <span class="text-yellow-600">Pending</span>
+                                        <?php elseif ($payment['status'] === 'Rejected'): ?>
+                                            <span class="text-red-600">Rejected</span>
                                         <?php endif; ?>
                                     </td>
+
                                     <td class="py-2 px-4 border text-center">
                                         <?php if (!empty($payment['receipt_image'])): ?>
                                             <button 

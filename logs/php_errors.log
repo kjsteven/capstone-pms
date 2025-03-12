@@ -237,3 +237,24 @@ Stack trace:
 [09-Mar-2025 06:32:59 Europe/Berlin] Processing manual payment. User: 1, Method: POST
 [09-Mar-2025 06:32:59 Europe/Berlin] Preparing to insert payment for tenant ID: 53, amount: 36000, processed by: 1
 [09-Mar-2025 06:33:03 Europe/Berlin] Payment confirmation email sent successfully to: palmagenalyn17@gmail.com
+[12-Mar-2025 14:59:42 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[12-Mar-2025 14:59:42 Europe/Berlin] Preparing to insert payment for tenant ID: 21, amount: 22500, processed by: 1
+[12-Mar-2025 14:59:45 Europe/Berlin] Payment confirmation email sent successfully to: kjstevenpalma18@gmail.com
+[12-Mar-2025 15:48:58 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[12-Mar-2025 15:48:58 Europe/Berlin] Preparing to insert payment for tenant ID: 42, amount: 67500, processed by: 1
+[12-Mar-2025 15:49:01 Europe/Berlin] Payment confirmation email sent successfully to: freshplayz18@gmail.com
+[12-Mar-2025 16:28:29 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[12-Mar-2025 16:28:29 Europe/Berlin] Preparing to insert payment for tenant ID: 48, amount: 90000, processed by: 1
+[12-Mar-2025 16:28:32 Europe/Berlin] Payment confirmation email sent successfully to: freshplayz18@gmail.com
+[12-Mar-2025 16:29:01 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[12-Mar-2025 16:29:01 Europe/Berlin] Preparing to insert payment for tenant ID: 48, amount: 10000, processed by: 1
+[12-Mar-2025 16:29:04 Europe/Berlin] Payment confirmation email sent successfully to: freshplayz18@gmail.com
+[12-Mar-2025 16:29:40 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[12-Mar-2025 16:29:40 Europe/Berlin] Preparing to insert payment for tenant ID: 48, amount: 5000, processed by: 1
+[12-Mar-2025 16:29:43 Europe/Berlin] Payment confirmation email sent successfully to: freshplayz18@gmail.com
+[12-Mar-2025 16:32:03 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[12-Mar-2025 16:32:03 Europe/Berlin] Preparing to insert payment for tenant ID: 42, amount: 67500, processed by: 1
+[12-Mar-2025 16:32:07 Europe/Berlin] Payment confirmation email sent successfully to: freshplayz18@gmail.com
+[12-Mar-2025 16:43:40 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[12-Mar-2025 16:43:40 Europe/Berlin] Preparing to insert payment for tenant ID: 52, amount: 49500, processed by: 1
+[12-Mar-2025 16:43:43 Europe/Berlin] Payment confirmation email sent successfully to: palmagenalyn17@gmail.com

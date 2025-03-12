@@ -48,7 +48,7 @@ try {
 
     // Get the new fields
     $payment_type = $_POST['payment_type'] ?? 'rent';
-    $bill_item = ($payment_type === 'rent') ? null : ($_POST['bill_item'] ?? null);
+    $bill_item = ($payment_type === 'rent') ? "Monthly Rent" : ($_POST['bill_item'] ?? "");
 
     // Validate required fields
     if (!$unit_id || !$amount || !$gcash_number || !$reference_number) {

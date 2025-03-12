@@ -232,6 +232,47 @@ mysqli_close($conn);
 
 
 
+<!-- SCRIPT FOR TAB SWITCHING  -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching functionality
+    const tabReports = document.getElementById('tab-reports');
+    const tabAnalytics = document.getElementById('tab-analytics');
+    const contentReports = document.getElementById('content-reports');
+    const contentAnalytics = document.getElementById('content-analytics');
+    
+    // Tab Reports click handler
+    tabReports.addEventListener('click', function() {
+        // Update tab styles
+        tabReports.classList.add('border-blue-600', 'text-blue-600');
+        tabAnalytics.classList.remove('border-blue-600', 'text-blue-600');
+        tabAnalytics.classList.add('border-transparent');
+        
+        // Show/hide content
+        contentReports.classList.remove('hidden');
+        contentAnalytics.classList.add('hidden');
+    });
+    
+    // Tab Analytics click handler
+    tabAnalytics.addEventListener('click', function() {
+        // Update tab styles
+        tabAnalytics.classList.add('border-blue-600', 'text-blue-600');
+        tabReports.classList.remove('border-blue-600', 'text-blue-600');
+        tabReports.classList.add('border-transparent');
+        
+        // Show/hide content
+        contentAnalytics.classList.remove('hidden');
+        contentReports.classList.add('hidden');
+        
+        // Refresh charts when switching to analytics tab
+        if (typeof refreshAllCharts === 'function') {
+            refreshAllCharts();
+        }
+    });
+});
+</script>
+
+
   <!-- Report Generation -->
 
 <script>
@@ -430,6 +471,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let propertyAvailabilityChart = null;
         let propertyMaintenanceChart = null;
         let tenantOccupancyChart = null;
+        let monthlyPaymentsChart = null;
+        let rentalBalanceChart = null;
 
         // Define chart options first
         const tenantOccupancyOptions = {
@@ -472,289 +515,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }]
         };
-
-        // Initialize all charts function
-        function initializeAllCharts() {
-            // Initialize tenant occupancy chart
-            tenantOccupancyChart = new ApexCharts(
-                document.querySelector("#tenant-occupancy-chart"), 
-                tenantOccupancyOptions
-            );
-            tenantOccupancyChart.render();
-
-            // Initialize property availability chart
-            initPropertyAvailabilityChart();
-
-            // Initialize maintenance chart
-            if (years && years.length > 0) {
-                const yearFilter = document.getElementById('maintenance-year-filter');
-                const initialYear = years[0];
-                yearFilter.value = initialYear;
-                fetchMaintenanceData(initialYear)
-                    .then(data => initMaintenanceChart(data, initialYear));
-            }
-
-            // Initialize other charts
-            const monthlyPaymentsChart = new ApexCharts(
-                document.querySelector("#monthly-payments-chart"), 
-                monthlyPaymentsOptions
-            );
-            monthlyPaymentsChart.render();
-
-            const rentalBalanceChart = new ApexCharts(
-                document.querySelector("#rental-balance-chart"), 
-                rentalBalanceOptions
-            );
-            rentalBalanceChart.render();
-        }
-
-        // Tab switching logic
-        const tabs = document.querySelectorAll('[id^="tab-"]');
-        const contentSections = document.querySelectorAll('.tab-content');
-        
-        tabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                tabs.forEach(t => t.classList.remove('border-blue-600', 'text-blue-600'));
-                this.classList.add('border-blue-600', 'text-blue-600');
-                
-                contentSections.forEach(content => content.classList.add('hidden'));
-                const contentId = this.id.replace('tab-', 'content-');
-                document.getElementById(contentId).classList.remove('hidden');
-
-                // Refresh charts when switching to analytics tab
-                if (this.id === 'tab-analytics') {
-                    if (propertyAvailabilityChart) {
-                        initPropertyAvailabilityChart();
-                    }
-                    if (propertyMaintenanceChart) {
-                        const yearFilter = document.getElementById('maintenance-year-filter');
-                        fetchMaintenanceData(yearFilter.value)
-                            .then(data => initMaintenanceChart(data, yearFilter.value));
-                    }
-                }
-            });
-        });
-
-        // Show first tab by default
-        tabs[0].classList.add('border-blue-600', 'text-blue-600');
-        contentSections[0].classList.remove('hidden');
-
-        // Initialize all charts when page loads
-        initializeAllCharts();
-
-        // Property Availability Chart Function
-        function initPropertyAvailabilityChart() {
-            console.log('Initializing property availability chart...');
-            fetch('get_availability_data.php')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Received availability data:', data);
-                    
-                    const options = {
-                        chart: { 
-                            type: 'bar',
-                            height: '100%',
-                            width: '100%',
-                            stacked: true,
-                            toolbar: {
-                                show: true
-                            }
-                        },
-                        series: [
-                            {
-                                name: 'Occupied',
-                                data: data.series[0].data.map(item => item.occupied || 0),
-                                color: '#e74c3c'
-                            },
-                            {
-                                name: 'Available',
-                                data: data.series[0].data.map(item => item.available || 0),
-                                color: '#228b22'
-                            },
-                            {
-                                name: 'Under Maintenance',
-                                data: data.series[0].data.map(item => item.maintenance || 0),
-                                color: '#3498db'
-                            }
-                        ],
-                        xaxis: {
-                            categories: data.categories,
-                            labels: {
-                                rotate: -45,
-                                style: { fontSize: '12px' }
-                            }
-                        },
-                        plotOptions: {
-                            bar: {
-                                horizontal: false,
-                                columnWidth: '55%',
-                                endingShape: 'rounded'
-                            }
-                        },
-                        dataLabels: {
-                            enabled: true,
-                            formatter: function (val) {
-                                return val > 0 ? val.toString() : '';  // Only show labels for non-zero values
-                            },
-                            style: {
-                                fontSize: '12px',
-                                colors: ['#fff']
-                            }
-                        },
-                        title: {
-                            text: 'Unit Status by Floor',
-                            align: 'center',
-                            style: {
-                                fontSize: '14px'
-                            }
-                        },
-                        yaxis: {
-                            title: {
-                                text: 'Number of Units'
-                            },
-                            min: 0
-                        },
-                        tooltip: {
-                            y: {
-                                formatter: function(val) {
-                                    return val + " units";
-                                }
-                            }
-                        },
-                        legend: {
-                            position: 'top',
-                            horizontalAlign: 'center'
-                        }
-                    };
-
-                    if (propertyAvailabilityChart) {
-                        propertyAvailabilityChart.updateOptions(options);
-                    } else {
-                        propertyAvailabilityChart = new ApexCharts(
-                            document.querySelector("#property-availability-chart"), 
-                            options
-                        );
-                        propertyAvailabilityChart.render();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading availability data:', error);
-                });
-        }
-
-
-    });
-</script>
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-    // Tab switching logic
-    const tabs = document.querySelectorAll('[id^="tab-"]');
-    const contentSections = document.querySelectorAll('.tab-content');
-    
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Remove active classes from all tabs
-            tabs.forEach(t => t.classList.remove('border-blue-600', 'text-blue-600'));
-            // Add active class to clicked tab
-            this.classList.add('border-blue-600', 'text-blue-600');
-            
-            // Hide all content sections
-            contentSections.forEach(content => content.classList.add('hidden'));
-            // Show content corresponding to clicked tab
-            const contentId = this.id.replace('tab-', 'content-');
-            document.getElementById(contentId).classList.remove('hidden');
-            
-            // Refresh charts when switching to analytics tab
-            if (this.id === 'tab-analytics') {
-                refreshAllCharts();
-            }
-        });
-    });
-    
-    // Set first tab active by default
-    tabs[0].classList.add('border-blue-600', 'text-blue-600');
-    contentSections[0].classList.remove('hidden');
-    
-    // Get the data from PHP
-    const occupied = <?php echo $occupied; ?>;
-    const available = <?php echo $available; ?>;
-    const underMaintenance = <?php echo $underMaintenance; ?>;
-    const years = <?php echo $years_json; ?> || [];
-    
-    // Chart variables in global scope
-    let tenantOccupancyChart;
-    let propertyAvailabilityChart;
-    let propertyMaintenanceChart;
-    let monthlyPaymentsChart;
-    let rentalBalanceChart;
-    
-    // Initialize all charts
-    initializeAllCharts();
-    
-    // Function to refresh all charts
-    function refreshAllCharts() {
-        if (propertyAvailabilityChart) {
-            initPropertyAvailabilityChart();
-        }
-        
-        if (years && years.length > 0) {
-            const yearFilter = document.getElementById('maintenance-year-filter');
-            fetchMaintenanceData(yearFilter.value)
-                .then(data => initMaintenanceChart(data, yearFilter.value))
-                .catch(error => console.error('Error refreshing maintenance chart:', error));
-        }
-    }
-    
-    // Initialize all charts function
-    function initializeAllCharts() {
-        // 1. Tenant Occupancy Chart
-        const tenantOccupancyOptions = {
-            chart: { 
-                type: 'pie', 
-                height: '100%', 
-                width: '100%',
-                toolbar: {
-                    show: true,
-                    tools: {
-                        download: true
-                    },
-                    export: {
-                        csv: { filename: 'tenant_occupancy_report' },
-                        png: { filename: 'tenant_occupancy_report' },
-                        jpeg: { filename: 'tenant_occupancy_report' }
-                    }
-                }
-            },
-            series: [occupied, available, underMaintenance],
-            labels: ['Occupied', 'Available', 'Under Maintenance'],
-            colors: ['#e74c3c', '#228b22', '#3498db'],
-            legend: {
-                position: 'right',
-                horizontalAlign: 'center',
-                verticalAlign: 'middle',
-                floating: false,
-                offsetY: 0
-            },
-            plotOptions: {
-                pie: {
-                    customScale: 0.9
-                }
-            },
-            responsive: [{
-                breakpoint: 1024,
-                options: {
-                    chart: { width: '100%' },
-                    legend: { position: 'bottom' }
-                }
-            }]
-        };
         
         tenantOccupancyChart = new ApexCharts(
             document.querySelector("#tenant-occupancy-chart"), 
@@ -764,34 +524,149 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 2. Property Availability Chart
         initPropertyAvailabilityChart();
+     
+        // 3. Monthly Payments Chart - Call the function instead of using static options
+        loadMonthlyPaymentsChart();
         
-        // 3. Monthly Payments Chart
-        const monthlyPaymentsOptions = {
-            chart: { 
-                type: 'area', 
-                width: '100%', 
-                height: '100%',
-                toolbar: {
-                    show: true
-                }
-            },
-            series: [{
-                name: 'Payments',
-                data: [2500, 3600, 3500, 4000, 4500, 4700, 3300, 3700, 5000, 6000, 2300, 3000]
-            }],
-            xaxis: {
-                categories: ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
-            },
-            legend: {
-                position: 'top'
+        // Function to load monthly payments data and initialize chart
+        function loadMonthlyPaymentsChart(year = new Date().getFullYear()) {
+            fetch(`get_payments_ajax.php?year=${year}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error:', data.error);
+                        return;
+                    }
+                    
+                    const monthlyPaymentsOptions = {
+                        chart: { 
+                            type: 'area', 
+                            width: '100%', 
+                            height: '100%',
+                            toolbar: {
+                                show: true
+                            }
+                        },
+                        series: [{
+                            name: 'Payments',
+                            data: data.data
+                        }],
+                        xaxis: {
+                            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                        },
+                        yaxis: {
+                            title: {
+                                text: 'Amount (₱)'
+                            },
+                            labels: {
+                                formatter: function(val) {
+                                    return '₱' + val.toLocaleString();
+                                }
+                            }
+                        },
+                        dataLabels: {
+                            enabled: false
+                        },
+                        stroke: {
+                            curve: 'smooth',
+                            width: 2
+                        },
+                        colors: ['#2E93fA'],
+                        fill: {
+                            type: 'gradient',
+                            gradient: {
+                                shadeIntensity: 1,
+                                opacityFrom: 0.7,
+                                opacityTo: 0.9,
+                                stops: [0, 90, 100]
+                            }
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: function(val) {
+                                    return '₱' + val.toLocaleString();
+                                }
+                            }
+                        },
+                        title: {
+                            text: `Monthly Payments - ${year}`,
+                            align: 'center'
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    };
+
+                    if (monthlyPaymentsChart) {
+                        monthlyPaymentsChart.updateOptions(monthlyPaymentsOptions);
+                    } else {
+                        monthlyPaymentsChart = new ApexCharts(
+                            document.querySelector("#monthly-payments-chart"), 
+                            monthlyPaymentsOptions
+                        );
+                        monthlyPaymentsChart.render();
+                    }
+
+                    // If we have years data, create a year filter dropdown
+                    if (data.years && data.years.length > 0) {
+                        createPaymentYearFilter(data.years, year);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading monthly payments data:', error);
+                });
+        }
+
+        // Function to create year filter for payments chart
+        function createPaymentYearFilter(years, selectedYear) {
+            // Check if the filter already exists
+            let yearFilter = document.getElementById('payment-year-filter');
+            
+            if (!yearFilter) {
+                // Create the filter if it doesn't exist
+                const chartContainer = document.querySelector("#monthly-payments-chart").closest('.chart-container');
+                const titleElement = chartContainer.querySelector('h3');
+                
+                // Create a container for the title and filter
+                const headerContainer = document.createElement('div');
+                headerContainer.className = 'flex justify-between items-center mb-4';
+                
+                // Move the title into the container
+                titleElement.parentNode.insertBefore(headerContainer, titleElement);
+                headerContainer.appendChild(titleElement);
+                
+                // Create the select element
+                yearFilter = document.createElement('select');
+                yearFilter.id = 'payment-year-filter';
+                yearFilter.className = 'px-3 py-1 border border-gray-300 rounded-md text-sm';
+                
+                // Add event listener
+                yearFilter.addEventListener('change', function() {
+                    loadMonthlyPaymentsChart(this.value);
+                });
+                
+                // Add to the container
+                headerContainer.appendChild(yearFilter);
+            } else {
+                // Clear existing options
+                yearFilter.innerHTML = '';
             }
-        };
-        
-        monthlyPaymentsChart = new ApexCharts(
-            document.querySelector("#monthly-payments-chart"), 
-            monthlyPaymentsOptions
-        );
-        monthlyPaymentsChart.render();
+            
+            // Add options to the filter
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                option.selected = year == selectedYear;
+                yearFilter.appendChild(option);
+            });
+        }
+
         
         // 4. Rental Balance Chart
         const rentalBalanceOptions = {
@@ -844,193 +719,192 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(data => initMaintenanceChart(data, initialYear))
                 .catch(error => console.error('Error loading initial maintenance data:', error));
         }
-    }
-    
-    // Property Availability Chart Function
-    function initPropertyAvailabilityChart() {
-        fetch('get_availability_data.php')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                const propertyAvailabilityOptions = {
-                    chart: { 
-                        type: 'bar',
-                        height: '100%',
-                        width: '100%',
-                        stacked: true,
-                        toolbar: {
-                            show: true
-                        }
-                    },
-                    series: [
-                        {
-                            name: 'Available',
-                            data: data.series[0].data,
-                            color: '#228b22' // Green
-                        },
-                        {
-                            name: 'Occupied',
-                            data: data.series[1].data,
-                            color: '#e74c3c' // Red
-                        },
-                        {
-                            name: 'Maintenance',
-                            data: data.series[2].data,
-                            color: '#3498db' // Blue
-                        }
-                    ],
-                    xaxis: {
-                        categories: data.categories,
-                        labels: {
-                            rotate: -45,
-                            style: {
-                                fontSize: '12px'
-                            }
-                        }
-                    },
-                    plotOptions: {
-                        bar: {
-                            horizontal: false,
-                            columnWidth: '55%',
-                            endingShape: 'rounded'
-                        }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        formatter: function (val) {
-                            return val.toString();
-                        },
-                        style: {
-                            fontSize: '12px',
-                            colors: ['#fff']
-                        }
-                    },
-                    title: {
-                        text: 'Unit Status by Floor',
-                        align: 'center',
-                        style: {
-                            fontSize: '14px'
-                        }
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'Number of Units'
-                        },
-                        min: 0
-                    },
-                    legend: {
-                        position: 'top',
-                        horizontalAlign: 'center'
-                    },
-                    tooltip: {
-                        y: {
-                            formatter: function (val) {
-                                return val + " units"
-                            }
-                        }
-                    }
-                };
-
-                if (propertyAvailabilityChart) {
-                    propertyAvailabilityChart.updateOptions(propertyAvailabilityOptions);
-                } else {
-                    propertyAvailabilityChart = new ApexCharts(
-                        document.querySelector("#property-availability-chart"), 
-                        propertyAvailabilityOptions
-                    );
-                    propertyAvailabilityChart.render();
-                }
-            })
-            .catch(error => {
-                console.error('Error loading availability data:', error);
-            });
-    }
-    
-    // Maintenance Data Fetching Function
-    function fetchMaintenanceData(year) {
-        const url = `get_maintenance_data.php?year=${year}`;
         
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (!data.completed || !data.pending || !data.inProgress) {
-                    console.error('Invalid data format received:', data);
-                    throw new Error('Invalid data format received');
-                }
-                return data;
-            });
-    }
-    
-    // Initialize Maintenance Chart Function
-    function initMaintenanceChart(data, year) {
-        const options = {
-            chart: { 
-                type: 'line',
-                height: '100%',
-                width: '100%',
-                toolbar: {
-                    show: true,
-                    tools: { download: true }
-                }
-            },
-            series: [{
-                name: 'Completed',
-                data: data.completed,
-                color: '#10B981'
-            }, {
-                name: 'Pending',
-                data: data.pending,
-                color: '#F59E0B'
-            }, {
-                name: 'In Progress',
-                data: data.inProgress,
-                color: '#3B82F6'
-            }],
-            xaxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            },
-            yaxis: {
-                title: { text: 'Number of Requests' },
-                min: 0,
-                forceNiceScale: true
-            },
-            title: {
-                text: `Maintenance Requests - ${year}`,
-                align: 'center'
-            },
-            stroke: { 
-                curve: 'smooth',
-                width: 2
-            },
-            markers: {
-                size: 4
-            },
-            legend: {
-                position: 'top'
-            }
-        };
+        // Property Availability Chart Function - This should be INSIDE the DOMContentLoaded handler
+        function initPropertyAvailabilityChart() {
+            fetch('get_availability_data.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const propertyAvailabilityOptions = {
+                        chart: { 
+                            type: 'bar',
+                            height: '100%',
+                            width: '100%',
+                            stacked: true,
+                            toolbar: {
+                                show: true
+                            }
+                        },
+                        series: [
+                            {
+                                name: 'Available',
+                                data: data.series[0].data,
+                                color: '#228b22' // Green
+                            },
+                            {
+                                name: 'Occupied',
+                                data: data.series[1].data,
+                                color: '#e74c3c' // Red
+                            },
+                            {
+                                name: 'Maintenance',
+                                data: data.series[2].data,
+                                color: '#3498db' // Blue
+                            }
+                        ],
+                        xaxis: {
+                            categories: data.categories,
+                            labels: {
+                                rotate: -45,
+                                style: {
+                                    fontSize: '12px'
+                                }
+                            }
+                        },
+                        plotOptions: {
+                            bar: {
+                                horizontal: false,
+                                columnWidth: '55%',
+                                endingShape: 'rounded'
+                            }
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function (val) {
+                                return val.toString();
+                            },
+                            style: {
+                                fontSize: '12px',
+                                colors: ['#fff']
+                            }
+                        },
+                        title: {
+                            text: 'Unit Status by Floor',
+                            align: 'center',
+                            style: {
+                                fontSize: '14px'
+                            }
+                        },
+                        yaxis: {
+                            title: {
+                                text: 'Number of Units'
+                            },
+                            min: 0
+                        },
+                        legend: {
+                            position: 'top',
+                            horizontalAlign: 'center'
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: function (val) {
+                                    return val + " units"
+                                }
+                            }
+                        }
+                    };
 
-        if (propertyMaintenanceChart) {
-            propertyMaintenanceChart.updateOptions(options);
-        } else {
-            propertyMaintenanceChart = new ApexCharts(
-                document.querySelector("#property-maintenance-chart"), 
-                options
-            );
-            propertyMaintenanceChart.render();
+                    if (propertyAvailabilityChart) {
+                        propertyAvailabilityChart.updateOptions(propertyAvailabilityOptions);
+                    } else {
+                        propertyAvailabilityChart = new ApexCharts(
+                            document.querySelector("#property-availability-chart"), 
+                            propertyAvailabilityOptions
+                        );
+                        propertyAvailabilityChart.render();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading availability data:', error);
+                });
         }
-    }
-});
+        
+        // Maintenance Data Fetching Function
+        function fetchMaintenanceData(year) {
+            const url = `get_maintenance_data.php?year=${year}`;
+            
+            return fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.completed || !data.pending || !data.inProgress) {
+                        console.error('Invalid data format received:', data);
+                        throw new Error('Invalid data format received');
+                    }
+                    return data;
+                });
+        }
+        
+        // Initialize Maintenance Chart Function
+        function initMaintenanceChart(data, year) {
+            const options = {
+                chart: { 
+                    type: 'line',
+                    height: '100%',
+                    width: '100%',
+                    toolbar: {
+                        show: true,
+                        tools: { download: true }
+                    }
+                },
+                series: [{
+                    name: 'Completed',
+                    data: data.completed,
+                    color: '#10B981'
+                }, {
+                    name: 'Pending',
+                    data: data.pending,
+                    color: '#F59E0B'
+                }, {
+                    name: 'In Progress',
+                    data: data.inProgress,
+                    color: '#3B82F6'
+                }],
+                xaxis: {
+                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                },
+                yaxis: {
+                    title: { text: 'Number of Requests' },
+                    min: 0,
+                    forceNiceScale: true
+                },
+                title: {
+                    text: `Maintenance Requests - ${year}`,
+                    align: 'center'
+                },
+                stroke: { 
+                    curve: 'smooth',
+                    width: 2
+                },
+                markers: {
+                    size: 4
+                },
+                legend: {
+                    position: 'top'
+                }
+            };
 
+            if (propertyMaintenanceChart) {
+                propertyMaintenanceChart.updateOptions(options);
+            } else {
+                propertyMaintenanceChart = new ApexCharts(
+                    document.querySelector("#property-maintenance-chart"), 
+                    options
+                );
+                propertyMaintenanceChart.render();
+            }
+        }
+    });
+    
 </script>
 
 

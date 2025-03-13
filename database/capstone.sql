@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 05, 2025 at 11:08 PM
+-- Generation Time: Mar 13, 2025 at 04:51 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -200,7 +200,58 @@ INSERT INTO `activity_logs` (`log_id`, `user_id`, `staff_id`, `user_role`, `acti
 (232, 23, NULL, 'User', 'Logout', 'User logged out', '::1', '2025-03-06 01:23:55'),
 (233, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-06 01:24:10'),
 (234, 1, NULL, 'Admin', 'Approved Payment', 'Approved payment of ₱22,500.00 for Conrad Palma (Unit 205)', '::1', '2025-03-06 02:16:14'),
-(235, 1, NULL, 'Admin', 'Logout', 'User logged out', '::1', '2025-03-06 02:19:12');
+(235, 1, NULL, 'Admin', 'Logout', 'User logged out', '::1', '2025-03-06 02:19:12'),
+(236, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-09 12:00:05'),
+(237, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded GCash payment of ₱9,999.98 for Maintenance Charges - David Fuentes (Unit 102)', '::1', '2025-03-09 12:09:53'),
+(238, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash payment of ₱5,000.00 for Utilities - David Fuentes (Unit 102)', '::1', '2025-03-09 12:11:37'),
+(239, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash rent payment of ₱22,500.00 for David Fuentes (Unit 102)', '::1', '2025-03-09 12:23:22'),
+(240, 26, NULL, 'User', 'Login', 'User logged in successfully', '::1', '2025-03-09 12:32:10'),
+(241, 26, NULL, 'User', 'Unit Reservation', 'Reserved Unit #115 - Viewing scheduled for 2025-03-10 at 10:30 (Reservation ID: 34)', '::1', '2025-03-09 12:33:42'),
+(242, 1, NULL, 'Admin', 'Update Reservation', 'Reservation ID: 34 updated to confirmed by Jhon Bautista (Admin)', '::1', '2025-03-09 12:34:09'),
+(243, 1, NULL, 'Admin', 'Added New Tenant', 'Added new tenant for Unit 115', '::1', '2025-03-09 12:34:49'),
+(244, 26, NULL, 'User', 'Unit Reservation', 'Reserved Unit #116 - Viewing scheduled for 2025-03-20 at 10:40 (Reservation ID: 35)', '::1', '2025-03-09 12:43:43'),
+(245, 1, NULL, 'Admin', 'Update Reservation', 'Reservation ID: 35 updated to confirmed by Jhon Bautista (Admin)', '::1', '2025-03-09 12:44:03'),
+(246, 1, NULL, 'Admin', 'Added New Unit to Tenant', 'Added unit 116 for tenant Genalyn Palma with receipt', '::1', '2025-03-09 12:45:17'),
+(247, 26, NULL, 'User', 'Unit Reservation', 'Reserved Unit #807 - Viewing scheduled for 2025-03-30 at 13:30 (Reservation ID: 36)', '::1', '2025-03-09 12:56:30'),
+(248, 1, NULL, 'Admin', 'Update Reservation', 'Reservation ID: 36 updated to confirmed by Jhon Bautista (Admin)', '::1', '2025-03-09 12:56:46'),
+(249, 1, NULL, 'Admin', 'Added New Unit to Tenant', 'Added unit 807 for tenant Genalyn Palma with receipt', '::1', '2025-03-09 12:57:33'),
+(250, 26, NULL, 'User', 'Archive Reservation', 'Archived reservation #36', '::1', '2025-03-09 13:02:29'),
+(251, 26, NULL, 'User', 'Unit Reservation', 'Reserved Unit #807 - Viewing scheduled for 2025-03-30 at 10:31 (Reservation ID: 37)', '::1', '2025-03-09 13:03:02'),
+(252, 1, NULL, 'Admin', 'Update Reservation', 'Reservation ID: 37 updated to confirmed by Jhon Bautista (Admin)', '::1', '2025-03-09 13:03:15'),
+(253, 1, NULL, 'Admin', 'Added New Unit to Tenant', 'Added unit 807 for tenant Genalyn Palma with receipt', '::1', '2025-03-09 13:04:08'),
+(254, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded GCash rent payment of ₱90,000.00 for Genalyn Palma (Unit 807)', '::1', '2025-03-09 13:05:39'),
+(255, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash rent payment of ₱36,000.00 for Genalyn Palma (Unit 116)', '::1', '2025-03-09 13:15:30'),
+(256, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash rent payment of ₱90,000.00 for Genalyn Palma (Unit 807)', '::1', '2025-03-09 13:16:44'),
+(257, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash rent payment of ₱90,000.00 for Genalyn Palma (Unit 807)', '::1', '2025-03-09 13:21:01'),
+(258, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash rent payment of ₱36,000.00 for Genalyn Palma (Unit 116)', '::1', '2025-03-09 13:33:03'),
+(259, 26, NULL, 'User', 'Payment Submission', 'Payment of PHP 49,500.00 submitted for review (Reference: 2012120513868)', '::1', '2025-03-09 13:34:35'),
+(260, 1, NULL, 'Admin', 'Approved Payment', 'Approved payment of ₱49,500.00 for Genalyn Palma (Unit 115)', '::1', '2025-03-09 13:34:57'),
+(261, 26, NULL, 'User', 'Payment Submission', 'Payment of PHP 1,000.00 submitted for review (Reference: 2012120513868)', '::1', '2025-03-09 13:44:41'),
+(262, 1, NULL, 'Admin', 'Approved Payment', 'Approved payment of ₱1,000.00 for Genalyn Palma (Unit 115)', '::1', '2025-03-09 13:45:17'),
+(264, 1, NULL, 'Admin', 'Approved Payment', 'Approved payment of ₱1,500.00 for Genalyn Palma (Unit 116)', '::1', '2025-03-09 13:55:01'),
+(266, 26, NULL, 'User', 'Payment Submission', 'Payment of PHP 800.00 submitted for review (Reference: 2012120513868)', '::1', '2025-03-09 14:17:50'),
+(267, 26, NULL, 'User', 'Logout', 'User logged out', '::1', '2025-03-09 14:29:53'),
+(268, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-10 22:58:33'),
+(269, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-12 20:22:46'),
+(270, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash rent payment of ₱22,500.00 for Conrad Palma (Unit 205)', '::1', '2025-03-12 21:59:45'),
+(271, 1, NULL, 'Admin', 'Rejected Payment', 'Rejected payment of ₱800.00 for Genalyn Palma (Unit 807)', '::1', '2025-03-12 22:01:03'),
+(272, 1, NULL, 'Admin', 'Rejected Payment', 'Rejected payment of ₱5,000.00 for Genalyn Palma (Unit 807)', '::1', '2025-03-12 22:01:16'),
+(273, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash rent payment of ₱67,500.00 for Anora Hidson (Unit 107)', '::1', '2025-03-12 22:49:01'),
+(274, 26, NULL, 'User', 'Login', 'User logged in successfully', '::1', '2025-03-12 22:50:23'),
+(275, 26, NULL, 'User', 'Payment Submission', 'Payment of PHP 36,000.00 submitted for review (Reference: 201923210312)', '::1', '2025-03-12 22:56:37'),
+(276, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded GCash rent payment of ₱90,000.00 for Anora Hidson (Unit 1004)', '::1', '2025-03-12 23:28:32'),
+(277, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded Cash payment of ₱10,000.00 for Utilities - Anora Hidson (Unit 1004)', '::1', '2025-03-12 23:29:04'),
+(278, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded GCash payment of ₱5,000.00 for Utilities - Anora Hidson (Unit 1004)', '::1', '2025-03-12 23:29:43'),
+(279, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded GCash rent payment of ₱67,500.00 for Anora Hidson (Unit 107)', '::1', '2025-03-12 23:32:07'),
+(280, 1, NULL, 'Admin', 'Rejected Payment', 'Rejected payment of ₱36,000.00 for Genalyn Palma (Unit 116)', '::1', '2025-03-12 23:34:40'),
+(281, 1, NULL, 'Admin', 'Recorded Manual Payment', 'Recorded GCash rent payment of ₱49,500.00 for Genalyn Palma (Unit 115)', '::1', '2025-03-12 23:43:43'),
+(282, 26, NULL, 'User', 'Payment Submission', 'Payment of PHP 500.00 submitted for review (Reference: 201923210312)', '::1', '2025-03-12 23:44:53'),
+(283, 1, NULL, 'Admin', 'Rejected Payment', 'Rejected payment of ₱500.00 for Genalyn Palma (Unit 807)', '::1', '2025-03-12 23:45:14'),
+(284, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-13 20:23:20'),
+(285, 1, NULL, 'Admin', 'Generate Report', 'Generated Unit Occupancy Report for January 2025', '::1', '2025-03-13 22:02:53'),
+(286, 1, NULL, 'Admin', 'Delete Report', 'Deleted Unit Occupancy Report (ID: 191) for period 2025-01', '::1', '2025-03-13 22:03:02'),
+(287, 1, NULL, 'Admin', 'Login', 'User logged in successfully', '::1', '2025-03-13 23:14:01'),
+(288, 1, NULL, 'Admin', 'Sent Invoice Email', 'Sent invoice #INV-20250304-9270 to Conrad Palma (kjstevenpalma18@gmail.com)', '::1', '2025-03-13 23:26:56');
 
 -- --------------------------------------------------------
 
@@ -260,7 +311,7 @@ CREATE TABLE `invoices` (
 INSERT INTO `invoices` (`id`, `tenant_id`, `invoice_number`, `amount`, `issue_date`, `due_date`, `status`, `invoice_type`, `description`, `email_sent`, `email_sent_date`, `created_at`, `updated_at`) VALUES
 (1, 42, 'INV-20250304-1713', 67500.00, '2025-03-15', '2025-03-30', 'paid', 'rent', 'test', 1, '2025-03-04 19:22:27', '2025-03-04 11:11:13', '2025-03-05 16:15:27'),
 (2, 42, 'INV-20250304-3030', 2000.00, '2025-03-04', '2025-03-19', 'paid', 'utility', 'Water and Electric Bill', 1, '2025-03-04 19:24:09', '2025-03-04 11:23:20', '2025-03-05 16:15:41'),
-(3, 44, 'INV-20250304-9270', 45500.00, '2025-03-15', '2025-03-30', 'paid', 'rent', 'Monthly rent and additional expenses', 1, '2025-03-04 19:42:51', '2025-03-04 11:42:14', '2025-03-05 17:18:46');
+(3, 44, 'INV-20250304-9270', 45500.00, '2025-03-15', '2025-03-30', 'paid', 'rent', 'Monthly rent and additional expenses', 1, '2025-03-13 23:26:56', '2025-03-04 11:42:14', '2025-03-13 15:26:56');
 
 -- --------------------------------------------------------
 
@@ -352,7 +403,7 @@ CREATE TABLE `payments` (
   `reference_number` varchar(100) NOT NULL,
   `receipt_image` varchar(255) DEFAULT NULL,
   `gcash_number` varchar(20) NOT NULL,
-  `status` enum('Pending','Received') NOT NULL DEFAULT 'Pending',
+  `status` enum('Pending','Received','Rejected') NOT NULL DEFAULT 'Pending',
   `notes` text DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -373,7 +424,29 @@ INSERT INTO `payments` (`payment_id`, `tenant_id`, `amount`, `payment_date`, `re
 (19, 47, 90000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-05 23:59:45', '2025-03-06 01:10:57', '', 'rent', '', NULL),
 (20, 42, 1000.00, '2025-03-05 00:00:00', '', NULL, '', 'Received', '', '2025-03-06 00:27:48', '2025-03-06 00:27:48', '', 'other', 'Maintenance Charges', 'Maintenance fee for fixing broken AC'),
 (21, 42, 5000.00, '2025-03-05 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741194767_5948.jpg', '09310973342', 'Received', '', '2025-03-06 01:12:47', '2025-03-06 01:12:47', '', 'other', 'Utilities', 'Water and Electric Bill'),
-(22, 21, 22500.00, '2025-03-06 01:21:26', '2012120513868', 'uploads/receipts/receipt_67c888167fc27_1741195286.jpg', '09610974334', 'Received', NULL, '2025-03-06 01:21:26', '2025-03-06 02:16:14', 'Jhon Bautista', 'rent', '', NULL);
+(22, 21, 22500.00, '2025-03-06 01:21:26', '2012120513868', 'uploads/receipts/receipt_67c888167fc27_1741195286.jpg', '09610974334', 'Received', NULL, '2025-03-06 01:21:26', '2025-03-06 02:16:14', 'Jhon Bautista', 'rent', '', NULL),
+(23, 43, 9999.98, '2025-03-09 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741493393_9274.jpg', '09510974884', 'Received', '', '2025-03-09 12:09:53', '2025-03-09 12:09:53', '', 'other', 'Maintenance Charges', ''),
+(24, 43, 5000.00, '2025-03-09 00:00:00', '', 'uploads/receipts/receipt_1741493497_9345.jpg', '', 'Received', '', '2025-03-09 12:11:37', '2025-03-09 12:11:37', '', 'other', 'Utilities', ''),
+(25, 43, 22500.00, '2025-03-09 00:00:00', '', '', '', 'Received', '', '2025-03-09 12:23:22', '2025-03-09 12:23:22', '1', 'rent', '', ''),
+(26, 55, 90000.00, '2025-03-09 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741496739_8566.jpg', '09510974884', 'Received', '', '2025-03-09 13:05:39', '2025-03-09 13:05:39', '1', 'rent', '', ''),
+(27, 53, 36000.00, '2025-03-09 00:00:00', '', '', '', 'Received', '', '2025-03-09 13:15:30', '2025-03-09 13:15:30', '1', 'rent', '', ''),
+(28, 55, 90000.00, '2025-03-09 00:00:00', '', '', '', 'Received', '', '2025-03-09 13:16:44', '2025-03-09 13:16:44', '1', 'rent', '', ''),
+(29, 55, 90000.00, '2025-04-30 00:00:00', '', '', '', 'Received', '', '2025-03-09 13:21:01', '2025-03-09 13:21:01', '1', 'rent', '', ''),
+(30, 53, 36000.00, '2025-03-09 00:00:00', '', '', '', 'Received', '', '2025-03-09 13:32:59', '2025-03-09 13:32:59', '1', 'rent', '', ''),
+(31, 52, 49500.00, '2025-03-09 13:34:35', '2012120513868', 'uploads/receipts/receipt_67cd286b96f91_1741498475.jpg', '09510974884', 'Received', NULL, '2025-03-09 13:34:35', '2025-03-09 13:34:53', 'Jhon Bautista', '', '', NULL),
+(32, 52, 1000.00, '2025-03-09 13:44:41', '2012120513868', 'uploads/receipts/receipt_67cd2ac954129_1741499081.jpg', '09510974884', 'Received', NULL, '2025-03-09 13:44:41', '2025-03-09 13:45:13', 'Jhon Bautista', '', '', NULL),
+(33, 53, 1500.00, '2025-03-09 13:54:27', '2012120513868', 'uploads/receipts/receipt_67cd2d13892c3_1741499667.jpg', '09510974884', 'Received', NULL, '2025-03-09 13:54:27', '2025-03-09 13:54:58', 'Jhon Bautista', 'maintenance', 'AC Repair', NULL),
+(34, 55, 5000.00, '2025-03-09 14:14:57', '2012120513868', 'uploads/receipts/receipt_67cd31e1ab094_1741500897.jpg', '09510974884', 'Rejected', NULL, '2025-03-09 14:14:57', '2025-03-12 23:06:54', 'Jhon Bautista', 'utilities', 'Electric Bill', NULL),
+(35, 55, 800.00, '2025-03-09 14:17:50', '2012120513868', 'uploads/receipts/receipt_67cd328eeaab5_1741501070.jpg', '09510974884', 'Rejected', NULL, '2025-03-09 14:17:50', '2025-03-12 23:06:57', 'Jhon Bautista', 'utilities', 'Water Bil', NULL),
+(36, 21, 22500.00, '2025-05-30 00:00:00', '', '', '', 'Received', '', '2025-03-12 21:59:42', '2025-03-12 21:59:42', '1', 'rent', '', ''),
+(37, 42, 67500.00, '2025-03-12 00:00:00', '', '', '', 'Received', '', '2025-03-12 22:48:58', '2025-03-12 22:48:58', '1', 'rent', '', ''),
+(38, 53, 36000.00, '2025-03-12 22:56:37', '201923210312', 'uploads/receipts/receipt_67d1a0a55127c_1741791397.jpg', '09510974884', 'Rejected', ' [Payment rejected by admin]', '2025-03-12 22:56:37', '2025-03-12 23:34:40', 'Jhon Bautista', 'rent', 'Monthly Rent', NULL),
+(39, 48, 90000.00, '2025-05-30 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741793309_4456.jpg', '09510974884', 'Received', '', '2025-03-12 23:28:29', '2025-03-12 23:28:29', '1', 'rent', '', ''),
+(40, 48, 10000.00, '2025-03-25 00:00:00', '', '', '', 'Received', '', '2025-03-12 23:29:01', '2025-03-12 23:29:01', '1', 'other', 'Utilities', 'Water Bill'),
+(41, 48, 5000.00, '2025-03-15 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741793380_6499.jpg', '09510974884', 'Received', '', '2025-03-12 23:29:40', '2025-03-12 23:29:40', '1', 'other', 'Utilities', 'Electric Bill'),
+(42, 42, 67500.00, '2025-05-30 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741793523_4348.jpg', '09510974884', 'Received', '', '2025-03-12 23:32:03', '2025-03-12 23:32:03', '1', 'rent', '', ''),
+(43, 52, 49500.00, '2025-04-30 00:00:00', '2012120513868', 'uploads/receipts/receipt_1741794220_5481.jpg', '09510974884', 'Received', '', '2025-03-12 23:43:40', '2025-03-12 23:43:40', '1', 'rent', '', ''),
+(44, 55, 500.00, '2025-03-12 23:44:53', '201923210312', 'uploads/receipts/receipt_67d1abf549cf0_1741794293.jpg', '09510974884', 'Rejected', ' [Payment rejected by admin]', '2025-03-12 23:44:53', '2025-03-12 23:45:14', 'Jhon Bautista', 'maintenance', 'Broken Faucet', NULL);
 
 -- --------------------------------------------------------
 
@@ -402,8 +475,8 @@ INSERT INTO `property` (`unit_id`, `unit_no`, `unit_type`, `square_meter`, `mont
 (4, '102', 'Commercial', 50.00, 22500.00, 'uploads/674492f88e939_kitchen-8297678_1280.jpg', 'Occupied', 'active'),
 (5, '106', 'Warehouse', 100.00, 45000.00, 'uploads/6744bfef4a3ce_architecture-5339245_1280.jpg', 'Occupied', 'active'),
 (6, '107', 'Commercial', 150.00, 67500.00, 'uploads/6746d96160177_architecture-3383067_1280.jpg', 'Occupied', 'active'),
-(7, '115', 'Warehouse', 110.00, 49500.00, 'uploads/674ee720cb5b1_warehouse-1026496_1280.jpg', 'Available', 'active'),
-(8, '116', 'Office', 80.00, 36000.00, 'uploads/674ee99e0119e_classroom-4919804_1280.jpg', 'Available', 'active'),
+(7, '115', 'Warehouse', 110.00, 49500.00, 'uploads/674ee720cb5b1_warehouse-1026496_1280.jpg', 'Occupied', 'active'),
+(8, '116', 'Office', 80.00, 36000.00, 'uploads/674ee99e0119e_classroom-4919804_1280.jpg', 'Occupied', 'active'),
 (9, '201', 'Commercial', 50.00, 22500.00, 'uploads/6757aa7d0e2eb_kitchen-8714865_1280.jpg', 'Available', 'active'),
 (10, '205', 'Office', 50.00, 22500.00, 'uploads/6757c2c52a4a1_kitchen-1336160_1280.jpg', 'Available', 'active'),
 (11, '206', 'Warehouse', 150.00, 67500.00, 'uploads/67ab43a74ce60_ShockWatch-Warehouse-Efficiency.jpg', 'Available', 'active'),
@@ -415,7 +488,7 @@ INSERT INTO `property` (`unit_id`, `unit_no`, `unit_type`, `square_meter`, `mont
 (17, '501', 'Office', 200.00, 90000.00, 'uploads/67b2bbc389c3f_bedroom-8275330_1280.jpg', 'Available', 'active'),
 (18, '605', 'Office', 250.00, 112500.00, 'uploads/67b2bc10d4e5f_apartment-1851201_1280.jpg', 'Available', 'active'),
 (19, '702', 'Warehouse', 200.00, 90000.00, 'uploads/67b2bc4d0a251_apartment-406901_1280.jpg', 'Maintenance', 'active'),
-(20, '807', 'Warehouse', 200.00, 90000.00, 'uploads/67b2bc75b1f59_high-level-rack-408222_1280.jpg', 'Available', 'active'),
+(20, '807', 'Warehouse', 200.00, 90000.00, 'uploads/67b2bc75b1f59_high-level-rack-408222_1280.jpg', 'Occupied', 'active'),
 (21, '902', 'Office', 100.00, 45000.00, 'uploads/67b2bca4e0c7e_workplace-5517744_1280.jpg', 'Available', 'active'),
 (22, '1006', 'Office', 200.00, 90000.00, 'uploads/67b2bcd813f98_office-2360063_1280.jpg', 'Available', 'active'),
 (23, '701', 'Warehouse', 200.00, 90000.00, 'uploads/67b479e46a5ca_office-2360063_1280.jpg', 'Occupied', 'active'),
@@ -457,7 +530,11 @@ INSERT INTO `reservations` (`reservation_id`, `user_id`, `unit_id`, `viewing_dat
 (23, 24, 29, '2025-02-28', '10:50:00', '2025-02-25 05:48:25', 'Completed', 0),
 (24, 11, 25, '2025-03-05', '11:30:00', '2025-02-25 12:26:27', 'Completed', 0),
 (32, 11, 1, '2025-03-05', '10:40:00', '2025-02-27 18:17:03', 'Pending', 0),
-(33, 23, 27, '2025-03-05', '14:00:00', '2025-03-01 15:24:03', 'Completed', 0);
+(33, 23, 27, '2025-03-05', '14:00:00', '2025-03-01 15:24:03', 'Completed', 0),
+(34, 26, 7, '2025-03-10', '10:30:00', '2025-03-09 04:33:42', 'Completed', 0),
+(35, 26, 8, '2025-03-20', '10:40:00', '2025-03-09 04:43:43', 'Completed', 0),
+(36, 26, 20, '2025-03-30', '13:30:00', '2025-03-09 04:56:30', 'Completed', 1),
+(37, 26, 20, '2025-03-30', '10:31:00', '2025-03-09 05:03:02', 'Completed', 0);
 
 -- --------------------------------------------------------
 
@@ -511,24 +588,28 @@ CREATE TABLE `tenants` (
   `status` enum('active','archived') DEFAULT 'active',
   `contract_file` varchar(255) DEFAULT NULL,
   `contract_upload_date` datetime DEFAULT NULL,
-  `downpayment_receipt` varchar(255) DEFAULT NULL
+  `downpayment_receipt` varchar(255) DEFAULT NULL,
+  `last_payment_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `tenants`
 --
 
-INSERT INTO `tenants` (`tenant_id`, `user_id`, `unit_rented`, `rent_from`, `rent_until`, `monthly_rate`, `outstanding_balance`, `registration_date`, `created_at`, `updated_at`, `downpayment_amount`, `payable_months`, `status`, `contract_file`, `contract_upload_date`, `downpayment_receipt`) VALUES
-(20, 11, '3', '2024-12-29', '2026-05-20', 33750.00, 440000.00, '0000-00-00', '2024-12-09 13:52:32', '2025-02-16 12:37:46', 100000.00, 14, 'active', 'uploads/contracts/67b1dc1a23042_20_Rental_Agreement.pdf', '2025-02-16 20:37:46', NULL),
-(21, 23, '10', '2024-12-10', '2026-12-20', 22500.00, 417500.00, '0000-00-00', '2024-12-10 04:27:46', '2025-03-05 18:16:14', 100000.00, 20, 'active', NULL, NULL, NULL),
-(42, 24, '6', '2024-12-31', '2026-10-31', 67500.00, 1385000.00, '0000-00-00', '2024-12-31 08:43:13', '2024-12-31 08:43:13', 100000.00, 21, 'active', NULL, NULL, NULL),
-(43, 11, '4', '2025-01-03', '2027-11-24', 22500.00, 665000.00, '0000-00-00', '2025-01-03 15:08:01', '2025-02-25 15:18:53', 100000.00, 30, 'active', NULL, NULL, NULL),
-(44, 23, '5', '2025-01-23', '2027-10-03', 45000.00, 895000.00, '0000-00-00', '2025-01-03 15:12:16', '2025-03-05 15:18:27', 500000.00, 21, 'active', NULL, NULL, NULL),
-(45, 11, '23', '2025-02-18', '2027-09-23', 90000.00, 2244000.00, '0000-00-00', '2025-02-18 12:20:19', '2025-03-05 15:08:19', 500000.00, 26, 'active', 'uploads/contracts/67b47bfcb7e70_45_Rental_Agreement.pdf', '2025-02-18 20:24:28', NULL),
-(47, 11, '20', '2025-02-28', '2028-10-26', 90000.00, 3280000.00, '0000-00-00', '2025-02-23 14:37:52', '2025-03-05 15:59:45', 500000.00, 38, 'active', NULL, NULL, NULL),
-(48, 24, '29', '2025-03-06', '2027-09-30', 90000.00, 2200000.00, '0000-00-00', '2025-02-25 05:49:53', '2025-02-25 05:49:53', 500000.00, 25, 'active', NULL, NULL, NULL),
-(50, 11, '25', '2025-04-30', '2026-12-30', 90000.00, 1400000.00, '0000-00-00', '2025-02-25 16:20:51', '2025-02-25 16:20:51', 400000.00, 16, 'active', NULL, NULL, NULL),
-(51, 23, '27', '2025-03-10', '2027-05-30', 78750.00, 1468750.00, '0000-00-00', '2025-03-01 15:25:07', '2025-03-05 15:41:32', 500000.00, 20, 'active', NULL, NULL, '../uploads/receipts/receipt_1740842707_6543.jpg');
+INSERT INTO `tenants` (`tenant_id`, `user_id`, `unit_rented`, `rent_from`, `rent_until`, `monthly_rate`, `outstanding_balance`, `registration_date`, `created_at`, `updated_at`, `downpayment_amount`, `payable_months`, `status`, `contract_file`, `contract_upload_date`, `downpayment_receipt`, `last_payment_date`) VALUES
+(20, 11, '3', '2024-12-29', '2026-05-20', 33750.00, 440000.00, '0000-00-00', '2024-12-09 13:52:32', '2025-02-16 12:37:46', 100000.00, 14, 'active', 'uploads/contracts/67b1dc1a23042_20_Rental_Agreement.pdf', '2025-02-16 20:37:46', NULL, NULL),
+(21, 23, '10', '2024-12-10', '2026-12-20', 22500.00, 395000.00, '0000-00-00', '2024-12-10 04:27:46', '2025-03-12 13:59:42', 100000.00, 18, 'active', NULL, NULL, NULL, '2025-05-30'),
+(42, 24, '6', '2024-12-31', '2026-10-31', 67500.00, 1250000.00, '0000-00-00', '2024-12-31 08:43:13', '2025-03-12 15:32:03', 100000.00, 19, 'active', NULL, NULL, NULL, '2025-05-30'),
+(43, 11, '4', '2025-01-03', '2027-11-24', 22500.00, 642500.00, '0000-00-00', '2025-01-03 15:08:01', '2025-03-09 04:23:22', 100000.00, 30, 'active', NULL, NULL, NULL, NULL),
+(44, 23, '5', '2025-01-23', '2027-10-03', 45000.00, 895000.00, '0000-00-00', '2025-01-03 15:12:16', '2025-03-05 15:18:27', 500000.00, 21, 'active', NULL, NULL, NULL, NULL),
+(45, 11, '23', '2025-02-18', '2027-09-23', 90000.00, 2244000.00, '0000-00-00', '2025-02-18 12:20:19', '2025-03-05 15:08:19', 500000.00, 26, 'active', 'uploads/contracts/67b47bfcb7e70_45_Rental_Agreement.pdf', '2025-02-18 20:24:28', NULL, NULL),
+(47, 11, '20', '2025-02-28', '2028-10-26', 90000.00, 3280000.00, '0000-00-00', '2025-02-23 14:37:52', '2025-03-05 15:59:45', 500000.00, 38, 'active', NULL, NULL, NULL, NULL),
+(48, 24, '29', '2025-03-06', '2027-09-30', 90000.00, 2110000.00, '0000-00-00', '2025-02-25 05:49:53', '2025-03-12 15:28:29', 500000.00, 24, 'active', NULL, NULL, NULL, '2025-05-30'),
+(50, 11, '25', '2025-04-30', '2026-12-30', 90000.00, 1400000.00, '0000-00-00', '2025-02-25 16:20:51', '2025-02-25 16:20:51', 400000.00, 16, 'active', NULL, NULL, NULL, NULL),
+(51, 23, '27', '2025-03-10', '2027-05-30', 78750.00, 1468750.00, '0000-00-00', '2025-03-01 15:25:07', '2025-03-09 04:30:41', 500000.00, 20, 'active', NULL, NULL, NULL, NULL),
+(52, 26, '7', '2025-03-14', '2027-07-20', 49500.00, 586500.00, '0000-00-00', '2025-03-09 04:34:49', '2025-03-12 15:43:40', 750000.00, 12, 'active', NULL, NULL, '../uploads/downpayment/receipt_1741494889_1955.jpg', '2025-04-30'),
+(53, 26, '8', '2025-04-15', '2027-12-27', 36000.00, 630000.00, '0000-00-00', '2025-03-09 04:45:17', '2025-03-09 05:32:59', 450000.00, 18, 'active', NULL, NULL, NULL, '2025-03-09'),
+(55, 26, '20', '2025-03-30', '2027-10-19', 90000.00, 1710000.00, '0000-00-00', '2025-03-09 05:04:08', '2025-03-09 05:21:01', 800000.00, 19, 'active', NULL, NULL, '../uploads/downpayment/receipt_1741496648_8709.jpg', '2025-04-30');
 
 -- --------------------------------------------------------
 
@@ -562,11 +643,11 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `profile_image`, `role`, `OTP`, `OTP_used`, `OTP_expiration`, `token`, `is_verified`, `created_at`, `updated_at`, `phone`, `ResetToken`, `login_attempts`, `last_attempt`, `status`) VALUES
-(1, 'Jhon Bautista', 'kjstevenpalma@gmail.com', '$2y$10$IbNu.ni4K.fxIYaIbyFqnekQgBR9RykaYNiTAbmUPa9obcBHlDxWG', NULL, 'Admin', '940281', 0, '2025-03-05 18:34:06', NULL, 1, '2024-10-22 08:59:15', '2025-03-05 18:19:12', '09510973323', '25974df077c253efd20cab82d9270e27fe1fd5238d4fea9ac2794aec23671076', 0, '2025-03-05 17:24:06', 'inactive'),
+(1, 'Jhon Bautista', 'kjstevenpalma@gmail.com', '$2y$10$IbNu.ni4K.fxIYaIbyFqnekQgBR9RykaYNiTAbmUPa9obcBHlDxWG', NULL, 'Admin', '454799', 0, '2025-03-13 16:23:57', NULL, 1, '2024-10-22 08:59:15', '2025-03-13 15:13:57', '09510973323', '25974df077c253efd20cab82d9270e27fe1fd5238d4fea9ac2794aec23671076', 0, '2025-03-13 15:13:57', 'active'),
 (11, 'David Fuentes', 'kjstevengaming@gmail.com', '$2y$10$vq8FbgmhOjIfSu5BBi5UA.Sk4wynt6P.s2FAbGG9DsuCmH3U6q0cq', 'uploads/67bdb549d211a-145218582_429580515129022_8609296071987312843_n.jpg', 'User', '382116', 0, '2025-03-04 15:03:01', NULL, 1, '2024-10-22 09:34:53', '2025-03-04 13:53:01', '09510973444', NULL, 0, '2025-03-04 13:53:01', 'active'),
 (23, 'Conrad Palma', 'kjstevenpalma18@gmail.com', '$2y$10$ePCz3ES5ycuXMIvghHlbS.Tp7vI8DHmRz8VbXRiSwGmb9S5yz3p/a', NULL, 'User', '489455', 0, '2025-03-05 18:29:34', NULL, 1, '2024-12-10 04:21:37', '2025-03-05 17:23:55', '09616733509', NULL, 0, '2025-03-05 17:19:34', 'inactive'),
 (24, 'Anora Hidson', 'freshplayz18@gmail.com', '$2y$10$mKVkrd7ZtB4yXrdmUPN.DO7.msB12SEcdbM1tp7MsZQtko5WOQctK', NULL, 'User', '160895', 0, '2025-02-25 06:57:36', NULL, 1, '2024-12-25 07:47:13', '2025-02-25 05:47:36', '09212973327', NULL, 0, '2025-02-25 05:47:36', 'active'),
-(26, 'Genalyn Palma', 'palmagenalyn17@gmail.com', '$2y$10$5w8ADIL9AijXhs.JVBw1X.olYGpZT8HL7W6TIe4lad3IJSgNtX6Ve', NULL, 'User', '461341', 0, '2025-02-25 17:29:11', NULL, 1, '2025-02-25 16:18:33', '2025-02-25 16:22:00', '09516733408', NULL, 0, '2025-02-25 16:19:11', 'inactive');
+(26, 'Genalyn Palma', 'palmagenalyn17@gmail.com', '$2y$10$5w8ADIL9AijXhs.JVBw1X.olYGpZT8HL7W6TIe4lad3IJSgNtX6Ve', NULL, 'User', '569571', 0, '2025-03-12 16:00:20', NULL, 1, '2025-02-25 16:18:33', '2025-03-12 14:50:20', '09516733408', NULL, 0, '2025-03-12 14:50:20', 'active');
 
 --
 -- Indexes for dumped tables
@@ -672,13 +753,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=236;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=289;
 
 --
 -- AUTO_INCREMENT for table `generated_reports`
 --
 ALTER TABLE `generated_reports`
-  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=167;
+  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=192;
 
 --
 -- AUTO_INCREMENT for table `invoices`
@@ -708,7 +789,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `payment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `property`
@@ -720,7 +801,7 @@ ALTER TABLE `property`
 -- AUTO_INCREMENT for table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `reservation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `reservation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `staff`
@@ -732,7 +813,7 @@ ALTER TABLE `staff`
 -- AUTO_INCREMENT for table `tenants`
 --
 ALTER TABLE `tenants`
-  MODIFY `tenant_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `tenant_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `users`

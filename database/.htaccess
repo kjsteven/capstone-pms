@@ -1,0 +1,8 @@
+# Deny access to all files in this directory
+<FilesMatch "^.*$">
+  Order Allow,Deny
+  Deny from all
+</FilesMatch>
+
+# Prevent directory listing
+Options -Indexes

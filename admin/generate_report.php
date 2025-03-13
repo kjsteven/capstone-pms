@@ -7,6 +7,8 @@ date_default_timezone_set('Asia/Manila');
 
 require '../session/db.php';
 require 'UnitOccupancyReport.php';
+require 'PropertyMaintenanceReport.php';
+require '../session/audit_trail.php'; // Added audit trail requirement
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'generate_report') {
     $reportType = $_POST['report_type'];
@@ -54,6 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $reportSaved = $report->saveReportToDatabase($generatedReport, $filePath);
 
             if ($reportSaved) {
+                // Log the activity
+                $monthName = date('F', mktime(0, 0, 0, $reportMonth, 1, $reportYear));
+                $actionDetails = "Generated Unit Occupancy Report for $monthName $reportYear";
+                logActivity($userId, "Generate Report", $actionDetails);
+                
                 echo json_encode([
                     'status' => 'success',
                     'message' => 'Report generated successfully',
@@ -62,6 +69,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 ]);
             } else {
                 throw new Exception('Failed to save report to the database');
+            }
+        } elseif ($reportType === 'Property Maintenance Report') {
+            $report = new PropertyMaintenanceReport($conn);
+            $generatedReport = $report->generateReport($reportDate, $reportYear, $reportMonth, $generatedBy);
+            
+            $filename = $report->exportReportToCSV($generatedReport);
+            $filePath = '../reports/' . $filename;
+            
+            $reportSaved = $report->saveReportToDatabase($generatedReport, $filePath);
+            
+            if ($reportSaved) {
+                // Log the activity
+                $monthName = date('F', mktime(0, 0, 0, $reportMonth, 1, $reportYear));
+                $actionDetails = "Generated Property Maintenance Report for $monthName $reportYear";
+                logActivity($userId, "Generate Report", $actionDetails);
+                
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Maintenance Report generated successfully',
+                    'filename' => $filename,
+                    'report_id' => $conn->insert_id
+                ]);
+            } else {
+                throw new Exception('Failed to save maintenance report to the database');
             }
         } else {
             throw new Exception('Unknown report type');

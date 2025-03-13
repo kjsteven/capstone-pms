@@ -258,3 +258,6 @@ Stack trace:
 [12-Mar-2025 16:43:40 Europe/Berlin] Processing manual payment. User: 1, Method: POST
 [12-Mar-2025 16:43:40 Europe/Berlin] Preparing to insert payment for tenant ID: 52, amount: 49500, processed by: 1
 [12-Mar-2025 16:43:43 Europe/Berlin] Payment confirmation email sent successfully to: palmagenalyn17@gmail.com
+[13-Mar-2025 13:25:05 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 13:25:08 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 13:25:09 Europe/Berlin] Starting invoice_actions.php with action: view

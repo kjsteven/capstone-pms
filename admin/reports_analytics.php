@@ -461,8 +461,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 
 
-
-
 <!-- Initialize Charts -->
  
 <script>
@@ -903,6 +901,180 @@ document.addEventListener('DOMContentLoaded', function() {
                 propertyMaintenanceChart.render();
             }
         }
+        
+        // Function to load rental balance data with tenant metrics
+        function loadRentalBalanceChart(sortBy = 'amount') {
+            fetch('get_rental_balance_data.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        let series, labels, subtitle, title;
+                        
+                        if (sortBy === 'tenants') {
+                            // Display tenant-based percentages
+                            series = [
+                                data.data.paid_tenants_percentage, 
+                                data.data.outstanding_tenants_percentage
+                            ];
+                            subtitle = `${data.data.paid_tenants} Tenants Fully Paid | ${data.data.outstanding_tenants} Tenants with Balance`;
+                            title = "Rental Balance - By Tenants";
+                        } else {
+                            // Display amount-based percentages (default)
+                            series = [
+                                data.data.paid_percentage, 
+                                data.data.outstanding_percentage
+                            ];
+                            subtitle = `Paid: ₱${formatNumber(data.data.paid)} | Outstanding: ₱${formatNumber(data.data.outstanding)}`;
+                            title = "Rental Balance - By Amount";
+                        }
+                        
+                        const rentalBalanceOptions = {
+                            chart: { 
+                                type: 'donut', 
+                                width: '100%', 
+                                height: '100%',
+                                toolbar: {
+                                    show: true,
+                                    tools: {
+                                        download: true
+                                    },
+                                    export: {
+                                        csv: { filename: 'rental_balance_report' },
+                                        png: { filename: 'rental_balance_report' },
+                                        jpeg: { filename: 'rental_balance_report' }
+                                    }
+                                }
+                            },
+                            series: series,
+                            labels: ['Paid', 'Outstanding'],
+                            colors: ['#27ae60', '#e74c3c'],
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                y: {
+                                    formatter: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            },
+                            title: {
+                                text: title,
+                                align: 'center'
+                            },
+                            subtitle: {
+                                text: subtitle,
+                                align: 'center'
+                            },
+                            plotOptions: {
+                                pie: {
+                                    donut: {
+                                        labels: {
+                                            show: true,
+                                            total: {
+                                                show: true,
+                                                label: 'Total',
+                                                formatter: function (w) {
+                                                    return sortBy === 'tenants' 
+                                                        ? data.data.total_tenants + ' Tenants'
+                                                        : '₱' + formatNumber(data.data.total);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            dataLabels: {
+                                formatter: function (val, opts) {
+                                    return opts.w.config.series[opts.seriesIndex] + '%';
+                                }
+                            }
+                        };
+                        
+                        if (rentalBalanceChart) {
+                            rentalBalanceChart.updateOptions(rentalBalanceOptions);
+                        } else {
+                            rentalBalanceChart = new ApexCharts(
+                                document.querySelector("#rental-balance-chart"), 
+                                rentalBalanceOptions
+                            );
+                            rentalBalanceChart.render();
+                        }
+                        
+                        // Create or update sorting toggle
+                        createRentalBalanceSorter(sortBy);
+                    } else {
+                        console.error('Error loading rental balance data:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading rental balance data:', error);
+                });
+        }
+
+        // Function to create sort-by toggle for rental balance chart
+        function createRentalBalanceSorter(currentSortBy) {
+            const chartContainer = document.querySelector("#rental-balance-chart").closest('.chart-container');
+            const titleElement = chartContainer.querySelector('h3');
+            
+            // Check if the filter container already exists
+            let headerContainer = chartContainer.querySelector('.filter-container');
+            
+            if (!headerContainer) {
+                // Create a container for the title and filter
+                headerContainer = document.createElement('div');
+                headerContainer.className = 'flex justify-between items-center mb-4 filter-container';
+                
+                // Move the title into the container
+                titleElement.parentNode.insertBefore(headerContainer, titleElement);
+                headerContainer.appendChild(titleElement);
+            } else {
+                // Clear existing filters but keep the title
+                const title = headerContainer.querySelector('h3');
+                headerContainer.innerHTML = '';
+                headerContainer.appendChild(title);
+            }
+            
+            // Create toggle selector
+            const sortSelect = document.createElement('select');
+            sortSelect.id = 'rental-balance-sort';
+            sortSelect.className = 'px-3 py-1 border border-gray-300 rounded-md text-sm';
+            
+            // Add options
+            const options = [
+                { value: 'amount', text: 'View by Amount' },
+                { value: 'tenants', text: 'View by Tenants' }
+            ];
+            
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.text;
+                optionElement.selected = option.value === currentSortBy;
+                sortSelect.appendChild(optionElement);
+            });
+            
+            // Add event listener
+            sortSelect.addEventListener('change', function() {
+                loadRentalBalanceChart(this.value);
+            });
+            
+            // Add filter to container
+            headerContainer.appendChild(sortSelect);
+        }
+        
+        // Helper function to format number with commas
+        function formatNumber(num) {
+            return num.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        }
+        
+        // Replace the static rental balance chart with dynamic data loading
+        loadRentalBalanceChart();
     });
     
 </script>

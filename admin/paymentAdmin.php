@@ -194,14 +194,28 @@ if ($tenantsResult) {
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment ID</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable('tenant')">
+                                    Tenant
+                                    <span class="ml-1 sort-icon" data-column="tenant">
+                                        <i class="fas fa-sort text-gray-400"></i>
+                                    </span>
+                                </div>
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bill Item</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference #</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div class="flex items-center cursor-pointer" onclick="sortTable('date')">
+                                    Date
+                                    <span class="ml-1 sort-icon" data-column="date">
+                                        <i class="fas fa-sort-down text-gray-700"></i>
+                                    </span>
+                                </div>
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -689,7 +703,84 @@ if ($tenantsResult) {
         
         // Print details button
         document.getElementById('print-details-btn').addEventListener('click', printPaymentDetails);
+
+        // By default, sort by date (newest to oldest) - already the default in the PHP query
+        currentSortColumn = 'date';
+        currentSortOrder = 'desc';
+        updateSortIcons();
     });
+
+    // Global variables to keep track of sorting state
+    let currentSortColumn = 'date'; // Default sort column
+    let currentSortOrder = 'desc';  // Default sort order (newest first)
+
+    // Sort the table based on the clicked column
+    function sortTable(column) {
+        // If clicking the same column, toggle sort order
+        if (column === currentSortColumn) {
+            currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            // If clicking a new column, set default sort order
+            currentSortColumn = column;
+            // Set descending for date (newest first) and ascending for tenant (A-Z)
+            currentSortOrder = column === 'date' ? 'desc' : 'asc';
+        }
+        
+        // Update sort icons
+        updateSortIcons();
+        
+        // Get all rows from the table body
+        const tableBody = document.getElementById('payments-table-body');
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        
+        // Skip if there's only the "No payments found" row
+        if (rows.length === 1 && rows[0].cells.length <= 1) {
+            return;
+        }
+        
+        // Sort the rows based on the selected column
+        rows.sort((rowA, rowB) => {
+            let valueA, valueB;
+            
+            if (column === 'tenant') {
+                // For tenant column (index 1)
+                valueA = rowA.cells[1].textContent.trim().toLowerCase();
+                valueB = rowB.cells[1].textContent.trim().toLowerCase();
+                return currentSortOrder === 'asc' ? 
+                    valueA.localeCompare(valueB) : 
+                    valueB.localeCompare(valueA);
+            } else if (column === 'date') {
+                // For date column (index 8) - parse the date
+                valueA = new Date(rowA.cells[8].textContent.trim());
+                valueB = new Date(rowB.cells[8].textContent.trim());
+                return currentSortOrder === 'asc' ? 
+                    valueA - valueB : 
+                    valueB - valueA;
+            }
+        });
+        
+        // Reorder rows in the table
+        rows.forEach(row => tableBody.appendChild(row));
+        
+        // Show toast to indicate sorting applied
+        showToast(`Sorted by ${column === 'tenant' ? 'tenant name' : 'date'} (${currentSortOrder === 'asc' ? 'A-Z' : 'Z-A'})`, 'success');
+    }
+
+    // Update the sort icons to reflect current sort state
+    function updateSortIcons() {
+        // Reset all icons
+        document.querySelectorAll('.sort-icon').forEach(icon => {
+            icon.innerHTML = '<i class="fas fa-sort text-gray-400"></i>';
+        });
+        
+        // Set active icon for current sort column
+        const activeIcon = document.querySelector(`.sort-icon[data-column="${currentSortColumn}"]`);
+        if (activeIcon) {
+            activeIcon.innerHTML = currentSortOrder === 'asc' ? 
+                '<i class="fas fa-sort-up text-gray-700"></i>' : 
+                '<i class="fas fa-sort-down text-gray-700"></i>';
+        }
+    }
 
     // Toggle manual payment modal visibility
     function toggleManualModal(show) {

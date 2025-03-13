@@ -45,6 +45,10 @@ if ($page > $totalPages) {
     }
 }
 
+// Get today's date for default export date range
+$todayDate = date('Y-m-d');
+$thirtyDaysAgo = date('Y-m-d', strtotime('-30 days'));
+
 // Get invoice data with pagination using prepared statement for safety
 $query = "SELECT i.*, t.tenant_id, u.name as tenant_name, p.unit_no 
           FROM invoices i
@@ -148,9 +152,14 @@ if ($tenantResult) {
         
         <div class="mb-6 flex flex-col lg:flex-row justify-between items-start gap-4">
             <h1 class="text-2xl font-semibold text-gray-800">Invoice Management</h1>
-            <button id="createInvoiceBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center">
-                <i class="fas fa-plus mr-2"></i> Create New Invoice
-            </button>
+            <div class="flex gap-2">
+                <button id="exportInvoiceBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 flex items-center">
+                    <i class="fas fa-file-export mr-2"></i> Export Report
+                </button>
+                <button id="createInvoiceBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Create New Invoice
+                </button>
+            </div>
         </div>
 
         <!-- Filters and Search Section -->
@@ -608,6 +617,67 @@ if ($tenantResult) {
     </div>
 </div>
 
+<!-- Export Report Modal -->
+<div id="exportReportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-800">Export Invoice Report</h3>
+            <button class="text-gray-400 hover:text-gray-500" onclick="toggleExportModal(false)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <form id="exportForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Date Range</label>
+                    <input type="text" id="export-date-range" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Select date range">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="export-status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Statuses</option>
+                        <option value="paid">Paid</option>
+                        <option value="unpaid">Unpaid</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tenant (Optional)</label>
+                    <select id="export-tenant" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Tenants</option>
+                        <?php foreach ($tenants as $tenant) : ?>
+                        <option value="<?= $tenant['tenant_id'] ?>"><?= htmlspecialchars($tenant['tenant_name']) ?> (Unit <?= htmlspecialchars($tenant['unit_no']) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Export Format</label>
+                    <div class="mt-1 flex space-x-4">
+
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="export-format" value="csv" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <span class="ml-2 text-sm text-gray-700">CSV</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="toggleExportModal(false)">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Export Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Success toast container -->
 <div id="toast-container" class="fixed top-5 right-5 z-50"></div>
 
@@ -623,18 +693,22 @@ if ($tenantResult) {
             placeholder: "Select date range"
         });
         
-        // Set today's date as default for issue date
-        const today = new Date();
-        document.getElementById('issue_date').valueAsDate = today;
-        
-        // Set due date as 15 days from now by default
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 15);
-        document.getElementById('due_date').valueAsDate = dueDate;
+        // Initialize date picker for export date range with default dates
+        flatpickr("#export-date-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            defaultDate: [new Date('<?= $thirtyDaysAgo ?>'), new Date('<?= $todayDate ?>')],
+            placeholder: "Select date range"
+        });
         
         // Show create invoice modal
         document.getElementById('createInvoiceBtn').addEventListener('click', function() {
             toggleCreateModal(true);
+        });
+        
+        // Show export modal
+        document.getElementById('exportInvoiceBtn').addEventListener('click', function() {
+            toggleExportModal(true);
         });
         
         // Handle tenant selection to pre-fill monthly rate for rent invoices
@@ -700,6 +774,85 @@ if ($tenantResult) {
             createInvoice();
         });
         
+        // Handle export form submission
+        document.getElementById('exportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const dateRange = document.getElementById('export-date-range').value;
+            const status = document.getElementById('export-status').value;
+            const tenant = document.getElementById('export-tenant').value;
+            const format = document.querySelector('input[name="export-format"]:checked').value;
+            
+            // Create form data for submission
+            const formData = new FormData();
+            formData.append('date_range', dateRange);
+            formData.append('status', status);
+            formData.append('tenant_id', tenant);
+            formData.append('format', format);
+            
+            // Show loading state
+            const submitBtn = document.querySelector('#exportForm button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Exporting...';
+            
+            // Create and submit a form to download the file
+            fetch('export_invoice_report.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create a link to download the file
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                
+                // Set the file name based on the format
+                let fileName = 'invoice_report_' + new Date().toISOString().split('T')[0];
+                if (format === 'pdf') {
+                    fileName += '.pdf';
+                } else if (format === 'excel') {
+                    fileName += '.xlsx';
+                } else {
+                    fileName += '.csv';
+                }
+                a.download = fileName;
+                
+                // Append to the body, click and remove
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Close the modal
+                toggleExportModal(false);
+                
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                
+                // Show success message
+                showToast('Report exported successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                
+                showToast('Error exporting report: ' + error.message, 'error');
+            });
+        });
+        
         // Apply filters on change
         document.getElementById('status-filter').addEventListener('change', applyFilters);
         document.getElementById('date-range').addEventListener('change', applyFilters);
@@ -754,6 +907,16 @@ if ($tenantResult) {
     // Toggle email confirmation modal
     function toggleEmailModal(show) {
         const modal = document.getElementById('emailConfirmModal');
+        if (show) {
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+    
+    // Toggle export modal
+    function toggleExportModal(show) {
+        const modal = document.getElementById('exportReportModal');
         if (show) {
             modal.classList.remove('hidden');
         } else {

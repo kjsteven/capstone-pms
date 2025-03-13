@@ -261,3 +261,10 @@ Stack trace:
 [13-Mar-2025 13:25:05 Europe/Berlin] Starting invoice_actions.php with action: view
 [13-Mar-2025 13:25:08 Europe/Berlin] Starting invoice_actions.php with action: view
 [13-Mar-2025 13:25:09 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 15:33:27 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 16:26:25 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 16:26:32 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 16:26:35 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 16:26:44 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 16:26:50 Europe/Berlin] Starting invoice_actions.php with action: view
+[13-Mar-2025 16:26:53 Europe/Berlin] Starting invoice_actions.php with action: send_email

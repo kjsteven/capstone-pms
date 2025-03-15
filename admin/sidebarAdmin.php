@@ -10,6 +10,7 @@ start_secure_session();
 
 // Set HTTP headers to prevent caching
 header("Cache-Control: no-store, no-cache, must-revalidate");
+header("X-Content-Type-Options: nosniff");
 header("Pragma: no-cache");
 
 // Check if the user is logged in

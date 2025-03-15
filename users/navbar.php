@@ -3,6 +3,21 @@ require '../session/db.php';
 require_once '../session/session_manager.php';
 
 start_secure_session();
+
+// Prevent caching
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Pragma: no-cache");
+
+// Security headers
+header("X-Content-Type-Options: nosniff"); // Prevent MIME-type sniffing
+header("X-Frame-Options: DENY"); // Prevent clickjacking
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self';"); // Prevent XSS & Base Tag Injection
+header("Referrer-Policy: strict-origin-when-cross-origin"); // More secure referrer policy
+
+// Only add this if your site runs on HTTPS
+header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
+header("Strict-Transport-Security: max-age=31536000; preload"); 
+
 // Assuming you have a session started and the user is logged in, get the user ID
 $user_id = $_SESSION['user_id']; // or fetch user ID from session if already set
 

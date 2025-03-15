@@ -1,4 +1,21 @@
 <?php
+
+session_start();
+
+// Prevent caching
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Pragma: no-cache");
+
+// Security headers
+header("X-Content-Type-Options: nosniff"); // Prevent MIME-type sniffing
+header("X-Frame-Options: DENY"); // Prevent clickjacking
+header("Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self';"); // Prevent XSS & Base Tag Injection
+header("Referrer-Policy: strict-origin-when-cross-origin"); // More secure referrer policy
+
+// Only add this if your site runs on HTTPS
+header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
+header("Strict-Transport-Security: max-age=31536000; preload"); 
+
 require '../session/db.php';
 require '../vendor/autoload.php';
 require '../config/config.php';

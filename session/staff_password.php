@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Create the email content with the reset token link
         $subject = 'Password Reset';
-        $body = 'Click the following link to reset your password: <a href="https://localhost/capstone-pms/session/staff_resetpass.php?resettoken=' . $resetToken . '">Reset Password</a>';
+        $body = 'Click the following link to reset your password: <a href="https://propertywise.site/session/staff_resetpass.php?resettoken=' . $resetToken . '">Reset Password</a>';
 
         // Send the email using PHPMailer
         require '../vendor/phpmailer/phpmailer/src/PHPMailer.php';
@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <h1 style="color: #1f2937; font-size: 24px; margin-bottom: 20px; text-align: center;">Password Reset Request</h1>
                     <p style="color: #6b7280; margin-bottom: 20px; text-align: center;">We received a request to reset your password. Click the button below to create a new password:</p>
                     <div style="text-align: center; margin: 30px 0;">
-                        <a href="https://localhost/capstone-pms/session/staff_resetpass.php?resettoken=' . $resetToken . '" 
+                        <a href="https://propertywise.site/session/staff_resetpass.php?resettoken=' . $resetToken . '" 
                            style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
                             Reset Password
                         </a>
@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>';
 
             // Plain text alternative
-            $mail->AltBody = 'Reset your password by copying and pasting this link into your browser: https://localhost/capstone-pms/session/staff_resetpass.php?resettoken=' . $resetToken;
+            $mail->AltBody = 'Reset your password by copying and pasting this link into your browser: https://propertywise.site/session/staff_resetpass.php?resettoken=' . $resetToken;
 
             $mail->send();
 

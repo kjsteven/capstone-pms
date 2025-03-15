@@ -128,7 +128,9 @@ function sendVerificationEmail($email, $token, $name) {
         $mail->addAddress($email); // Use the email address passed in
 
         // Email content
-        $verificationLink = 'https://localhost/capstone-pms/session/verify.php?token=' . $token;
+        // $verificationLink = 'https://localhost/capstone-pms/session/verify.php?token=' . $token;
+
+        $verificationLink = 'https://propertywise.site/session/verify.php?token=' . $token;
         $mail->Subject = 'Email Verification';
         $mail->Body = 'Hi ' . $name . ',' . "\n\n" .
                       'We just need to verify your email address before you can access our website.' . "\n\n" .

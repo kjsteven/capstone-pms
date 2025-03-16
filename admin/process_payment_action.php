@@ -195,8 +195,8 @@ try {
                  updated_at = CURRENT_TIMESTAMP,
                  processed_by = ?,
                  notes = CASE 
-                          WHEN ? != '' THEN CONCAT(IFNULL(notes, ''), ' [Rejection Reason: ', ?, ']')
-                          ELSE CONCAT(IFNULL(notes, ''), ' [Payment rejected by admin]')
+                          WHEN LENGTH(?) > 0 THEN CONCAT(COALESCE(notes, ''), ' [Rejection Reason: ', ?, ']')
+                          ELSE CONCAT(COALESCE(notes, ''), ' [Payment rejected by admin]')
                         END
              WHERE payment_id = ?"
         );

@@ -576,6 +576,39 @@ if ($tenantsResult) {
     </div>
 </div>
 
+<!-- Rejection Reason Modal -->
+<div id="rejectionReasonModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex justify-between items-center p-5 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Reject Payment</h3>
+            <button class="text-gray-400 hover:text-gray-500" onclick="toggleRejectionModal(false)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <form id="rejectionForm" class="space-y-5">
+                <input type="hidden" id="rejection_payment_id" name="payment_id">
+                
+                <div>
+                    <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-1">Reason for Rejection (Optional)</label>
+                    <textarea id="rejection_reason" name="rejection_reason" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Please provide a reason for rejecting this payment"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">This reason will be included in the notification email sent to the tenant.</p>
+                </div>
+                
+                <div class="flex justify-end pt-4">
+                    <button type="button" class="mr-3 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" onclick="toggleRejectionModal(false)">
+                        Cancel
+                    </button>
+                    <button type="submit" id="confirm-reject-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200">
+                        Reject Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Toastify JS -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
 
@@ -812,6 +845,17 @@ if ($tenantsResult) {
         }
     }
     
+    // Toggle rejection reason modal visibility
+    function toggleRejectionModal(show, paymentId = null) {
+        const modal = document.getElementById('rejectionReasonModal');
+        if (show) {
+            document.getElementById('rejection_payment_id').value = paymentId;
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+    
     // Submit manual payment form with AJAX
     function submitManualPayment() {
         // Collect form data
@@ -981,7 +1025,7 @@ if ($tenantsResult) {
     }
 
     
- // Approve pending payment
+ // Approve pending payment - Updated with better error handling
  function approvePayment(paymentId, tenantId, amount) {
         if (confirm('Are you sure you want to approve this payment?')) {
             // Show loading indicator on the button
@@ -997,7 +1041,21 @@ if ($tenantsResult) {
                 },
                 body: `action=approve&payment_id=${paymentId}&tenant_id=${tenantId}&amount=${amount}`,
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text().then(text => {
+                    try {
+                        // Try to parse as JSON
+                        return JSON.parse(text);
+                    } catch (e) {
+                        // If parsing fails, log the actual response for debugging
+                        console.error('Server returned invalid JSON:', text);
+                        throw new Error('Invalid server response format');
+                    }
+                });
+            })
             .then(data => {
                 if (data.success) {
                     // Show success toast
@@ -1028,49 +1086,76 @@ if ($tenantsResult) {
 
     // Reject pending payment
     function rejectPayment(paymentId) {
-        if (confirm('Are you sure you want to reject this payment?')) {
-            // Show loading indicator on the button
-            const rejectButton = document.querySelector(`#payment-row-${paymentId} .text-red-600`);
-            const originalHTML = rejectButton.innerHTML;
-            rejectButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            rejectButton.disabled = true;
-
-            fetch('process_payment_action.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `action=reject&payment_id=${paymentId}`,
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success toast
-                    showToast(data.message, 'success');
-
-                    // Update the payment row
-                    const row = document.getElementById(`payment-row-${paymentId}`);
-                    row.classList.add('fade-out');
-
-                    // Reload the page after animation completes
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
-                } else {
-                    throw new Error(data.message || 'An error occurred');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast(error.message, 'error');
-
-                // Reset button state
-                rejectButton.innerHTML = originalHTML;
-                rejectButton.disabled = false;
-            });
-        }
+        toggleRejectionModal(true, paymentId);
     }
 
+    // Handle rejection form submission - Updated with better error handling
+    document.getElementById('rejectionForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const paymentId = document.getElementById('rejection_payment_id').value;
+        const rejectionReason = document.getElementById('rejection_reason').value.trim();
+        
+        // Show loading indicator
+        const confirmRejectBtn = document.getElementById('confirm-reject-btn');
+        const originalBtnText = confirmRejectBtn.innerHTML;
+        confirmRejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        confirmRejectBtn.disabled = true;
+        
+        fetch('process_payment_action.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=reject&payment_id=${paymentId}&rejection_reason=${encodeURIComponent(rejectionReason)}`,
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.text().then(text => {
+                try {
+                    // Try to parse as JSON
+                    return JSON.parse(text);
+                } catch (e) {
+                    // If parsing fails, log the actual response for debugging
+                    console.error('Server returned invalid JSON:', text);
+                    throw new Error('Invalid server response format');
+                }
+            });
+        })
+        .then(data => {
+            if (data.success) {
+                // Show success toast
+                showToast(data.message, 'success');
+                
+                // Hide modal
+                toggleRejectionModal(false);
+                
+                // Update the payment row
+                const row = document.getElementById(`payment-row-${paymentId}`);
+                if (row) {
+                    row.classList.add('fade-out');
+                }
+                
+                // Reload the page after animation completes
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                throw new Error(data.message || 'An error occurred');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast(error.message, 'error');
+            
+            // Reset button state
+            confirmRejectBtn.innerHTML = originalBtnText;
+            confirmRejectBtn.disabled = false;
+        });
+    });
+    
     // Export payment report
     function exportReport() {
         const formData = new FormData(document.getElementById('exportForm'));

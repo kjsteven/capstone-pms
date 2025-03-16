@@ -1170,7 +1170,7 @@ if ($tenantResult) {
                                     <p class="text-gray-600">Due Date: ${new Date(data.invoice.due_date).toLocaleDateString()}</p>
                                 </div>
                                 <div class="mt-4 md:mt-0">
-                                    <h3 class="text-xl font-semibold text-gray-800">Property Management System</h3>
+                                    <h3 class="text-xl font-semibold text-gray-800">Property Information Management System</h3>
                                     <p class="text-gray-600">123 Property Street</p>
                                     <p class="text-gray-600">City, State 12345</p>
                                     <p class="text-gray-600">admin@propertywise.com</p>

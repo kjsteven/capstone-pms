@@ -486,8 +486,9 @@ if ($tenantResult) {
                         </div>
                         <div class="mt-4 md:mt-0">
                             <h3 class="text-xl font-semibold text-gray-800">Property Information Management System</h3>
-                            <p class="text-gray-600">123 Property Street</p>
-                            <p class="text-gray-600">City, State 12345</p>
+                            <p class="text-gray-600">One Soler Bldg, 1080 Soler St. 
+                            Cor. Reina Regente / Felipe ll St.</p>
+                            <p class="text-gray-600">Binondo Manila, 1006 Metro Manila</p>
                             <p class="text-gray-600">admin@propertywise.com</p>
                         </div>
                     </div>
@@ -1171,8 +1172,8 @@ if ($tenantResult) {
                                 </div>
                                 <div class="mt-4 md:mt-0">
                                     <h3 class="text-xl font-semibold text-gray-800">Property Information Management System</h3>
-                                    <p class="text-gray-600">123 Property Street</p>
-                                    <p class="text-gray-600">City, State 12345</p>
+                                    <p class="text-gray-600">One Soler Bldg, 1080 Soler St. Cor. Reina Regente / Felipe ll St. </p>
+                                    <p class="text-gray-600">Binondo Manila, 1006 Metro Manila</p>
                                     <p class="text-gray-600">admin@propertywise.com</p>
                                 </div>
                             </div>

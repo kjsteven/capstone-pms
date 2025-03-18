@@ -37,60 +37,184 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        accent: {
+                            light: '#f97316',
+                            DEFAULT: '#ea580c',
+                            dark: '#c2410c',
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                        'hover': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                    },
+                    fontFamily: {
+                        'sans': ['Poppins', 'sans-serif'],
+                    },
+                    transitionProperty: {
+                        'height': 'height',
+                        'spacing': 'margin, padding',
+                    }
+                },
+            },
+        }
+    </script>
     <style>
         body {
-            font-family: 'Poppins', sans-serif; /* Apply Poppins font */
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
         }
+        
         /* Smooth scrolling */
         html {
             scroll-behavior: smooth;
         }
-        /* Optional transition for mobile menu */
+        
+        /* Mobile menu transitions */
         .mobile-menu {
             display: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease;
+            opacity: 0;
         }
+        
         .mobile-menu.active {
             display: block;
+            max-height: 500px;
+            opacity: 1;
         }
+        
+        /* Section spacing for smooth scrolling */
         section {
-        scroll-margin-top: 80px; /* Adjust this value based on your header height */
+            scroll-margin-top: 80px;
         }
-    
-        /* Hero Section Animation */
+        
+        /* Hero section enhancements */
         .hero-content {
-            animation: fadeInUp 1s ease-out;
+            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-
-        /* Custom Animations */
+        
+        .hero-image {
+            animation: floatIn 1.5s ease-out forwards;
+        }
+        
+        /* Button animations */
+        .btn-primary, .btn-secondary {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary::after, .btn-secondary::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: -100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.6s ease;
+        }
+        
+        .btn-primary:hover::after, .btn-secondary:hover::after {
+            left: 100%;
+        }
+        
+        /* Card hover effects */
+        .feature-card, .property-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backface-visibility: hidden;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .property-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Custom animations */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-
-        @keyframes slideIn {
+        
+        @keyframes fadeInRight {
             from {
-                transform: translateX(-100px);
                 opacity: 0;
+                transform: translateX(-30px);
             }
             to {
-                transform: translateX(0);
                 opacity: 1;
+                transform: translateX(0);
             }
         }
         
-        /* Image float animation for 3D building */
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes floatIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
         @keyframes float {
             0% {
                 transform: translateY(0px);
             }
             50% {
-                transform: translateY(-10px);
+                transform: translateY(-12px);
             }
             100% {
                 transform: translateY(0px);
@@ -98,9 +222,125 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
         }
         
         .floating-image {
-            animation: float 6s ease-in-out infinite;
+            animation: float 8s ease-in-out infinite;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
         }
-         
+        
+        /* Shimmer effect for CTA buttons */
+        .shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shimmer::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(30deg);
+            animation: shimmer 3s infinite linear;
+        }
+        
+        @keyframes shimmer {
+            from {
+                transform: rotate(30deg) translateX(-100%);
+            }
+            to {
+                transform: rotate(30deg) translateX(100%);
+            }
+        }
+        
+        /* Testimonial carousel */
+        .testimonial-container {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .testimonial-slider {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        
+        .testimonial {
+            flex: 0 0 100%;
+        }
+        
+        /* Modern radio inputs for pagination */
+        .custom-radio input {
+            display: none;
+        }
+        
+        .custom-radio label {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            cursor: pointer;
+            margin: 0 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .custom-radio input:checked + label {
+            background-color: #0ea5e9;
+            transform: scale(1.2);
+        }
+        
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(to right, #0ea5e9, #38bdf8);
+            width: 0%;
+            z-index: 9999;
+            transition: width 0.2s ease;
+        }
+        
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(90deg, #0ea5e9, #0284c7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Images with rounded corners and shadow */
+        .enhanced-image {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .enhanced-image:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Form input enhancements */
+        .form-input {
+            transition: border 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+        }
+        
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -388,23 +628,88 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 
 
 <!-- Footer Section -->
-<footer class="bg-gray-50 mx-auto w-full max-w-container px-4 sm:px-6 lg:px-8">
-    <div class="border-t border-slate-900/5 py-10">
-        <p class="mt-5 text-center text-sm leading-6 text-slate-500">&copy; 2025 PropertyWise. All Rights Reserved.</p>
-        <div class="mt-8 flex items-center justify-center space-x-4 text-sm font-semibold leading-6 text-slate-700">
-            <a href="./asset/privacy_policy.php" class="text-blue-600 hover:underline">Privacy Policy</a>
-            <div class="h-4 w-px bg-slate-500/20"></div>
-            <a href="./asset/terms_condition.php" class="text-blue-600 hover:underline">Terms of Service</a>
-            <div class="h-4 w-px bg-slate-500/20"></div>
-            <a href="./asset/team.php" class="text-blue-600 hover:underline">Meet Our Team</a>
+<footer class="bg-gray-800 text-white">
+    <div class="container mx-auto px-6 pt-12 pb-6">
+        <!-- Footer content grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+            <!-- Company Info -->
+            <div>
+                <h3 class="text-xl font-bold mb-4 text-blue-400">PropertyWise</h3>
+                <p class="mb-4 text-gray-300 text-sm">Simplifying property management for tenants and landlords.</p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors duration-300">
+                        <i class="fab fa-facebook-f text-lg"></i>
+                    </a>
+                    <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors duration-300">
+                        <i class="fab fa-twitter text-lg"></i>
+                    </a>
+                    <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors duration-300">
+                        <i class="fab fa-instagram text-lg"></i>
+                    </a>
+                    <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors duration-300">
+                        <i class="fab fa-linkedin-in text-lg"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div>
+                <h3 class="text-xl font-bold mb-4 text-blue-400">Quick Links</h3>
+                <ul class="space-y-2 text-gray-300 text-sm">
+                    <li><a href="#features" class="hover:text-white hover:underline transition-colors duration-300">Features</a></li>
+                    <li><a href="#services" class="hover:text-white hover:underline transition-colors duration-300">Properties</a></li>
+                    <li><a href="#how-it-works" class="hover:text-white hover:underline transition-colors duration-300">How It Works</a></li>
+                    <li><a href="#contact" class="hover:text-white hover:underline transition-colors duration-300">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Legal -->
+            <div>
+                <h3 class="text-xl font-bold mb-4 text-blue-400">Legal</h3>
+                <ul class="space-y-2 text-gray-300 text-sm">
+                    <li><a href="./asset/privacy_policy.php" class="hover:text-white hover:underline transition-colors duration-300">Privacy Policy</a></li>
+                    <li><a href="./asset/terms_condition.php" class="hover:text-white hover:underline transition-colors duration-300">Terms of Service</a></li>
+                    <li><a href="./asset/team.php" class="hover:text-white hover:underline transition-colors duration-300">Meet Our Team</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact Info -->
+            <div>
+                <h3 class="text-xl font-bold mb-4 text-blue-400">Contact Us</h3>
+                <ul class="space-y-2 text-gray-300 text-sm">
+                    <li class="flex items-start">
+                        <i class="fas fa-map-marker-alt mt-1 mr-2 text-blue-400"></i>
+                        <span>One Soler Bldg, 1080 Soler St. 
+                        Cor. Reina Regente / Felipe ll St. Brgy. 293 Binondo Manila</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-phone mr-2 text-blue-400"></i>
+                        <span>+63 912 345 6789</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-envelope mr-2 text-blue-400"></i>
+                        <span>info@propertywise.com</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-gray-700 my-6"></div>
+
+        <!-- Copyright -->
+        <div class="flex flex-col md:flex-row justify-between items-center">
+            <p class="text-sm text-gray-400">&copy; 2025 PropertyWise. All Rights Reserved.</p>
+            <div class="mt-4 md:mt-0">
+                <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors duration-300 text-sm">
+                    Back to top <i class="fas fa-arrow-up ml-1"></i>
+                </a>
+            </div>
         </div>
     </div>
 </footer>
 
-    
-
-
-        <script>
+    <script>
 
                 document.addEventListener("DOMContentLoaded", () => {
                 const properties = <?php echo json_encode($properties); ?>; // PHP array to JavaScript

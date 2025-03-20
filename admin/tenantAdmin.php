@@ -614,6 +614,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
 
                     const selectedOption = unitSelect.options[0];
                     monthlyRateInput.value = selectedOption.getAttribute('data-rent');
+                    
+                    // Add event listener to update monthly rate when unit selection changes
+                    unitSelect.addEventListener('change', function() {
+                        const selectedOption = this.options[this.selectedIndex];
+                        monthlyRateInput.value = selectedOption.getAttribute('data-rent');
+                    });
                 } else {
                     unitSelect.innerHTML = '<option value="" disabled selected>No reserved units found</option>';
                 }
@@ -931,6 +937,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                         unitSelect.selectedIndex = 0;
                         const selectedOption = unitSelect.options[0];
                         monthlyRateInput.value = selectedOption.getAttribute('data-rent');
+                        
+                        // Add event listener to update monthly rate when unit selection changes
+                        unitSelect.addEventListener('change', function() {
+                            const selectedOption = this.options[this.selectedIndex];
+                            monthlyRateInput.value = selectedOption.getAttribute('data-rent');
+                        });
                     } else {
                         unitSelect.innerHTML = '<option value="" disabled selected>No available units found</option>';
                     }

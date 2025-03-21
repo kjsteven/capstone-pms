@@ -389,8 +389,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['payable_months'] ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['created_at'] ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column">
-                    <button class="text-blue-500 hover:text-blue-700" onclick="editTenant(<?= $tenant['tenant_id'] ?>)">Edit</button>
-                    <button class="text-red-500 hover:text-red-700" onclick="archiveTenant(<?= $tenant['tenant_id'] ?>)">Archive</button>
+                    <button class="inline-flex items-center justify-center px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" 
+                            onclick="archiveTenant(<?= $tenant['tenant_id'] ?>)" 
+                            title="Archive this tenant">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                        Archive
+                    </button>
                 </td>
             </tr>
             <?php endforeach; ?>

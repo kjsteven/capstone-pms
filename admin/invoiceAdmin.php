@@ -11,6 +11,29 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Function to check and update overdue invoices
+function updateOverdueInvoices($conn) {
+    // Get today's date
+    $today = date('Y-m-d');
+    
+    // Prepare and execute query to update status of overdue invoices
+    $updateQuery = "UPDATE invoices SET status = 'overdue' 
+                   WHERE status = 'unpaid' AND due_date < ? AND status != 'paid'";
+    
+    $stmt = $conn->prepare($updateQuery);
+    $stmt->bind_param("s", $today);
+    $stmt->execute();
+    
+    // Return number of updated rows
+    $updatedRows = $stmt->affected_rows;
+    $stmt->close();
+    
+    return $updatedRows;
+}
+
+// Call the function to update overdue invoices on page load
+updateOverdueInvoices($conn);
+
 // Pagination settings with validation
 $entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
 // Ensure entries per page is a positive number
@@ -231,7 +254,8 @@ if ($tenantResult) {
                                     if ($invoice['status'] === 'paid') {
                                         $status_class = 'bg-green-100 text-green-800';
                                         $status_text = 'Paid';
-                                    } elseif (strtotime($invoice['due_date']) < time()) {
+                                    } elseif ($invoice['status'] === 'overdue' || 
+                                              (strtotime($invoice['due_date']) < time() && $invoice['status'] !== 'paid')) {
                                         $status_class = 'bg-red-100 text-red-800';
                                         $status_text = 'Overdue';
                                     } else {
@@ -873,6 +897,39 @@ if ($tenantResult) {
         document.getElementById('confirm-send-email').addEventListener('click', function() {
             sendInvoiceEmail();
         });
+
+        // Add context menu for status options
+        const actionCells = document.querySelectorAll('#invoice-table-body tr td:last-child');
+        actionCells.forEach(cell => {
+            const invoiceRow = cell.closest('tr');
+            const statusCell = invoiceRow.querySelector('td:nth-child(6)');
+            const statusText = statusCell.textContent.trim().toLowerCase();
+            
+            // Add a new button for setting to overdue if it's not already overdue or paid
+            if (statusText !== 'overdue' && statusText !== 'paid') {
+                const buttons = cell.querySelector('.flex.space-x-2');
+                
+                // Create the overdue button
+                const overdueBtn = document.createElement('button');
+                overdueBtn.className = 'text-red-600 hover:text-red-900';
+                overdueBtn.title = 'Mark as Overdue';
+                overdueBtn.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                
+                // Extract the invoice ID from the existing buttons
+                const viewBtn = buttons.querySelector('button');
+                const onclick = viewBtn.getAttribute('onclick');
+                const invoiceId = onclick.match(/\d+/)[0];
+                
+                // Set the click handler
+                overdueBtn.onclick = function() {
+                    toggleInvoiceStatus(invoiceId, 'overdue');
+                };
+                
+                // Insert before the delete button
+                buttons.insertBefore(overdueBtn, buttons.lastElementChild);
+                buttons.insertBefore(document.createTextNode(' '), buttons.lastElementChild);
+            }
+        });
     });
     
     // Toggle create invoice modal
@@ -1263,12 +1320,17 @@ if ($tenantResult) {
         window.print();
     }
     
-    // Toggle invoice status (new function)
+    // Toggle invoice status (modified to handle overdue status)
     function toggleInvoiceStatus(invoiceId, newStatus) {
         // Show confirmation dialog
-        const confirmMessage = newStatus === 'paid' ? 
-            'Are you sure you want to mark this invoice as paid?' : 
-            'Are you sure you want to mark this invoice as unpaid?';
+        let confirmMessage = '';
+        if (newStatus === 'paid') {
+            confirmMessage = 'Are you sure you want to mark this invoice as paid?';
+        } else if (newStatus === 'unpaid') {
+            confirmMessage = 'Are you sure you want to mark this invoice as unpaid?';
+        } else if (newStatus === 'overdue') {
+            confirmMessage = 'Are you sure you want to mark this invoice as overdue?';
+        }
             
         if (!confirm(confirmMessage)) {
             return; // User cancelled
@@ -1300,7 +1362,7 @@ if ($tenantResult) {
         });
     }
     
-    // Update status UI elements
+    // Update status UI elements (modified for overdue status)
     function updateStatusUI(invoiceId, status) {
         // Update status badge
         const statusBadge = document.getElementById(`status-badge-${invoiceId}`);
@@ -1308,6 +1370,9 @@ if ($tenantResult) {
             if (status === 'paid') {
                 statusBadge.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800';
                 statusBadge.textContent = 'Paid';
+            } else if (status === 'overdue') {
+                statusBadge.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800';
+                statusBadge.textContent = 'Overdue';
             } else {
                 statusBadge.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800';
                 statusBadge.textContent = 'Unpaid';
@@ -1322,6 +1387,11 @@ if ($tenantResult) {
                 statusIcon.title = 'Mark as Unpaid';
                 statusIcon.querySelector('i').className = 'fas fa-times-circle';
                 statusIcon.onclick = () => toggleInvoiceStatus(invoiceId, 'unpaid');
+            } else if (status === 'overdue') {
+                statusIcon.className = 'text-red-600 hover:text-red-900';
+                statusIcon.title = 'Mark as Paid';
+                statusIcon.querySelector('i').className = 'fas fa-check-circle';
+                statusIcon.onclick = () => toggleInvoiceStatus(invoiceId, 'paid');
             } else {
                 statusIcon.className = 'text-yellow-600 hover:text-yellow-900';
                 statusIcon.title = 'Mark as Paid';
@@ -1442,7 +1512,7 @@ if ($tenantResult) {
         }
     }
     
-    // Apply filters to the invoice table
+    // Apply filters to the invoice table (modified for better overdue handling)
     function applyFilters() {
         const statusFilter = document.getElementById('status-filter').value.toLowerCase();
         const dateRange = document.getElementById('date-range').value;
@@ -1450,18 +1520,55 @@ if ($tenantResult) {
         
         const rows = document.querySelectorAll('#invoice-table-body tr');
         
+        // Parse date range if provided
+        let startDate = null;
+        let endDate = null;
+        if (dateRange) {
+            const dates = dateRange.split(' to ');
+            if (dates.length === 2) {
+                startDate = new Date(dates[0]);
+                endDate = new Date(dates[1]);
+                // Set end date to end of day
+                endDate.setHours(23, 59, 59, 999);
+            } else if (dates.length === 1) {
+                // Single date selected
+                startDate = new Date(dates[0]);
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(dates[0]);
+                endDate.setHours(23, 59, 59, 999);
+            }
+        }
+        
         rows.forEach(row => {
             const tenant = row.cells[1].textContent.toLowerCase();
             const unit = row.cells[2].textContent.toLowerCase();
-            const dueDate = row.cells[4].textContent;
+            const dueDateText = row.cells[4].textContent;
+            const dueDate = new Date(dueDateText);
             const status = row.cells[5].textContent.trim().toLowerCase();
             
-            const matchesStatus = statusFilter === '' || status.includes(statusFilter);
-            const matchesSearch = searchInput === '' || tenant.includes(searchInput) || unit.includes(searchInput);
+            // Improved status filter handling with special case for overdue
+            let matchesStatus = statusFilter === '';
+            if (statusFilter === 'overdue') {
+                // Check if status shows as 'overdue' or if it's unpaid and past due date
+                const isOverdue = status === 'overdue';
+                const isPastDue = status === 'unpaid' && dueDate < new Date();
+                matchesStatus = isOverdue || isPastDue;
+            } else if (statusFilter === 'unpaid') {
+                // Only truly unpaid, not overdue
+                matchesStatus = status === 'unpaid' && dueDate >= new Date();
+            } else {
+                matchesStatus = status.includes(statusFilter);
+            }
             
-            // Date range filtering would require parsing the date range and comparing
-            // For simplicity, we'll just check if any filter is applied
-            const matchesDateRange = dateRange === '';
+            const matchesSearch = searchInput === '' || 
+                                 tenant.includes(searchInput) || 
+                                 unit.includes(searchInput);
+            
+            // Date range filtering
+            let matchesDateRange = true;
+            if (startDate && endDate) {
+                matchesDateRange = dueDate >= startDate && dueDate <= endDate;
+            }
             
             if (matchesStatus && matchesSearch && matchesDateRange) {
                 row.style.display = '';

@@ -714,9 +714,9 @@ function updateInvoiceStatus() {
         $invoice_id = (int)$_POST['invoice_id'];
         $status = $_POST['status'];
         
-        // Validate status value (only 'paid' or 'unpaid' are allowed)
-        if ($status !== 'paid' && $status !== 'unpaid') {
-            throw new Exception('Invalid status value. Must be "paid" or "unpaid"');
+        // Validate status value (allow 'paid', 'unpaid', or 'overdue')
+        if ($status !== 'paid' && $status !== 'unpaid' && $status !== 'overdue') {
+            throw new Exception('Invalid status value. Must be "paid", "unpaid", or "overdue"');
         }
         
         // Get invoice details for logging

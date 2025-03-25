@@ -33,9 +33,23 @@ function isValidEmail($email) {
     return preg_match($regex, $email);
 }
 
-// Validate phone format (simple example)
+// Validate phone format for Philippine numbers
 function isValidPhone($phone) {
-    return preg_match('/^\+?[0-9]{10,}$/', $phone);
+    // Philippine formats: +639XXXXXXXXX, 09XXXXXXXXX
+    // Remove any spaces or dashes for validation
+    $phone = preg_replace('/[\s-]/', '', $phone);
+    
+    // Check for format +639XXXXXXXXX (13 digits with +)
+    if (preg_match('/^\+639\d{9}$/', $phone)) {
+        return true;
+    }
+    
+    // Check for format 09XXXXXXXXX (11 digits)
+    if (preg_match('/^09\d{9}$/', $phone)) {
+        return true;
+    }
+    
+    return false;
 }
 
 // Validate password
@@ -59,19 +73,35 @@ function isValidPassword($password) {
     return $errors;
 }
 
+// Validate name format - must have first and last name
+function isValidName($name) {
+    // Remove extra spaces and split the name
+    $nameParts = preg_split('/\s+/', trim($name));
+    
+    // Check if we have at least two parts (first and last name)
+    return count($nameParts) >= 2;
+}
+
+// Add variable to track successful registration
+$registrationSuccess = false;
+$redirectDelay = 5; // Seconds to delay before redirect
+
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve form input data
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone']);
+    $address = trim($_POST['address']); // Add address field
     $password = $_POST['password'];
     $confirmPassword = $_POST['confirmPassword'];
     $termsAccepted = isset($_POST['termsAccepted']); // Check if terms checkbox is checked
 
     // Validate form fields
-    if (empty($name) || empty($email) || empty($phone) || empty($password) || empty($confirmPassword)) {
+    if (empty($name) || empty($email) || empty($phone) || empty($address) || empty($password) || empty($confirmPassword)) {
         $error = "All fields are required.";
+    } elseif (!isValidName($name)) {
+        $error = "Please enter both your first and last name.";
     } elseif (!isValidEmail($email)) {
         $error = "Invalid email format.";
     } elseif (!isValidPhone($phone)) {
@@ -101,17 +131,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error = "This email is already registered.";
             } else {
                 // Prepare and bind SQL statement to prevent SQL injection
-                $stmt = $conn->prepare("INSERT INTO users (name, email, phone, password, token, role) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $conn->prepare("INSERT INTO users (name, email, phone, address, password, token, role) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 $defaultRole = 'user'; // Set default role for new users
-                $stmt->bind_param("ssssss", $name, $email, $phone, $hashedPassword, $verificationToken, $defaultRole);
+                $stmt->bind_param("sssssss", $name, $email, $phone, $address, $hashedPassword, $verificationToken, $defaultRole);
 
                 // Execute the insert query
                 if ($stmt->execute()) {
                     // Send verification email only
                     if (sendVerificationEmail($email, $verificationToken, $name)) {
-                        $_SESSION['success'] = "Registration successful! Please check your email to verify your account.";
-                        header("Location: login.php");
-                        exit();
+                        // Set success message and flag instead of immediate redirect
+                        $success = "Registration successful! Please check your email to verify your account. Redirecting to login page in {$redirectDelay} seconds...";
+                        $registrationSuccess = true;
+                        // Don't redirect immediately
+                        // header("Location: login.php");
+                        // exit();
                     } else {
                         $error = "Error sending verification email.";
                     }
@@ -276,6 +309,29 @@ $conn->close();
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        
+        /* Input validation styles */
+        .valid-input {
+            border-color: #10b981 !important;
+        }
+        
+        .invalid-input {
+            border-color: #ef4444 !important;
+        }
+        
+        .validation-message {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            min-height: 1rem;
+        }
+        
+        .validation-success {
+            color: #10b981;
+        }
+        
+        .validation-error {
+            color: #ef4444;
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen p-6">
@@ -293,12 +349,13 @@ $conn->close();
                 <!-- Form Section (Now on Right) -->
                 <div class="w-full md:w-1/2" style="background-color: #1f2937; padding: 2rem;">
                     <h2 class="text-white text-center text-2xl font-bold">Sign up</h2>
-                    <form method="POST" class="mt-8 space-y-4">
+                    <form method="POST" class="mt-8 space-y-4" id="signupForm">
                         <div class="form-input-container">
                             <label class="text-white text-sm mb-2 block">Full Name</label>
                             <div class="relative flex items-center">
                                 <input name="name" type="text" id="name" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter full name" />
                             </div>
+                            <div class="validation-message" id="nameValidation"></div>
                         </div>
 
                         <div class="form-input-container">
@@ -306,6 +363,7 @@ $conn->close();
                             <div class="relative flex items-center">
                                 <input name="email" type="email" id="email" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter email" />
                             </div>
+                            <div class="validation-message" id="emailValidation"></div>
                         </div>
 
                         <div class="form-input-container">
@@ -313,6 +371,16 @@ $conn->close();
                             <div class="relative flex items-center">
                                 <input name="phone" type="tel" id="phone" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter phone number" />
                             </div>
+                            <div class="validation-message" id="phoneValidation"></div>
+                        </div>
+
+                        <!-- New Address Field -->
+                        <div class="form-input-container">
+                            <label class="text-white text-sm mb-2 block">Address</label>
+                            <div class="relative flex items-center">
+                                <input name="address" type="text" id="address" required class="w-full text-gray-800 text-sm border border-gray-300 px-4 py-3 rounded-md outline-blue-600" placeholder="Enter your full address" />
+                            </div>
+                            <div class="validation-message" id="addressValidation"></div>
                         </div>
 
                         <div class="form-input-container">
@@ -323,6 +391,7 @@ $conn->close();
                                     <i id="togglePasswordIcon" class='bx bxs-show w-4 h-4 text-gray-400'></i>
                                 </button>
                             </div>
+                            <div class="validation-message" id="passwordValidation"></div>
                         </div>
 
                         <div class="form-input-container">
@@ -333,6 +402,7 @@ $conn->close();
                                     <i id="toggleConfirmPasswordIcon" class='bx bxs-show w-4 h-4 text-gray-400'></i>
                                 </button>
                             </div>
+                            <div class="validation-message" id="confirmPasswordValidation"></div>
                         </div>
 
                         <div class="form-input-container flex items-center mb-4">
@@ -341,16 +411,26 @@ $conn->close();
                                 I accept the 
                                 <a href="#" id="openTermsModal" class="text-blue-500 hover:text-blue-700">terms and conditions</a>
                             </label>
-                        </div>      
+                        </div>
+                        <div class="form-input-container">
+                            <div class="validation-message" id="termsValidation"></div>
+                        </div>
 
                         <?php if (!empty($error)): ?>
                             <div class="form-input-container text-red-500 text-sm mt-2"><?= $error; ?></div>
                         <?php elseif (!empty($success)): ?>
-                            <div class="form-input-container text-green-500 text-sm mt-2"><?= $success; ?></div>
+                            <div class="form-input-container text-green-500 text-sm mt-2 p-3 bg-green-100 border border-green-300 rounded">
+                                <?= $success; ?>
+                                <div class="mt-2">
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div id="progress-bar" class="bg-green-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
                         <?php endif; ?>
 
                         <div class="form-input-container">
-                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md">Sign Up</button>
+                            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md">Sign Up</button>
                         </div>
 
                         <div class="form-input-container">
@@ -538,7 +618,231 @@ $conn->close();
                     document.getElementById(tabId).classList.add('active');
                 });
             });
+
+            // Real-time form validation
+            const form = document.getElementById('signupForm');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            const addressInput = document.getElementById('address'); // Add address input
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const termsCheckbox = document.getElementById('termsAccepted');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Validation elements
+            const nameValidation = document.getElementById('nameValidation');
+            const emailValidation = document.getElementById('emailValidation');
+            const phoneValidation = document.getElementById('phoneValidation');
+            const addressValidation = document.getElementById('addressValidation'); // Add address validation
+            const passwordValidation = document.getElementById('passwordValidation');
+            const confirmPasswordValidation = document.getElementById('confirmPasswordValidation');
+            const termsValidation = document.getElementById('termsValidation');
+            
+            // Utility functions for validation states
+            function setValid(input, validationElement, message) {
+                input.classList.remove('invalid-input');
+                input.classList.add('valid-input');
+                validationElement.textContent = message;
+                validationElement.className = 'validation-message validation-success';
+            }
+            
+            function setInvalid(input, validationElement, message) {
+                input.classList.remove('valid-input');
+                input.classList.add('invalid-input');
+                validationElement.textContent = message;
+                validationElement.className = 'validation-message validation-error';
+            }
+            
+            // Validate name - require first and last name
+            nameInput.addEventListener('input', function() {
+                const nameValue = this.value.trim();
+                
+                if (nameValue === '') {
+                    setInvalid(this, nameValidation, 'Name is required');
+                } else {
+                    // Split the name by spaces and check if we have at least 2 parts
+                    const nameParts = nameValue.split(/\s+/).filter(part => part.length > 0);
+                    
+                    if (nameParts.length < 2) {
+                        setInvalid(this, nameValidation, 'Please enter both first and last name');
+                    } else {
+                        setValid(this, nameValidation, 'Valid name');
+                    }
+                }
+                checkFormValidity();
+            });
+            
+            // Validate email
+            emailInput.addEventListener('input', function() {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (this.value.trim() === '') {
+                    setInvalid(this, emailValidation, 'Email is required');
+                } else if (!emailRegex.test(this.value)) {
+                    setInvalid(this, emailValidation, 'Invalid email format');
+                } else {
+                    setValid(this, emailValidation, 'Valid email');
+                }
+                checkFormValidity();
+            });
+            
+            // Validate phone for Philippine format
+            phoneInput.addEventListener('input', function() {
+                // Clean input - remove spaces and dashes
+                let phoneValue = this.value.replace(/[\s-]/g, '');
+                
+                if (phoneValue.trim() === '') {
+                    setInvalid(this, phoneValidation, 'Phone number is required');
+                } 
+                // Check +639 format (international)
+                else if (/^\+639\d{9}$/.test(phoneValue)) {
+                    setValid(this, phoneValidation, 'Valid phone number');
+                } 
+                // Check 09 format (local)
+                else if (/^09\d{9}$/.test(phoneValue)) {
+                    setValid(this, phoneValidation, 'Valid phone number');
+                } 
+                else {
+                    setInvalid(this, phoneValidation, 'Invalid format. Use 09XXXXXXXXX');
+                }
+                checkFormValidity();
+            });
+            
+            // Validate address
+            addressInput.addEventListener('input', function() {
+                if (this.value.trim() === '') {
+                    setInvalid(this, addressValidation, 'Address is required');
+                } else if (this.value.trim().length < 10) {
+                    setInvalid(this, addressValidation, 'Please enter a complete address');
+                } else {
+                    setValid(this, addressValidation, 'Valid address');
+                }
+                checkFormValidity();
+            });
+            
+            // Password validation function
+            function validatePassword() {
+                const value = passwordInput.value;
+                const criteria = [
+                    { test: value.length >= 12, message: "At least 12 characters" },
+                    { test: /[A-Z]/.test(value), message: "Uppercase letter" },
+                    { test: /[a-z]/.test(value), message: "Lowercase letter" },
+                    { test: /[0-9]/.test(value), message: "Number" },
+                    { test: /[@$!%*?&]/.test(value), message: "Special character" }
+                ];
+                
+                const failedCriteria = criteria.filter(c => !c.test).map(c => c.message);
+                
+                if (value === '') {
+                    setInvalid(passwordInput, passwordValidation, 'Password is required');
+                    return false;
+                } else if (failedCriteria.length > 0) {
+                    setInvalid(passwordInput, passwordValidation, 'Missing: ' + failedCriteria.join(', '));
+                    return false;
+                } else {
+                    setValid(passwordInput, passwordValidation, 'Strong password');
+                    return true;
+                }
+            }
+            
+            // Add password input validation event
+            passwordInput.addEventListener('input', function() {
+                validatePassword();
+                if (confirmPasswordInput.value !== '') {
+                    validateConfirmPassword();
+                }
+                checkFormValidity();
+            });
+            
+            // Confirm password validation
+            function validateConfirmPassword() {
+                if (confirmPasswordInput.value === '') {
+                    setInvalid(confirmPasswordInput, confirmPasswordValidation, 'Please confirm your password');
+                    return false;
+                } else if (confirmPasswordInput.value !== passwordInput.value) {
+                    setInvalid(confirmPasswordInput, confirmPasswordValidation, 'Passwords do not match');
+                    return false;
+                } else {
+                    setValid(confirmPasswordInput, confirmPasswordValidation, 'Passwords match');
+                    return true;
+                }
+            }
+            
+            // Add confirm password validation event
+            confirmPasswordInput.addEventListener('input', function() {
+                validateConfirmPassword();
+                checkFormValidity();
+            });
+            
+            // Terms validation
+            termsCheckbox.addEventListener('change', function() {
+                if (!this.checked) {
+                    termsValidation.textContent = 'You must accept the terms and conditions';
+                    termsValidation.className = 'validation-message validation-error';
+                } else {
+                    termsValidation.textContent = '';
+                    termsValidation.className = 'validation-message';
+                }
+                checkFormValidity();
+            });
+            
+            // Check form validity
+            function checkFormValidity() {
+                // Get validation state
+                const nameValid = nameInput.classList.contains('valid-input');
+                const emailValid = emailInput.classList.contains('valid-input');
+                const phoneValid = phoneInput.classList.contains('valid-input');
+                const addressValid = addressInput.classList.contains('valid-input'); // Add address validity
+                const passwordValid = passwordInput.classList.contains('valid-input');
+                const confirmValid = confirmPasswordInput.classList.contains('valid-input');
+                const termsValid = termsCheckbox.checked;
+                
+                // Enable/disable submit button
+                submitBtn.disabled = !(nameValid && emailValid && phoneValid && addressValid && passwordValid && confirmValid && termsValid);
+                submitBtn.classList.toggle('opacity-50', !nameValid || !emailValid || !phoneValid || !addressValid || !passwordValid || !confirmValid || !termsValid);
+            }
+            
+            // Run validation on page load for prefilled fields
+            nameInput.dispatchEvent(new Event('input'));
+            emailInput.dispatchEvent(new Event('input'));
+            phoneInput.dispatchEvent(new Event('input'));
+            addressInput.dispatchEvent(new Event('input')); // Add address validation on load
+            passwordInput.dispatchEvent(new Event('input'));
+            confirmPasswordInput.dispatchEvent(new Event('input'));
+            termsCheckbox.dispatchEvent(new Event('change'));
         });
+
+        // Add redirect functionality for successful registration
+        <?php if ($registrationSuccess): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Disable the form submission
+            document.getElementById('signupForm').onsubmit = function(e) {
+                e.preventDefault();
+                return false;
+            };
+            
+            // Disable the submit button
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').classList.add('opacity-50');
+            
+            // Set up progress bar
+            const progressBar = document.getElementById('progress-bar');
+            const totalTime = <?= $redirectDelay ?> * 1000;
+            const interval = 50; // Update every 50ms
+            let elapsed = 0;
+            
+            const timer = setInterval(function() {
+                elapsed += interval;
+                const percentage = Math.min((elapsed / totalTime) * 100, 100);
+                progressBar.style.width = percentage + '%';
+                
+                if (elapsed >= totalTime) {
+                    clearInterval(timer);
+                    window.location.href = 'login.php';
+                }
+            }, interval);
+        });
+        <?php endif; ?>
     </script>
 </body>
 </html>

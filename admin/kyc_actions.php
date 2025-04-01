@@ -144,6 +144,42 @@ try {
                 throw new Exception("Failed to reject KYC: " . $e->getMessage());
             }
             break;
+
+        case 'archive':
+            $kycId = isset($_POST['kyc_id']) ? (int)$_POST['kyc_id'] : 0;
+            
+            if (!$kycId) {
+                throw new Exception("Invalid KYC ID");
+            }
+            
+            $conn->begin_transaction();
+            
+            try {
+                $updateKyc = $conn->prepare("
+                    UPDATE kyc_verification 
+                    SET archived = 1 
+                    WHERE kyc_id = ?
+                ");
+                
+                $updateKyc->bind_param("i", $kycId);
+                if (!$updateKyc->execute()) {
+                    throw new Exception("Failed to archive KYC record");
+                }
+                
+                // Log the action
+                logActivity(
+                    $_SESSION['user_id'], 
+                    'Archive KYC', 
+                    "Archived KYC verification #$kycId"
+                );
+                
+                $conn->commit();
+                echo json_encode(['success' => true, 'message' => 'KYC record archived successfully']);
+            } catch (Exception $e) {
+                $conn->rollback();
+                throw new Exception("Failed to archive KYC: " . $e->getMessage());
+            }
+            break;
             
         default:
             throw new Exception("Invalid action");

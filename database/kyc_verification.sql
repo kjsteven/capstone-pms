@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `kyc_verification` (
   `admin_remarks` text DEFAULT NULL,
   `submission_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `verification_date` timestamp NULL DEFAULT NULL,
+  `archived` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`kyc_id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `kyc_verification_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE

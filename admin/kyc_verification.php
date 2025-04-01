@@ -13,7 +13,7 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $entriesPerPage;
 
 // Get total number of KYC submissions
-$totalQuery = "SELECT COUNT(*) as total FROM kyc_verification";
+$totalQuery = "SELECT COUNT(*) as total FROM kyc_verification WHERE archived = 0";
 $totalResult = $conn->query($totalQuery);
 $totalRows = $totalResult->fetch_assoc()['total'];
 $totalPages = ceil($totalRows / $entriesPerPage);
@@ -22,6 +22,7 @@ $totalPages = ceil($totalRows / $entriesPerPage);
 $query = "SELECT k.*, u.email as user_email, u.name as user_name 
           FROM kyc_verification k 
           JOIN users u ON k.user_id = u.user_id 
+          WHERE k.archived = 0
           ORDER BY k.submission_date DESC 
           LIMIT ? OFFSET ?";
 
@@ -160,6 +161,10 @@ $result = $stmt->get_result();
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         <?php endif; ?>
+                                        <button onclick="archiveKYC(<?= $row['kyc_id'] ?>)"
+                                                class="text-gray-600 hover:text-gray-900">
+                                            <i class="fas fa-archive"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -419,6 +424,33 @@ function approveKYC(kycId) {
             setTimeout(() => window.location.reload(), 1500);
         } else {
             throw new Error(data.message || 'Error approving KYC');
+        }
+    })
+    .catch(error => {
+        showToast(error.message, 'error');
+    });
+}
+
+function archiveKYC(kycId) {
+    if (!confirm('Are you sure you want to archive this KYC record?')) {
+        return;
+    }
+    
+    fetch('kyc_actions.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `action=archive&kyc_id=${kycId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('KYC record archived successfully!', 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error(data.message || 'Error archiving KYC');
         }
     })
     .catch(error => {

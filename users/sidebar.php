@@ -1,20 +1,26 @@
 <?php
 
+require_once '../session/session_manager.php';
 start_secure_session();
 
-// Prevent caching
-header("Cache-Control: no-store, no-cache, must-revalidate");
-header("Pragma: no-cache");
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../authentication/login.php");
+    exit();
+}
 
-// Security headers
-header("X-Content-Type-Options: nosniff"); // Prevent MIME-type sniffing
-header("X-Frame-Options: DENY"); // Prevent clickjacking
-header("Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self';"); // Prevent XSS & Base Tag Injection
-header("Referrer-Policy: strict-origin-when-cross-origin"); // More secure referrer policy
+// Get user's KYC status
+$kyc_query = "SELECT COALESCE(verification_status, 'not_submitted') as kyc_status 
+              FROM kyc_verification 
+              WHERE user_id = ? 
+              ORDER BY submission_date DESC LIMIT 1";
+$stmt = $conn->prepare($kyc_query);
+$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->execute();
+$kyc_result = $stmt->get_result();
+$kyc_status = $kyc_result->num_rows > 0 ? $kyc_result->fetch_assoc()['kyc_status'] : 'not_submitted';
 
-// Only add this if your site runs on HTTPS
-header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
-header("Strict-Transport-Security: max-age=31536000; preload"); 
+// Check if user has access
+$has_access = ($kyc_status === 'approved');
 
 ?>
 
@@ -25,6 +31,7 @@ header("Strict-Transport-Security: max-age=31536000; preload");
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
     <title>Sidebar</title>
     <style>
         /* Optional: Custom styles for smooth transitions */
@@ -33,6 +40,21 @@ header("Strict-Transport-Security: max-age=31536000; preload");
         }
         body {
             font-family: 'Poppins', sans-serif;
+        }
+        /* Add styles for disabled state */
+        .sidebar-item-disabled {
+            opacity: 0.75;
+            position: relative;
+            pointer-events: none;
+        }
+        .kyc-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            background-color: rgba(239, 68, 68, 0.2);
+            color: rgb(239, 68, 68);
+            border-radius: 4px;
+            white-space: nowrap;
+            margin-left: auto;
         }
     </style>
 </head>
@@ -58,40 +80,40 @@ header("Strict-Transport-Security: max-age=31536000; preload");
                 </a>
             </li>
 
+            <!-- KYC Section -->
+            <li>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold  text-blue-950 dark:text-white uppercase tracking-wide">Verification</h3>
+            </li>
+
+            <li>
+                <a href="kyc.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                    <svg data-feather="user-check" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="flex-1 ms-3 text-sm text-white dark:text-white">Verify Your Identity</span>
+                </a>
+            </li>
+
             <!-- Property Section -->
             <li>
-                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold  text-blue-950 dark:text-white uppercase tracking-wide">Property</h3>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Property</h3>
             </li>
-            
-            <li class="relative">
-            <!-- Main Sidebar Item -->
-            <div class="flex items-center justify-between p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                <a href="bookunit.php" class="flex items-center">
+            <li>
+                <a href="<?= $has_access ? 'bookunit.php' : '#' ?>" 
+                   class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group <?= !$has_access ? 'sidebar-item-disabled' : '' ?>">
                     <svg data-feather="home" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
                     <span class="ms-3 text-white text-sm dark:text-white">Reserve a Unit</span>
+                    <?php if (!$has_access): ?>
+                        <span class="kyc-badge">Requires KYC</span>
+                    <?php endif; ?>
                 </a>
-                <!-- Arrow Icon for Dropdown -->
-                <button id="toggle-submenu" class="focus:outline-none">
-                    <svg data-feather="chevron-down" class="w-4 h-4 text-blue-500 transition duration-75 group-hover:text-blue-900 dark:text-white dark:group-hover:text-white"></svg>
-                </button>
-            </div>
-
-            <!-- Sub-sidebar for Reservation History -->
-            <ul class="hidden pl-8 space-y-2" id="reservation-submenu">
-                <li>
-                    <a href="reservation_history.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
-                        <svg data-feather="file-text" class="w-4 h-4 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
-                        <span class="ms-3 text-white text-sm dark:text-white">Reservation History</span>
-                    </a>
-                </li>
-            </ul>
-        </li>
-
-
+            </li>
             <li>
-                <a href="unitinfo.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                <a href="<?= $has_access ? 'unitinfo.php' : '#' ?>" 
+                   class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group <?= !$has_access ? 'sidebar-item-disabled' : '' ?>">
                     <svg data-feather="info" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
                     <span class="flex-1 ms-3 text-sm text-white dark:text-white">View Unit</span>
+                    <?php if (!$has_access): ?>
+                        <span class="kyc-badge">Requires KYC</span>
+                    <?php endif; ?>
                 </a>
             </li>
 
@@ -100,32 +122,43 @@ header("Strict-Transport-Security: max-age=31536000; preload");
                 <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Services</h3>
             </li>
             <li>
-                <a href="maintenance.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                <a href="<?= $has_access ? 'maintenance.php' : '#' ?>" 
+                   class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group <?= !$has_access ? 'sidebar-item-disabled' : '' ?>">
                     <svg data-feather="tool" class="w-5 h-5 text-blue-500 transition duration-75 dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
                     <span class="flex-1 ms-3 text-sm text-white dark:text-white">Maintenance Requests</span>
+                    <?php if (!$has_access): ?>
+                        <span class="kyc-badge">Requires KYC</span>
+                    <?php endif; ?>
                 </a>
             </li>
 
             <!-- Documents & Payments Section -->
             <li>
-                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold  text-blue-950 dark:text-white uppercase tracking-wide">Documents & Payments</h3>
+                <h3 class="px-2 pt-4 pb-2 text-sm font-semibold text-blue-950 dark:text-white uppercase tracking-wide">Documents & Payments</h3>
             </li>
             <li>
-                <a href="contract.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                <a href="<?= $has_access ? 'contract.php' : '#' ?>" 
+                   class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group <?= !$has_access ? 'sidebar-item-disabled' : '' ?>">
                     <svg data-feather="file" class="w-5 h-5 text-blue-500 transition duration-75 text-sm dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
                     <span class="ms-3 text-white text-sm dark:text-white">Rent Agreement</span>
+                    <?php if (!$has_access): ?>
+                        <span class="kyc-badge">Requires KYC</span>
+                    <?php endif; ?>
                 </a>
             </li>
             <li>
-                <a href="payment.php" class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group">
+                <a href="<?= $has_access ? 'payment.php' : '#' ?>" 
+                   class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group <?= !$has_access ? 'sidebar-item-disabled' : '' ?>">
                     <svg data-feather="credit-card" class="w-5 h-5 text-blue-500 transition duration-75 text-sm dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
-                    <span class="ms-3 text-white text-sm  dark:text-white">Pay Online</span>
+                    <span class="ms-3 text-white text-sm dark:text-white">Pay Online</span>
+                    <?php if (!$has_access): ?>
+                        <span class="kyc-badge">Requires KYC</span>
+                    <?php endif; ?>
                 </a>
             </li>
         </ul>
     </div>
 </aside>
-
 
 <script src="../node_modules/feather-icons/dist/feather.min.js"></script> <!-- Local path to Feather Icons -->
 <script>
@@ -152,7 +185,6 @@ header("Strict-Transport-Security: max-age=31536000; preload");
         });
     });
 </script>
-
 
 </body>
 </html>

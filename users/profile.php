@@ -13,7 +13,10 @@
 
     // Fetch user information from the database
     $user_id = $_SESSION['user_id'];
-    $sql = "SELECT name, email, phone, profile_image FROM users WHERE user_id = ?";
+    $sql = "SELECT u.*, COALESCE(k.verification_status, 'not_submitted') as kyc_status, k.admin_remarks 
+            FROM users u 
+            LEFT JOIN kyc_verification k ON u.user_id = k.user_id 
+            WHERE u.user_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
@@ -25,6 +28,8 @@
         $email = $user['email'];
         $phone = $user['phone'];
         $profile_image = $user['profile_image'];
+        $kyc_status = $user['kyc_status'];
+        $admin_remarks = $user['admin_remarks'];
 
         // If no profile image is set (i.e., it's NULL or empty), set the default image URL
         if (empty($profile_image)) {
@@ -167,6 +172,40 @@
         <!-- Personal Information Form -->
     <div id="info-content" class="bg-white shadow-lg rounded-lg p-6 w-full max-w-2xl">
         <h2 class="text-xl font-semibold mb-6">Personal Information</h2>
+        
+        <!-- Add KYC Status Section -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h4 class="text-lg font-medium">KYC Verification Status</h4>
+                    <?php
+                    $statusClasses = [
+                        'approved' => 'bg-green-100 text-green-800',
+                        'pending' => 'bg-yellow-100 text-yellow-800',
+                        'rejected' => 'bg-red-100 text-red-800',
+                        'not_submitted' => 'bg-gray-100 text-gray-800'
+                    ];
+                    $statusClass = $statusClasses[$kyc_status] ?? $statusClasses['not_submitted'];
+                    ?>
+                    <div class="mt-2">
+                        <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full <?= $statusClass ?>">
+                            <?= ucfirst(str_replace('_', ' ', $kyc_status)) ?>
+                        </span>
+                        <?php if ($admin_remarks && $kyc_status === 'rejected'): ?>
+                            <p class="mt-2 text-sm text-red-600"><?= htmlspecialchars($admin_remarks) ?></p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php if ($kyc_status === 'not_submitted' || $kyc_status === 'rejected'): ?>
+                    <div>
+                        <a href="kyc.php" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md">
+                            <?= $kyc_status === 'rejected' ? 'Resubmit KYC' : 'Complete KYC' ?>
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <form>
             <!-- Full Name (Read-only) -->
             <div class="mb-4">
@@ -198,10 +237,6 @@
                     <input type="email" id="email" class="ml-2 w-full outline-none" value="<?php echo htmlspecialchars($email); ?>" readonly />
                 </div>
             </div>
-            <div class="flex justify-between">
-                <button type="button" class="text-gray-700 border border-gray-400 rounded-lg px-4 py-2">Cancel</button>
-                <button type="submit" class="bg-blue-600 text-white rounded-lg px-4 py-2">Save</button>
-                </div>
             </form>
         </div>
 

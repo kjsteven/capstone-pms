@@ -66,6 +66,24 @@
 
     $user_id = $_SESSION['user_id'];
 
+    // Check KYC verification status
+    $kyc_query = "SELECT COALESCE(verification_status, 'not_submitted') as kyc_status 
+                  FROM kyc_verification 
+                  WHERE user_id = ? 
+                  ORDER BY submission_date DESC LIMIT 1";
+    $stmt = $conn->prepare($kyc_query);
+    $stmt->bind_param("i", $_SESSION['user_id']);
+    $stmt->execute();
+    $kyc_result = $stmt->get_result();
+    $kyc_status = $kyc_result->num_rows > 0 ? $kyc_result->fetch_assoc()['kyc_status'] : 'not_submitted';
+
+    // Redirect if KYC is not approved
+    if ($kyc_status !== 'approved') {
+        $_SESSION['error'] = "You need to complete KYC verification before accessing this page.";
+        header('Location: profile.php');
+        exit();
+    }
+
     // Query to get maintenance requests
     $query = "SELECT id, unit, issue, description, service_date, status, image 
               FROM maintenance_requests 

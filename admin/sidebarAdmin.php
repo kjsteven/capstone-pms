@@ -94,6 +94,12 @@ echo '<script>
                     <span>Users</span>
                 </a>
             </li>
+            <li>
+                <a href="kyc_verification.php" class="grid grid-cols-[30px_auto] items-center p-2 text-sm text-blue-900 rounded-lg dark:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-700">
+                    <svg data-feather="user-check" class="text-white icon-size"></svg>
+                    <span>KYC Verification</span>
+                </a>
+            </li>
 
             <!-- Operations Section -->
             <li>

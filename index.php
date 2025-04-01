@@ -567,7 +567,7 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
             <p class="text-gray-600 mt-4">Managing your rental experience has never been easier! Here's how it works:</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- Step 1 -->
             <div class="text-center p-6" data-aos="fade-right" data-aos-delay="100">
                 <div class="text-blue-600 mb-4">
@@ -578,12 +578,12 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
             </div>
 
             <!-- Step 2 -->
-            <div class="text-center p-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="text-center p-6" data-aos="fade-right" data-aos-delay="200">
                 <div class="text-blue-600 mb-4">
                     <span class="text-4xl font-bold">2</span>
                 </div>
-                <h3 class="text-xl font-bold text-gray-600">Submit Maintenance Requests</h3>
-                <p class="text-gray-600 mt-2">Quickly report issues and track the status of your requests.</p>
+                <h3 class="text-xl font-bold text-gray-600">Verify Your Identity</h3>
+                <p class="text-gray-600 mt-2">Complete the KYC process to ensure secure and reliable transactions.</p>
             </div>
 
             <!-- Step 3 -->
@@ -591,7 +591,16 @@ $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
                 <div class="text-blue-600 mb-4">
                     <span class="text-4xl font-bold">3</span>
                 </div>
-                <h3 class="text-xl font-bold text-gray-600">Make Payments Online</h3>
+                <h3 class="text-xl font-bold text-gray-600">Submit Requests</h3>
+                <p class="text-gray-600 mt-2">Quickly report issues and track the status of your maintenance requests.</p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="text-center p-6" data-aos="fade-left" data-aos-delay="400">
+                <div class="text-blue-600 mb-4">
+                    <span class="text-4xl font-bold">4</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-600">Make Payments</h3>
                 <p class="text-gray-600 mt-2">Easily pay rent and fees through our secure platform.</p>
             </div>
         </div>

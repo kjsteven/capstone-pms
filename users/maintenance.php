@@ -206,7 +206,7 @@
 
                     <!-- Preferred Service Date -->
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="service-date">Preferred Date for Service</label>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="service-date">Schedule of Repair</label>
                         <input type="date" id="service-date" name="service_date" class="w-full border border-gray-300 rounded-lg px-4 py-2 outline-none" required>
                     </div>
 

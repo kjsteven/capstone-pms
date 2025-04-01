@@ -106,7 +106,7 @@ foreach ($requests as $request) {
                 <p class="text-2xl font-bold text-gray-800"><?php echo $totalTasks; ?></p>
             </div>
             <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                <h3 class="text-sm font-semibold text-gray-600">Due Today</h3>
+                <h3 class="text-sm font-semibold text-gray-600">Schedule Today</h3>
                 <p class="text-2xl font-bold text-blue-600"><?php echo $dueToday; ?></p>
             </div>
             <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -163,7 +163,7 @@ foreach ($requests as $request) {
                             <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Unit</th>
                             <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Issue</th>
                             <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Description</th>
-                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Due Date</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Scedule Date</th>
                             <th class="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-semibold text-gray-700 border-b-2 border-gray-200 bg-gray-200">Status</th>
                         </tr>
                     </thead>

@@ -131,6 +131,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                            oninput="computeRent()" required>
                 </div>
 
+                <!-- Rate Per Square Meter -->
+                <div>
+                    <label for="rate_per_sqm" class="block text-sm font-medium text-gray-700">Rate Per Square Meter</label>
+                    <input type="number" step="0.01" id="rate_per_sqm" name="rate_per_sqm" 
+                           class="mt-1 block w-full border-2 border-gray-300 rounded-md p-2 focus:border-blue-500 focus:outline-none" 
+                           oninput="computeRent()" value="450" required>
+                </div>
+
                 <!-- Monthly Rent -->
                 <div>
                     <label for="monthly_rent" class="block text-sm font-medium text-gray-700">Monthly Rent</label>
@@ -179,21 +187,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Initialize Feather Icons
     feather.replace();
 
-      // JavaScript to compute monthly rent based on square meter
-      function computeRent() {
-            const squareMeterInput = document.getElementById('square_meter');
-            const monthlyRentInput = document.getElementById('monthly_rent');
-            const ratePerSquareMeter = 450;
+    // JavaScript to compute monthly rent based on square meter and rate
+    function computeRent() {
+        const squareMeterInput = document.getElementById('square_meter');
+        const ratePerSqmInput = document.getElementById('rate_per_sqm');
+        const monthlyRentInput = document.getElementById('monthly_rent');
 
-            // Validate and compute monthly rent
-            const squareMeter = parseFloat(squareMeterInput.value);
-            if (!isNaN(squareMeter) && squareMeter > 0) {
-                const computedRent = squareMeter * ratePerSquareMeter;
-                monthlyRentInput.value = computedRent.toFixed(2);
-            } else {
-                monthlyRentInput.value = '';
-            }
+        // Validate and compute monthly rent
+        const squareMeter = parseFloat(squareMeterInput.value);
+        const ratePerSquareMeter = parseFloat(ratePerSqmInput.value);
+        
+        if (!isNaN(squareMeter) && !isNaN(ratePerSquareMeter) && squareMeter > 0 && ratePerSquareMeter > 0) {
+            const computedRent = squareMeter * ratePerSquareMeter;
+            monthlyRentInput.value = computedRent.toFixed(2);
+        } else {
+            monthlyRentInput.value = '';
         }
+    }
 </script>
 
 <script>

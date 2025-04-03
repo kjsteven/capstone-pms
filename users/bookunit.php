@@ -167,14 +167,18 @@
 
                             <figure>
                                 <?php
-                                // Fetch the image from the database (assuming $property['images'] contains the relative path)
-                                if (!empty($property['images'])) {
-                                    $image_path = '../admin/' . $property['images']; // Relative path to the image
-                                } else {
-                                    $image_path = '../images/pic2.jpg'; // Fallback image if no image exists
+                                // Improved image path handling
+                                $image_path = '../images/pic2.jpg'; // Default fallback image
+                                
+                                if (!empty($property['images']) && $property['images'] !== null && $property['images'] !== 'null') {
+                                    $admin_path = '../admin/' . $property['images'];
+                                    // Check if file exists
+                                    if (file_exists($admin_path)) {
+                                        $image_path = $admin_path;
+                                    }
                                 }
                                 ?>
-                                <img class="w-full h-48 object-cover" src="<?php echo htmlspecialchars($image_path); ?>" alt="Property Image" />
+                                <img class="w-full h-48 object-cover" src="<?php echo htmlspecialchars($image_path); ?>" alt="Property Image" onerror="this.src='../images/pic2.jpg';" />
                             </figure>
                             <div class="p-6">
                                 <h2 class="text-xl font-semibold mb-4">Unit Details</h2>
@@ -366,10 +370,12 @@
                 // Determine button state
                 const isDisabled = status === 'Occupied' || status === 'Maintenance' || status === 'Reserved';;
 
-                // Image path
-                const imagePath = property.images 
-                    ? `../admin/${property.images}` 
-                    : '../images/pic2.jpg';
+                // Improved image path handling
+                let imagePath = '../images/pic2.jpg'; // Default fallback image
+                
+                if (property.images && property.images !== 'null' && property.images !== '') {
+                    imagePath = `../admin/${property.images}`;
+                }
 
                 // Create property card HTML
                 const propertyCard = `
@@ -381,7 +387,7 @@
                         </div>
 
                         <figure>
-                            <img class="w-full h-48 object-cover" src="${imagePath}" alt="Property Image" />
+                            <img class="w-full h-48 object-cover" src="${imagePath}" alt="Property Image" onerror="this.src='../images/pic2.jpg';" />
                         </figure>
                         <div class="p-6">
                             <h2 class="text-xl font-semibold mb-4">Unit Details</h2>

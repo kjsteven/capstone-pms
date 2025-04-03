@@ -193,10 +193,10 @@
                                     if (file_exists($full_path)) {
                                         $image_url = $full_path;
                                     } else {
-                                        $image_url = '../images/bg2.jpg'; // Fallback image
+                                        $image_url = '../images/pic2.jpg'; // Fallback image
                                     }
                                 } else {
-                                    $image_url = '../images/bg2.jpg'; // Default fallback image
+                                    $image_url = '../images/pic2.jpg'; // Default fallback image
                                 }
                                 ?>
                                 <img class="w-full h-48 object-cover" src="<?php echo htmlspecialchars($image_url); ?>" 

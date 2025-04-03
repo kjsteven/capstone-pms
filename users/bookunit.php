@@ -368,13 +368,64 @@
         for (const property of properties) {
             const imagePath = property.images 
                 ? `../admin/${property.images}`
-                : '../images/bg2.jpg';
+                : '../images/pic2.jpg';
 
             // Check if image exists
             const imageExists = await checkImageExists(imagePath);
-            const finalImagePath = imageExists ? imagePath : '../images/bg2.jpg';
+            const finalImagePath = imageExists ? imagePath : '../images/pic2.jpg';
 
-            // ...rest of your property card HTML creation code...
+            // Status colors mapping
+            const statusColors = {
+                'Available': 'bg-green-100 text-green-950',
+                'Occupied': 'bg-red-100 text-red-950',
+                'Maintenance': 'bg-yellow-100 text-yellow-950',
+                'Reserved': 'bg-blue-100 text-blue-700'
+            };
+
+            const status = property.status || 'Available';
+            const badgeColor = statusColors[status] || 'bg-gray-100 text-gray-800';
+            const isDisabled = (status === 'Occupied' || status === 'Maintenance' || status === 'Reserved');
+
+            // Create property card HTML
+            const propertyCard = `
+                <div class="bg-white shadow-xl rounded-xl overflow-hidden relative">
+                    <div class="absolute top-4 right-4 z-10">
+                        <span class="${badgeColor} px-3 py-1 rounded-full text-xs font-semibold uppercase">
+                            ${status}
+                        </span>
+                    </div>
+                    <figure>
+                        <img class="w-full h-48 object-cover" 
+                             src="${finalImagePath}" 
+                             alt="Property Image" 
+                             onerror="this.src='../images/pic2.jpg';" />
+                    </figure>
+                    <div class="p-6">
+                        <h2 class="text-xl font-semibold mb-4">Unit Details</h2>
+                        <div class="space-y-2">
+                            <p><span class="font-semibold">Unit No:</span> ${property.unit_no}</p>
+                            <p><span class="font-semibold">Unit Type:</span> ${property.unit_type}</p>
+                            <p><span class="font-semibold">Monthly Rent:</span> ₱${Number(property.monthly_rent).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                            <p><span class="font-semibold">Square Meter:</span> ${property.square_meter} sqm</p>
+                        </div>
+                        <div class="flex justify-center mt-6">
+                            <button 
+                                class="reserve-now-btn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition duration-300 
+                                ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${isDisabled ? 'disabled' : ''}
+                                data-unit-id="${property.unit_id}"
+                                data-unit-no="${property.unit_no}"
+                                data-unit-type="${property.unit_type}"
+                                data-monthly-rent="${property.monthly_rent}"
+                                data-square-meter="${property.square_meter}">
+                                ${isDisabled ? 'Not Available' : 'Reserve Now'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            propertiesContainer.innerHTML += propertyCard;
         }
         
         hideLoading();

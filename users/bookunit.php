@@ -185,14 +185,22 @@
 
                             <figure>
                                 <?php
-                                // Fetch the image from the database (assuming $property['images'] contains the relative path)
+                                // Fetch the image from the database
                                 if (!empty($property['images'])) {
-                                    $image_path = '../admin/' . $property['images']; // Relative path to the image
+                                    $image_path = str_replace('\\', '/', $property['images']); // Normalize path
+                                    $full_path = '../admin/' . $image_path;
+                                    // Check if file exists
+                                    if (file_exists($full_path)) {
+                                        $image_url = $full_path;
+                                    } else {
+                                        $image_url = '../images/bg2.jpg'; // Fallback image
+                                    }
                                 } else {
-                                    $image_path = '../images/bg2.jpg'; // Fallback image if no image exists
+                                    $image_url = '../images/bg2.jpg'; // Default fallback image
                                 }
                                 ?>
-                                <img class="w-full h-48 object-cover" src="<?php echo htmlspecialchars($image_path); ?>" alt="Property Image" />
+                                <img class="w-full h-48 object-cover" src="<?php echo htmlspecialchars($image_url); ?>" 
+                                     alt="Property Image" onerror="this.src='../images/bg2.jpg';" />
                             </figure>
                             <div class="p-6">
                                 <h2 class="text-xl font-semibold mb-4">Unit Details</h2>
@@ -315,16 +323,28 @@
 
     // Loading Functions
     function showLoading() {
-        const loading = document.getElementById('loading');
-        if (loading) {
-            loading.style.display = 'flex';
+        const loadingElement = document.getElementById('loading');
+        const contentElement = document.getElementById('content');
+        
+        if (loadingElement) {
+            loadingElement.style.display = 'flex';
+        }
+        
+        if (contentElement) {
+            contentElement.style.display = 'none';
         }
     }
 
     function hideLoading() {
-        const loading = document.getElementById('loading');
-        if (loading) {
-            loading.style.display = 'none';
+        const loadingElement = document.getElementById('loading');
+        const contentElement = document.getElementById('content');
+        
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+        
+        if (contentElement) {
+            contentElement.style.display = 'block';
         }
     }
 
@@ -373,11 +393,35 @@
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
         showLoading();
-        const properties = <?php echo json_encode($properties); ?>;
-        renderProperties(properties).then(() => {
-            document.getElementById('content').style.display = 'block';
-            hideLoading();
+
+        // Check if all images are loaded
+        const images = document.querySelectorAll('img');
+        let loadedImages = 0;
+
+        function imageLoaded() {
+            loadedImages++;
+            if (loadedImages === images.length) {
+                hideLoading();
+            }
+        }
+
+        // Handle both success and error cases for images
+        images.forEach(img => {
+            if (img.complete) {
+                imageLoaded();
+            } else {
+                img.addEventListener('load', imageLoaded);
+                img.addEventListener('error', imageLoaded);
+            }
         });
+
+        // Fallback in case no images are present
+        if (images.length === 0) {
+            hideLoading();
+        }
+
+        // Set timeout as fallback
+        setTimeout(hideLoading, 3000);
     });
 
     // Dropdown Functions

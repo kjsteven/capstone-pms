@@ -443,9 +443,54 @@
 
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
+        // Get all the required elements
+        const modal = document.getElementById('reservationModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelModalBtn = document.getElementById('cancelModal');
+        const gridContainer = document.querySelector('.grid');
+        const reservationForm = document.getElementById('reservationForm');
+        const viewingDateInput = document.getElementById('viewingDate');
+        const viewingTimeInput = document.getElementById('viewingTime');
+
+        // Show initial loading state
         showLoading();
 
-        // Check if all images are loaded
+        // Initialize all event listeners only if elements exist
+        if (gridContainer) {
+            gridContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('reserve-now-btn') && !e.target.disabled) {
+                    handleReservationClick(e.target);
+                }
+            });
+        }
+
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => {
+                if (modal) modal.classList.add('hidden');
+                clearViewingDetails();
+            });
+        }
+
+        if (cancelModalBtn) {
+            cancelModalBtn.addEventListener('click', () => {
+                if (modal) modal.classList.add('hidden');
+                clearViewingDetails();
+            });
+        }
+
+        if (viewingDateInput) {
+            viewingDateInput.addEventListener('change', validateViewingDate);
+        }
+
+        if (viewingTimeInput) {
+            viewingTimeInput.addEventListener('change', validateViewingTime);
+        }
+
+        if (reservationForm) {
+            reservationForm.addEventListener('submit', handleFormSubmit);
+        }
+
+        // Handle image loading
         const images = document.querySelectorAll('img');
         let loadedImages = 0;
 
@@ -456,89 +501,73 @@
             }
         }
 
-        // Handle both success and error cases for images
-        images.forEach(img => {
-            if (img.complete) {
-                imageLoaded();
-            } else {
-                img.addEventListener('load', imageLoaded);
-                img.addEventListener('error', imageLoaded);
-            }
-        });
-
-        // Fallback in case no images are present
-        if (images.length === 0) {
+        if (images.length > 0) {
+            images.forEach(img => {
+                if (img.complete) {
+                    imageLoaded();
+                } else {
+                    img.addEventListener('load', imageLoaded);
+                    img.addEventListener('error', imageLoaded);
+                }
+            });
+        } else {
             hideLoading();
         }
 
-        // Set timeout as fallback
+        // Initialize the page
+        preFillPersonalInfo();
+        setMinDate();
+
+        // Fallback timeout to hide loading
         setTimeout(hideLoading, 3000);
     });
 
-    // Dropdown Functions
-    function toggleDropdown() {
-        const dropdown = document.getElementById('dropdown');
-        dropdown.classList.toggle('hidden');
-    }
+    // Helper function to handle reservation button clicks
+    function handleReservationClick(button) {
+        const unitNo = button.dataset.unitNo;
+        const unitType = button.dataset.unitType;
+        const monthlyRent = button.dataset.monthlyRent;
+        const squareMeter = button.dataset.squareMeter;
+        const unitId = button.dataset.unitId;
 
-    function selectCategory(category) {
-        document.getElementById('dropdown-button').innerText = category;
-        toggleDropdown(); // Close the dropdown after selection
-        filterProperties(); // Filter properties based on selected category
-    }
-
-    // Properties data from PHP
-    const userData = <?php echo json_encode($userData); ?>;
-
-    // Function to pre-fill personal information
-    function preFillPersonalInfo() {
-        if (userData) {
-            document.getElementById('name').value = userData.name;
-            document.getElementById('email').value = userData.email;
-            document.getElementById('contact').value = userData.phone;
-        }
-    }
-
-    // Event Listeners
-
-    // Modal Events - Using event delegation for dynamically created buttons
-    document.querySelector('.grid').addEventListener('click', (e) => {
-        if (e.target.classList.contains('reserve-now-btn') && !e.target.disabled) {
-            // Get property details from data attributes
-            const unitNo = e.target.dataset.unitNo;
-            const unitType = e.target.dataset.unitType;
-            const monthlyRent = e.target.dataset.monthlyRent;
-            const squareMeter = e.target.dataset.squareMeter;
-            const unitId = e.target.dataset.unitId;
-
-            // Fill the modal form with property details
+        // Fill the modal form with property details
+        const modal = document.getElementById('reservationModal');
+        if (modal) {
             document.getElementById('unitNo').value = unitNo;
             document.getElementById('unitType').value = unitType;
             document.getElementById('monthlyRent').value = monthlyRent;
             document.getElementById('squareMeter').value = squareMeter;
             document.getElementById('unitId').value = unitId;
 
-            // Show the modal
             modal.classList.remove('hidden');
         }
-    });
+    }
+
+    // Handle form submission
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        
+        if (!validateViewingDate() || !validateViewingTime()) {
+            return;
+        }
+
+        showLoading();
+        const formData = new FormData(e.target);
+
+        fetch('submit_reservation.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(handleSubmissionResponse)
+        .catch(handleSubmissionError);
+    }
 
     // Clear "Viewing Details" fields when closing or canceling the modal
     function clearViewingDetails() {
         document.getElementById('viewingDate').value = '';
         document.getElementById('viewingTime').value = '';
     }
-
-    // Close modal events
-    closeModalBtn?.addEventListener('click', () => {
-        modal.classList.add('hidden');
-        clearViewingDetails(); 
-    });
-
-    cancelModalBtn?.addEventListener('click', () => {
-        modal.classList.add('hidden');
-        clearViewingDetails(); 
-    });
 
     // Set min date attribute for viewing date to today
     function setMinDate() {

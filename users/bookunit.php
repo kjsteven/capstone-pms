@@ -15,24 +15,6 @@
         exit();
     }
 
-    // Check KYC verification status
-    $kyc_query = "SELECT COALESCE(verification_status, 'not_submitted') as kyc_status 
-                  FROM kyc_verification 
-                  WHERE user_id = ? 
-                  ORDER BY submission_date DESC LIMIT 1";
-    $stmt = $conn->prepare($kyc_query);
-    $stmt->bind_param("i", $_SESSION['user_id']);
-    $stmt->execute();
-    $kyc_result = $stmt->get_result();
-    $kyc_status = $kyc_result->num_rows > 0 ? $kyc_result->fetch_assoc()['kyc_status'] : 'not_submitted';
-
-    // Redirect if KYC is not approved
-    if ($kyc_status !== 'approved') {
-        $_SESSION['error'] = "You need to complete KYC verification before accessing this page.";
-        header('Location: profile.php');
-        exit();
-    }
-
     // Query to fetch user data
     $query = "SELECT name, email, phone FROM users WHERE user_id = ?";
     $stmt = $conn->prepare($query);
@@ -45,7 +27,7 @@
 
 
     // Fetch available properties from the database
-    $properties_query = "SELECT * FROM property WHERE position = 'active'";
+    $properties_query = "SELECT * FROM property";
     $properties_result = mysqli_query($conn, $properties_query);
     $properties = mysqli_fetch_all($properties_result, MYSQLI_ASSOC);
 
@@ -185,22 +167,14 @@
 
                             <figure>
                                 <?php
-                                // Fetch the image from the database
+                                // Fetch the image from the database (assuming $property['images'] contains the relative path)
                                 if (!empty($property['images'])) {
-                                    $image_path = str_replace('\\', '/', $property['images']); // Normalize path
-                                    $full_path = '../admin/' . $image_path;
-                                    // Check if file exists
-                                    if (file_exists($full_path)) {
-                                        $image_url = $full_path;
-                                    } else {
-                                        $image_url = '../images/pic2.jpg'; // Fallback image
-                                    }
+                                    $image_path = '../admin/' . $property['images']; // Relative path to the image
                                 } else {
-                                    $image_url = '../images/pic2.jpg'; // Default fallback image
+                                    $image_path = '../images/pic2.jpg'; // Fallback image if no image exists
                                 }
                                 ?>
-                                <img class="w-full h-48 object-cover" src="<?php echo htmlspecialchars($image_url); ?>" 
-                                     alt="Property Image" onerror="this.src='../images/bg2.jpg';" />
+                                <img class="w-full h-48 object-cover" src="<?php echo htmlspecialchars($image_path); ?>" alt="Property Image" />
                             </figure>
                             <div class="p-6">
                                 <h2 class="text-xl font-semibold mb-4">Unit Details</h2>
@@ -323,157 +297,12 @@
 
     // Loading Functions
     function showLoading() {
-        const loadingElement = document.getElementById('loading');
-        const contentElement = document.getElementById('content');
-        
-        if (loadingElement) {
-            loadingElement.style.display = 'flex';
-        }
-        
-        if (contentElement) {
-            contentElement.style.display = 'none';
-        }
+        document.getElementById('loading').style.display = 'flex';
     }
 
     function hideLoading() {
-        const loadingElement = document.getElementById('loading');
-        const contentElement = document.getElementById('content');
-        
-        if (loadingElement) {
-            loadingElement.style.display = 'none';
-        }
-        
-        if (contentElement) {
-            contentElement.style.display = 'block';
-        }
+        document.getElementById('loading').style.display = 'none';
     }
-
-    // Function to check if image exists
-    function imageExists(url) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve(true);
-            img.onerror = () => resolve(false);
-            img.src = url;
-        });
-    }
-
-    // Function to render properties with image check
-    async function renderProperties(properties) {
-        const propertiesContainer = document.querySelector('.grid');
-        if (!propertiesContainer) return;
-
-        propertiesContainer.innerHTML = '';
-
-        for (const property of properties) {
-            const imagePath = property.images 
-                ? `../admin/${property.images}`
-                : '../images/pic2.jpg';
-
-            // Check if image exists
-            const imageExists = await checkImageExists(imagePath);
-            const finalImagePath = imageExists ? imagePath : '../images/pic2.jpg';
-
-            // Status colors mapping
-            const statusColors = {
-                'Available': 'bg-green-100 text-green-950',
-                'Occupied': 'bg-red-100 text-red-950',
-                'Maintenance': 'bg-yellow-100 text-yellow-950',
-                'Reserved': 'bg-blue-100 text-blue-700'
-            };
-
-            const status = property.status || 'Available';
-            const badgeColor = statusColors[status] || 'bg-gray-100 text-gray-800';
-            const isDisabled = (status === 'Occupied' || status === 'Maintenance' || status === 'Reserved');
-
-            // Create property card HTML
-            const propertyCard = `
-                <div class="bg-white shadow-xl rounded-xl overflow-hidden relative">
-                    <div class="absolute top-4 right-4 z-10">
-                        <span class="${badgeColor} px-3 py-1 rounded-full text-xs font-semibold uppercase">
-                            ${status}
-                        </span>
-                    </div>
-                    <figure>
-                        <img class="w-full h-48 object-cover" 
-                             src="${finalImagePath}" 
-                             alt="Property Image" 
-                             onerror="this.src='../images/pic2.jpg';" />
-                    </figure>
-                    <div class="p-6">
-                        <h2 class="text-xl font-semibold mb-4">Unit Details</h2>
-                        <div class="space-y-2">
-                            <p><span class="font-semibold">Unit No:</span> ${property.unit_no}</p>
-                            <p><span class="font-semibold">Unit Type:</span> ${property.unit_type}</p>
-                            <p><span class="font-semibold">Monthly Rent:</span> ₱${Number(property.monthly_rent).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                            <p><span class="font-semibold">Square Meter:</span> ${property.square_meter} sqm</p>
-                        </div>
-                        <div class="flex justify-center mt-6">
-                            <button 
-                                class="reserve-now-btn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition duration-300 
-                                ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}"
-                                ${isDisabled ? 'disabled' : ''}
-                                data-unit-id="${property.unit_id}"
-                                data-unit-no="${property.unit_no}"
-                                data-unit-type="${property.unit_type}"
-                                data-monthly-rent="${property.monthly_rent}"
-                                data-square-meter="${property.square_meter}">
-                                ${isDisabled ? 'Not Available' : 'Reserve Now'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            propertiesContainer.innerHTML += propertyCard;
-        }
-        
-        hideLoading();
-    }
-
-    // Function to check if image exists
-    async function checkImageExists(url) {
-        try {
-            const response = await fetch(url, { method: 'HEAD' });
-            return response.ok;
-        } catch {
-            return false;
-        }
-    }
-
-    // Initialize page
-    document.addEventListener('DOMContentLoaded', function() {
-        showLoading();
-
-        // Check if all images are loaded
-        const images = document.querySelectorAll('img');
-        let loadedImages = 0;
-
-        function imageLoaded() {
-            loadedImages++;
-            if (loadedImages === images.length) {
-                hideLoading();
-            }
-        }
-
-        // Handle both success and error cases for images
-        images.forEach(img => {
-            if (img.complete) {
-                imageLoaded();
-            } else {
-                img.addEventListener('load', imageLoaded);
-                img.addEventListener('error', imageLoaded);
-            }
-        });
-
-        // Fallback in case no images are present
-        if (images.length === 0) {
-            hideLoading();
-        }
-
-        // Set timeout as fallback
-        setTimeout(hideLoading, 3000);
-    });
 
     // Dropdown Functions
     function toggleDropdown() {
@@ -488,6 +317,7 @@
     }
 
     // Properties data from PHP
+    const properties = <?php echo json_encode($properties); ?>;
     const userData = <?php echo json_encode($userData); ?>;
 
     // Function to pre-fill personal information
@@ -496,6 +326,97 @@
             document.getElementById('name').value = userData.name;
             document.getElementById('email').value = userData.email;
             document.getElementById('contact').value = userData.phone;
+        }
+    }
+
+    // Function to filter properties
+    function filterProperties() {
+        const categoryFilter = document.getElementById('dropdown-button').innerText.trim();
+        const searchTerm = document.getElementById('search-dropdown').value.toLowerCase();
+        const propertiesContainer = document.querySelector('.grid');
+
+        // Clear existing properties
+        propertiesContainer.innerHTML = '';
+
+        // Filter properties
+        const filteredProperties = properties.filter(property => {
+            const matchesCategory = categoryFilter === 'All Categories' || 
+                property.unit_type.toLowerCase() === categoryFilter.toLowerCase();
+
+            const matchesSearch = searchTerm === '' || 
+                property.unit_no.toLowerCase().includes(searchTerm) ||
+                property.unit_type.toLowerCase().includes(searchTerm);
+
+            return matchesCategory && matchesSearch;
+        });
+
+        // Render filtered properties
+        if (filteredProperties.length > 0) {
+            filteredProperties.forEach(property => {
+                // Status determination
+                const status = property.status || 'Available';
+                const statusColors = {
+                    'Available': 'bg-green-100 text-green-800',
+                    'Occupied': 'bg-red-100 text-red-800',
+                    'Reserved': 'bg-blue-100 text-blue-700',
+                    'Maintenance': 'bg-yellow-100 text-yellow-800'
+                };
+                const badgeColor = statusColors[status] || 'bg-gray-100 text-gray-800';
+
+                // Determine button state
+                const isDisabled = status === 'Occupied' || status === 'Maintenance' || status === 'Reserved';;
+
+                // Image path
+                const imagePath = property.images 
+                    ? `../admin/${property.images}` 
+                    : '../images/pic2.jpg';
+
+                // Create property card HTML
+                const propertyCard = `
+                    <div class="bg-white shadow-xl rounded-xl overflow-hidden relative">
+                        <div class="absolute top-4 right-4 z-10">
+                            <span class="${badgeColor} px-3 py-1 rounded-full text-xs font-semibold uppercase">
+                                ${status}
+                            </span>
+                        </div>
+
+                        <figure>
+                            <img class="w-full h-48 object-cover" src="${imagePath}" alt="Property Image" />
+                        </figure>
+                        <div class="p-6">
+                            <h2 class="text-xl font-semibold mb-4">Unit Details</h2>
+                            <div class="space-y-2">
+                                <p><span class="font-semibold">Unit No:</span> ${property.unit_no}</p>
+                                <p><span class="font-semibold">Unit Type:</span> ${property.unit_type}</p>
+                                <p><span class="font-semibold">Monthly Rent:</span> ₱${Number(property.monthly_rent).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                <p><span class="font-semibold">Square Meter:</span> ${property.square_meter} sqm</p>
+                            </div>
+                            <div class="flex justify-center mt-6">
+                                <button 
+                                    class="reserve-now-btn bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition duration-300 
+                                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}"
+                                    ${isDisabled ? 'disabled' : ''}
+                                    data-unit-id="${property.unit_id}"
+                                    data-unit-no="${property.unit_no}"
+                                    data-unit-type="${property.unit_type}"
+                                    data-monthly-rent="${property.monthly_rent}"
+                                    data-square-meter="${property.square_meter}"
+                                >
+                                    ${isDisabled ? 'Not Available' : 'Reserve Now'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                propertiesContainer.innerHTML += propertyCard;
+            });
+        } else {
+            // No properties found
+            propertiesContainer.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <p class="text-gray-500">No properties found.</p>
+                </div>
+            `;
         }
     }
 
@@ -539,6 +460,9 @@
         modal.classList.add('hidden');
         clearViewingDetails(); 
     });
+
+    // Search input event
+    document.getElementById('search-dropdown').addEventListener('input', filterProperties);
 
     // Set min date attribute for viewing date to today
     function setMinDate() {
@@ -626,6 +550,7 @@
                 // Optionally, close the modal
                 modal.classList.add('hidden');
                 clearViewingDetails(); 
+                filterProperties(); // Reapply filters after submission
             } else {
                 // Handle error or show failure message
                 Toastify({
@@ -658,6 +583,7 @@
         showLoading();
         setTimeout(() => {
             hideLoading();
+            filterProperties(); // Initial filtering to set up the page
             preFillPersonalInfo();
             setMinDate(); // Set minimum date for the date picker
         }, 1000);

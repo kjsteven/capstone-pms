@@ -1,3 +1,52 @@
+<?php
+require_once '../session/session_manager.php';
+require '../session/db.php';
+
+// Fetch all tenants and their units
+$query = "
+    SELECT 
+        t.tenant_id, t.user_id, t.unit_rented, t.rent_from, t.rent_until,
+        t.monthly_rate, t.outstanding_balance, t.downpayment_amount,
+        t.payable_months, t.downpayment_receipt, t.created_at,
+        u.name AS tenant_name, u.profile_picture,
+        p.unit_no, p.unit_type, p.unit_size
+    FROM tenants t
+    JOIN users u ON t.user_id = u.user_id
+    JOIN property p ON t.unit_rented = p.unit_id
+    WHERE t.status = 'active'
+    ORDER BY u.name, t.created_at DESC
+";
+
+$result = $conn->query($query);
+$tenants = [];
+
+// Group tenants by name
+while ($row = $result->fetch_assoc()) {
+    $tenant_name = $row['tenant_name'];
+    if (!isset($tenants[$tenant_name])) {
+        $tenants[$tenant_name] = [
+            'user_id' => $row['user_id'],
+            'name' => $tenant_name,
+            'profile_picture' => $row['profile_picture'] ?? '../images/default_avatar.png',
+            'units' => []
+        ];
+    }
+    $tenants[$tenant_name]['units'][] = [
+        'tenant_id' => $row['tenant_id'],
+        'unit_no' => $row['unit_no'],
+        'unit_type' => $row['unit_type'],
+        'unit_size' => $row['unit_size'],
+        'rent_from' => $row['rent_from'],
+        'rent_until' => $row['rent_until'],
+        'monthly_rate' => $row['monthly_rate'],
+        'outstanding_balance' => $row['outstanding_balance'],
+        'downpayment_amount' => $row['downpayment_amount'],
+        'payable_months' => $row['payable_months'],
+        'downpayment_receipt' => $row['downpayment_receipt']
+    ];
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,37 +108,31 @@
 
             <!-- Cards Grid -->
             <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Tenant Card -->
+                <?php foreach ($tenants as $tenant): ?>
                 <div class="tenant-card bg-white shadow-lg rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl" 
-                    data-name="john doe">
+                    data-name="<?= strtolower($tenant['name']) ?>">
                     <!-- Card Header -->
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <img src="../images/kj1.jpg" alt="Tenant Photo" 
+                                <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" alt="Tenant Photo" 
                                     class="w-16 h-16 rounded-full ring-2 ring-blue-500 ring-offset-2">
                                 <div>
-                                    <h2 class="text-xl font-bold text-gray-800">John Doe</h2>
+                                    <h2 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($tenant['name']) ?></h2>
                                     <div class="flex items-center space-x-2 text-gray-500 text-sm">
                                         <i data-feather="home" class="w-4 h-4"></i>
-                                        <span>Unit A-101</span>
+                                        <span><?= count($tenant['units']) ?> Unit(s) Rented</span>
                                         <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
                                             Active
                                         </span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex space-x-2">
-                                <button 
-                                    onclick="exportToExcel('John Doe')"
-                                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors group relative"
-                                    title="Export to Excel">
-                                    <i data-feather="file-text" class="w-5 h-5"></i>
-                                    <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                        Export to Excel
-                                    </span>
-                                </button>
-                            </div>
+                            <button onclick="exportToExcel('<?= htmlspecialchars($tenant['name']) ?>')"
+                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors group relative"
+                                title="Export to Excel">
+                                <i data-feather="file-text" class="w-5 h-5"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -161,54 +204,45 @@
                                 </h3>
                                 <!-- Unit List -->
                                 <div class="space-y-3">
-                                    <!-- Unit Item -->
+                                    <?php foreach ($tenant['units'] as $index => $unit): ?>
                                     <div class="border rounded-lg overflow-hidden">
-                                        <button onclick="toggleUnitDetails('unit1')" 
+                                        <button onclick="toggleUnitDetails('unit<?= $tenant['user_id'] ?>_<?= $index ?>')" 
                                             class="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors">
                                             <div class="flex items-center space-x-3">
                                                 <i data-feather="home" class="w-5 h-5 text-blue-600"></i>
-                                                <span class="font-medium">Unit 101</span>
+                                                <span class="font-medium">Unit <?= htmlspecialchars($unit['unit_no']) ?></span>
                                             </div>
                                             <i data-feather="chevron-down" class="w-5 h-5 transform transition-transform unit-chevron"></i>
                                         </button>
-                                        <!-- Unit Details (Hidden by default) -->
-                                        <div id="unit1" class="hidden p-4 border-t">
+                                        <div id="unit<?= $tenant['user_id'] ?>_<?= $index ?>" class="hidden p-4 border-t">
                                             <div class="grid grid-cols-2 gap-4">
+                                                <!-- Unit details -->
+                                                <?php
+                                                $details = [
+                                                    'Unit Type' => $unit['unit_type'],
+                                                    'Unit Size' => $unit['unit_size'],
+                                                    'Monthly Rate' => '₱' . number_format($unit['monthly_rate'], 2),
+                                                    'Outstanding Balance' => '₱' . number_format($unit['outstanding_balance'], 2),
+                                                    'Rent From' => $unit['rent_from'],
+                                                    'Rent Until' => $unit['rent_until']
+                                                ];
+                                                foreach ($details as $label => $value):
+                                                ?>
                                                 <div class="p-3 bg-gray-50 rounded-lg">
-                                                    <p class="text-sm text-gray-600">Unit Type</p>
-                                                    <p class="font-medium">Warehouse</p>
+                                                    <p class="text-sm text-gray-600"><?= $label ?></p>
+                                                    <p class="font-medium"><?= $value ?></p>
                                                 </div>
-                                                <div class="p-3 bg-gray-50 rounded-lg">
-                                                    <p class="text-sm text-gray-600">Unit Size</p>
-                                                    <p class="font-medium">100 sqm</p>
-                                                </div>
-                                                <div class="p-3 bg-gray-50 rounded-lg">
-                                                    <p class="text-sm text-gray-600">Monthly Rent</p>
-                                                    <p class="font-medium">₱15,000</p>
-                                                </div>
-                                                <div class="p-3 bg-gray-50 rounded-lg">
-                                                    <p class="text-sm text-gray-600">Outstanding Balance</p>
-                                                    <p class="font-medium">₱1,000,000</p>
-                                                </div>
-                                                <div class="p-3 bg-gray-50 rounded-lg">
-                                                    <p class="text-sm text-gray-600">Rent From</p>
-                                                    <p class="font-medium">Dec 31, 2020</p>
-                                                </div>
-                                                <div class="p-3 bg-gray-50 rounded-lg">
-                                                    <p class="text-sm text-gray-600">Rent Until</p>
-                                                    <p class="font-medium">Dec 31, 2024</p>
-                                                </div>
+                                                <?php endforeach; ?>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- Additional Unit Items (if needed) -->
-                                    <!-- Copy the Unit Item div above and change the IDs -->
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>

@@ -80,8 +80,14 @@
                                 </div>
                             </div>
                             <div class="flex space-x-2">
-                                <button class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                    <i data-feather="edit-2" class="w-5 h-5"></i>
+                                <button 
+                                    onclick="exportToExcel('John Doe')"
+                                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors group relative"
+                                    title="Export to Excel">
+                                    <i data-feather="file-text" class="w-5 h-5"></i>
+                                    <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                        Export to Excel
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -293,6 +299,55 @@
 
     <!-- Include Toastify JS -->
     <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+        function exportToExcel(tenantName) {
+            // Gather tenant data
+            const tenantData = [
+                ['Tenant Information Report'],
+                [''],
+                ['Name:', tenantName],
+                ['Unit:', 'A-101'],
+                ['Status:', 'Active'],
+                [''],
+                ['Payment History'],
+                ['Date', 'Amount', 'Method', 'Status'],
+                ['March 2024', '₱500', 'GCash', 'Paid'],
+                [''],
+                ['Maintenance Requests'],
+                ['Issue', 'Status', 'Date'],
+                ['Kitchen sink leak', 'Pending', '2024-03-01'],
+                ['AC repair', 'Completed', '2024-02-15'],
+                [''],
+                ['Unit Details'],
+                ['Type:', 'Warehouse'],
+                ['Size:', '100 sqm'],
+                ['Monthly Rent:', '₱15,000'],
+                ['Contract End:', 'Dec 31, 2024']
+            ];
+
+            // Create worksheet
+            const ws = XLSX.utils.aoa_to_sheet(tenantData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Tenant Report");
+
+            // Generate file name
+            const fileName = `Tenant_Report_${tenantName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+            // Export file
+            XLSX.writeFile(wb, fileName);
+
+            // Show success message using Toastify
+            Toastify({
+                text: "Excel report generated successfully!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#10B981",
+                stopOnFocus: true,
+            }).showToast();
+        }
+    </script>
 
 </body>
 </html>

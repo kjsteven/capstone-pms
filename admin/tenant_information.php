@@ -14,29 +14,21 @@ try {
     // Add debug logging
     error_log("Starting tenant query...");
 
-    // Modified query to get active tenants with proper joins
+    // Modified query to include all tenant fields
     $query = "
         SELECT 
-            t.tenant_id, 
-            t.user_id, 
-            t.unit_rented, 
-            t.rent_from, 
-            t.rent_until,
-            t.monthly_rate, 
-            t.outstanding_balance, 
-            t.downpayment_amount,
-            t.payable_months, 
-            t.created_at,
-            t.status,
+            t.tenant_id, t.user_id, t.unit_rented, t.rent_from, t.rent_until,
+            t.monthly_rate, t.outstanding_balance, t.downpayment_amount,
+            t.payable_months, t.status, t.contract_file, t.contract_upload_date,
+            t.downpayment_receipt, t.last_payment_date, t.registration_date,
+            t.created_at, t.updated_at,
             u.name AS tenant_name,
-            p.unit_no, 
-            p.unit_type, 
-            p.unit_size
+            p.unit_no, p.unit_type, p.unit_size
         FROM tenants t
         INNER JOIN users u ON t.user_id = u.user_id
         INNER JOIN property p ON t.unit_rented = p.unit_id
         WHERE t.status = 'active'
-        ORDER BY u.name
+        ORDER BY t.created_at DESC
     ";
 
     $result = $conn->query($query);
@@ -56,19 +48,22 @@ try {
         // Debug log each tenant found
         error_log("Processing tenant: " . $tenant_name);
         
-        // Initialize tenant data if not exists
+        // Initialize tenant data with all fields
         if (!isset($tenants[$tenant_name])) {
             $tenants[$tenant_name] = [
                 'user_id' => $row['user_id'],
                 'name' => $tenant_name,
                 'profile_picture' => '../images/default_avatar.png',
+                'status' => $row['status'],
+                'registration_date' => $row['registration_date'],
                 'units' => [],
                 'maintenance' => [],
-                'payments' => []
+                'payments' => [],
+                'contract_info' => []
             ];
         }
 
-        // Add unit information
+        // Add unit information with all available fields
         $tenants[$tenant_name]['units'][] = [
             'tenant_id' => $row['tenant_id'],
             'unit_no' => $row['unit_no'],
@@ -79,7 +74,11 @@ try {
             'monthly_rate' => $row['monthly_rate'],
             'outstanding_balance' => $row['outstanding_balance'],
             'downpayment_amount' => $row['downpayment_amount'],
-            'payable_months' => $row['payable_months']
+            'payable_months' => $row['payable_months'],
+            'downpayment_receipt' => $row['downpayment_receipt'],
+            'last_payment_date' => $row['last_payment_date'],
+            'contract_file' => $row['contract_file'],
+            'contract_upload_date' => $row['contract_upload_date']
         ];
     }
 
@@ -226,8 +225,11 @@ try {
                                                 <i data-feather="home" class="w-4 h-4"></i>
                                                 <span><?= count($tenant['units']) ?> Unit(s) Rented</span>
                                                 <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                                                    Active
+                                                    <?= htmlspecialchars(ucfirst($tenant['status'])) ?>
                                                 </span>
+                                            </div>
+                                            <div class="text-sm text-gray-500 mt-1">
+                                                Registration Date: <?= date('M d, Y', strtotime($tenant['registration_date'])) ?>
                                             </div>
                                         </div>
                                     </div>
@@ -328,8 +330,10 @@ try {
                                                             'Unit Size' => $unit['unit_size'],
                                                             'Monthly Rate' => '₱' . number_format($unit['monthly_rate'], 2),
                                                             'Outstanding Balance' => '₱' . number_format($unit['outstanding_balance'], 2),
-                                                            'Rent From' => $unit['rent_from'],
-                                                            'Rent Until' => $unit['rent_until']
+                                                            'Downpayment' => '₱' . number_format($unit['downpayment_amount'], 2),
+                                                            'Last Payment' => $unit['last_payment_date'] ? date('M d, Y', strtotime($unit['last_payment_date'])) : 'No payments yet',
+                                                            'Contract Status' => $unit['contract_file'] ? '<a href="' . htmlspecialchars($unit['contract_file']) . '" class="text-blue-600 hover:underline">View Contract</a>' : 'No contract uploaded',
+                                                            'Rent Period' => date('M d, Y', strtotime($unit['rent_from'])) . ' - ' . date('M d, Y', strtotime($unit['rent_until']))
                                                         ];
                                                         foreach ($details as $label => $value):
                                                         ?>

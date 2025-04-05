@@ -256,10 +256,10 @@ try {
                                                         $details = [
                                                             'Unit Type' => htmlspecialchars($unit['unit_type']),
                                                             'Unit Size' => htmlspecialchars($unit['unit_size'] . ' sqm'),
-                                                            'Monthly Rate' => htmlspecialchars($unit['monthly_rate']),
-                                                            'Outstanding Balance' => htmlspecialchars($unit['outstanding_balance']),
-                                                            'Rent From' => htmlspecialchars($unit['rent_from']),
-                                                            'Rent Until' => htmlspecialchars($unit['rent_until'])
+                                                            'Monthly Rate' => '₱' . number_format((float)$unit['monthly_rate'], 2),
+                                                            'Outstanding Balance' => '₱' . number_format((float)$unit['outstanding_balance'], 2),
+                                                            'Rent From' => date('F j, Y', strtotime($unit['rent_from'])),
+                                                            'Rent Until' => date('F j, Y', strtotime($unit['rent_until']))
                                                         ];
                                                         foreach ($details as $label => $value):
                                                         ?>

@@ -10,7 +10,7 @@ try {
         throw new Exception("Database connection failed");
     }
 
-    // Simplified query
+    // Simplified query - REMOVED status filter to test
     $query = "
         SELECT 
             t.tenant_id, 
@@ -27,8 +27,8 @@ try {
             p.unit_size
         FROM tenants t
         JOIN users u ON t.user_id = u.user_id
-        JOIN property p ON t.unit_rented = p.unit_id
-        WHERE t.status = 'active'";
+        JOIN property p ON t.unit_rented = p.unit_id";
+    // WHERE clause removed for testing
 
     $result = $conn->query($query);
     
@@ -36,12 +36,18 @@ try {
         throw new Exception("Query execution failed: " . $conn->error);
     }
 
-    // Print debug information about query results - this is critical for debugging
+    // Print debug information about query results
     echo "<!-- Debug: Query returned " . $result->num_rows . " rows -->\n";
+    
+    // Add debug output to screen for testing
+    echo "<div style='background:yellow; padding:10px; margin:10px;'>Found " . $result->num_rows . " tenant records in database</div>";
     
     $tenants = [];
     while ($row = $result->fetch_assoc()) {
         $tenant_name = $row['tenant_name'];
+        
+        // Debug each tenant being processed
+        echo "<!-- Processing tenant: " . htmlspecialchars($tenant_name) . " with status: " . htmlspecialchars($row['status']) . " -->\n";
         
         if (!isset($tenants[$tenant_name])) {
             $tenants[$tenant_name] = [
@@ -67,9 +73,12 @@ try {
     
     // Print debug info about processed tenants
     echo "<!-- Debug: Processed " . count($tenants) . " tenant records -->\n";
+    // Add additional debug output
+    echo "<div style='background:lightgreen; padding:10px; margin:10px;'>Processed " . count($tenants) . " tenant records</div>";
     
 } catch (Exception $e) {
     error_log("Error in tenant_information.php: " . $e->getMessage());
+    echo "<div style='background:red; color:white; padding:10px; margin:10px;'>Error: " . htmlspecialchars($e->getMessage()) . "</div>";
     $tenants = [];
 }
 ?>

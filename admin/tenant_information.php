@@ -23,7 +23,7 @@ try {
             u.name AS tenant_name,
             p.unit_no,
             p.unit_type,
-            p.unit_size
+            p.square_meter
         FROM tenants t
         JOIN users u ON t.user_id = u.user_id
         JOIN property p ON t.unit_rented = p.unit_id";
@@ -241,7 +241,7 @@ try {
                                                         <?php
                                                         $details = [
                                                             'Unit Type' => htmlspecialchars($unit['unit_type']),
-                                                            'Unit Size' => htmlspecialchars($unit['unit_size']),
+                                                            'Unit Size' => htmlspecialchars($unit['square_meter'] . ' sqm'),
                                                             'Monthly Rate' => htmlspecialchars($unit['monthly_rate']),
                                                             'Outstanding Balance' => htmlspecialchars($unit['outstanding_balance']),
                                                             'Rent From' => htmlspecialchars($unit['rent_from']),

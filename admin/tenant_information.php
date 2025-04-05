@@ -154,7 +154,7 @@ try {
                                         <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
                                              alt="<?= htmlspecialchars($tenant['name']) ?>'s Photo" 
                                              onerror="this.src='../images/avatar_fallback.png'"
-                                             class="w-32 h-32 rounded-full object-cover"> <!-- Changed from w-16 h-16 to w-32 h-32 for 128x128 size -->
+                                             class="w-16 h-16 rounded-full object-cover"> <!-- Changed from w-16 h-16 to w-32 h-32 for 128x128 size -->
                                         <div>
                                             <h2 class="text-xl font-bold text-gray-800">
                                                 <?= htmlspecialchars($tenant['name']) ?>

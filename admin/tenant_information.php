@@ -126,7 +126,7 @@ try {
                 </div>
                 <input type="text" 
                     id="searchTenant" 
-                    placeholder="Search by tenant name, unit, or status..."
+                    placeholder="Search tenant name"
                     class="w-full pl-12 pr-12 py-3.5 text-gray-700 bg-white border border-gray-200 
                            rounded-xl shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
                            transition-all duration-300 text-base">

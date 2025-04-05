@@ -1,33 +1,37 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
+// Start session first before any output
 require_once '../session/session_manager.php';
 require '../session/db.php';
 
+// Buffer output to prevent headers already sent error
+ob_start();
+
 try {
-    // First check database connection
     if (!$conn) {
         throw new Exception("Database connection failed");
     }
 
-    // Add more detailed debugging
-    var_dump("Connection successful"); // Debug point 1
-
-    // Simplified query to focus on essential data
+    // Simplified query to get tenant data
     $query = "
         SELECT 
             t.tenant_id, 
             t.user_id,
             t.unit_rented,
+            t.rent_from,
+            t.rent_until,
+            t.monthly_rate,
+            t.outstanding_balance,
+            t.downpayment_amount,
+            t.status,
             u.name AS tenant_name,
-            p.unit_no
+            p.unit_no,
+            p.unit_type,
+            p.unit_size
         FROM tenants t
         JOIN users u ON t.user_id = u.user_id
         JOIN property p ON t.unit_rented = p.unit_id
-        WHERE t.status = 'active'";
-
-    var_dump("Query to execute: " . $query); // Debug point 2
+        WHERE t.status = 'active'
+        ORDER BY u.name";
 
     $result = $conn->query($query);
     
@@ -35,17 +39,9 @@ try {
         throw new Exception("Query execution failed: " . $conn->error);
     }
 
-    var_dump("Number of rows found: " . $result->num_rows); // Debug point 3
-
-    // Debug the raw results
-    $raw_results = [];
-    while ($row = $result->fetch_assoc()) {
-        $raw_results[] = $row;
-    }
-    var_dump("Raw results:", $raw_results); // Debug point 4
-
+    // Process results
     $tenants = [];
-    foreach ($raw_results as $row) {
+    while ($row = $result->fetch_assoc()) {
         $tenant_name = $row['tenant_name'];
         
         if (!isset($tenants[$tenant_name])) {
@@ -57,32 +53,26 @@ try {
             ];
         }
 
-        // Add unit information
+        // Add unit information with all details
         $tenants[$tenant_name]['units'][] = [
             'tenant_id' => $row['tenant_id'],
-            'unit_no' => $row['unit_no']
+            'unit_no' => $row['unit_no'],
+            'unit_type' => $row['unit_type'],
+            'unit_size' => $row['unit_size'],
+            'rent_from' => $row['rent_from'],
+            'rent_until' => $row['rent_until'],
+            'monthly_rate' => $row['monthly_rate'],
+            'outstanding_balance' => $row['outstanding_balance'],
+            'downpayment_amount' => $row['downpayment_amount']
         ];
-    }
-
-    var_dump("Processed tenants array:", $tenants); // Debug point 5
-    
-    // Check if tenants array is empty
-    if (empty($tenants)) {
-        var_dump("No tenants found in the final array"); // Debug point 6
-        // Check if there are any active tenants
-        $checkQuery = "SELECT COUNT(*) as count FROM tenants WHERE status = 'active'";
-        $checkResult = $conn->query($checkQuery);
-        $activeCount = $checkResult->fetch_assoc()['count'];
-        var_dump("Number of active tenants in database: " . $activeCount); // Debug point 7
     }
     
 } catch (Exception $e) {
-    var_dump("Error occurred: " . $e->getMessage()); // Debug point 8
     error_log("Error in tenant_information.php: " . $e->getMessage());
     $tenants = [];
 }
 
-// Move the HTML output after all debug information
+// Now we can start outputting HTML
 ?>
 
 <!DOCTYPE html>
@@ -240,12 +230,12 @@ try {
                                                     <div class="grid grid-cols-2 gap-4">
                                                         <?php
                                                         $details = [
-                                                            'Unit Type' => 'N/A',
-                                                            'Unit Size' => 'N/A',
-                                                            'Monthly Rate' => 'N/A',
-                                                            'Outstanding Balance' => 'N/A',
-                                                            'Rent From' => 'N/A',
-                                                            'Rent Until' => 'N/A'
+                                                            'Unit Type' => $unit['unit_type'],
+                                                            'Unit Size' => $unit['unit_size'],
+                                                            'Monthly Rate' => '₱' . number_format($unit['monthly_rate'], 2),
+                                                            'Outstanding Balance' => '₱' . number_format($unit['outstanding_balance'], 2),
+                                                            'Rent From' => $unit['rent_from'],
+                                                            'Rent Until' => $unit['rent_until']
                                                         ];
                                                         foreach ($details as $label => $value):
                                                         ?>

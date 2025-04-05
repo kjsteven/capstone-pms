@@ -14,17 +14,27 @@ try {
     // Add debug logging
     error_log("Starting tenant query...");
 
-    // Simplify the query to ensure we get basic tenant data first
+    // Modified query to get active tenants with proper joins
     $query = "
-        SELECT DISTINCT
-            t.tenant_id, t.user_id, t.unit_rented, t.rent_from, t.rent_until,
-            t.monthly_rate, t.outstanding_balance, t.downpayment_amount,
-            t.payable_months, t.created_at,
+        SELECT 
+            t.tenant_id, 
+            t.user_id, 
+            t.unit_rented, 
+            t.rent_from, 
+            t.rent_until,
+            t.monthly_rate, 
+            t.outstanding_balance, 
+            t.downpayment_amount,
+            t.payable_months, 
+            t.created_at,
+            t.status,
             u.name AS tenant_name,
-            p.unit_no, p.unit_type, p.unit_size
+            p.unit_no, 
+            p.unit_type, 
+            p.unit_size
         FROM tenants t
-        JOIN users u ON t.user_id = u.user_id
-        JOIN property p ON t.unit_rented = p.unit_id
+        INNER JOIN users u ON t.user_id = u.user_id
+        INNER JOIN property p ON t.unit_rented = p.unit_id
         WHERE t.status = 'active'
         ORDER BY u.name
     ";
@@ -43,10 +53,15 @@ try {
     while ($row = $result->fetch_assoc()) {
         $tenant_name = $row['tenant_name'];
         
+        // Debug log each tenant found
+        error_log("Processing tenant: " . $tenant_name);
+        
+        // Initialize tenant data if not exists
         if (!isset($tenants[$tenant_name])) {
             $tenants[$tenant_name] = [
                 'user_id' => $row['user_id'],
                 'name' => $tenant_name,
+                'profile_picture' => '../images/default_avatar.png',
                 'units' => [],
                 'maintenance' => [],
                 'payments' => []
@@ -62,16 +77,25 @@ try {
             'rent_from' => $row['rent_from'],
             'rent_until' => $row['rent_until'],
             'monthly_rate' => $row['monthly_rate'],
-            'outstanding_balance' => $row['outstanding_balance']
+            'outstanding_balance' => $row['outstanding_balance'],
+            'downpayment_amount' => $row['downpayment_amount'],
+            'payable_months' => $row['payable_months']
         ];
     }
 
-    // Now get maintenance requests
+    // Debug total tenants found
+    error_log("Total unique tenants found: " . count($tenants));
+
+    // Get maintenance requests for each tenant
     foreach ($tenants as $tenant_name => &$tenant_data) {
         $maintenance_query = "
             SELECT request_type, status
             FROM maintenance_requests
-            WHERE tenant_id IN (SELECT tenant_id FROM tenants WHERE user_id = ?)
+            WHERE tenant_id IN (
+                SELECT tenant_id 
+                FROM tenants 
+                WHERE user_id = ? AND status = 'active'
+            )
             AND archived = 0
         ";
         $stmt = $conn->prepare($maintenance_query);
@@ -87,12 +111,16 @@ try {
         }
     }
 
-    // Get payment history
+    // Get payment history for each tenant
     foreach ($tenants as $tenant_name => &$tenant_data) {
         $payments_query = "
             SELECT payment_amount, payment_date, payment_method
             FROM payments
-            WHERE tenant_id IN (SELECT tenant_id FROM tenants WHERE user_id = ?)
+            WHERE tenant_id IN (
+                SELECT tenant_id 
+                FROM tenants 
+                WHERE user_id = ? AND status = 'active'
+            )
             ORDER BY payment_date DESC
             LIMIT 5
         ";
@@ -110,10 +138,9 @@ try {
         }
     }
 
-    error_log("Total tenants processed: " . count($tenants));
-
 } catch (Exception $e) {
     error_log("Error in tenant_information.php: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     $tenants = [];
 }
 ?>
@@ -190,7 +217,7 @@ try {
                             <div class="p-6 border-b border-gray-100">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-4">
-                                        <img src="../images/default_avatar.png" 
+                                        <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
                                              alt="<?= htmlspecialchars($tenant['name']) ?>'s Photo" 
                                              class="w-16 h-16 rounded-full object-cover">
                                         <div>

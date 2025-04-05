@@ -181,9 +181,9 @@ try {
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <img src="../images/default_avatar.png" 
+                                <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
                                      alt="<?= htmlspecialchars($tenant['name']) ?>'s Photo" 
-                                     class="w-16 h-16 rounded-full ring-2 ring-blue-500 ring-offset-2 object-cover">
+                                     class="w-16 h-16 rounded-full object-cover">
                                 <div>
                                     <h2 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($tenant['name']) ?></h2>
                                     <div class="flex items-center space-x-2 text-gray-500 text-sm">
@@ -196,8 +196,7 @@ try {
                                 </div>
                             </div>
                             <button onclick="exportToExcel('<?= htmlspecialchars($tenant['name']) ?>')"
-                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors group relative"
-                                title="Export to Excel">
+                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
                                 <i data-feather="file-text" class="w-5 h-5"></i>
                             </button>
                         </div>
@@ -206,19 +205,19 @@ try {
                     <!-- Tabs Navigation -->
                     <div class="border-b bg-gray-50">
                         <div class="flex">
-                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-600 transition-all active" data-tab="payments1">
+                            <button class="tab-btn active flex items-center px-6 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600" data-tab="payments">
                                 <i data-feather="credit-card" class="w-4 h-4 mr-2"></i>
                                 Payments
                             </button>
-                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-600 transition-all" data-tab="maintenance1">
+                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="maintenance">
                                 <i data-feather="tool" class="w-4 h-4 mr-2"></i>
                                 Maintenance
                             </button>
-                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-600 transition-all" data-tab="reservations1">
+                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="reservations">
                                 <i data-feather="calendar" class="w-4 h-4 mr-2"></i>
                                 Reservations
                             </button>
-                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-600 transition-all" data-tab="unit_rented1">
+                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="unit_rented">
                                 <i data-feather="home" class="w-4 h-4 mr-2"></i>
                                 Unit
                             </button>
@@ -228,7 +227,7 @@ try {
                     <!-- Tab Content -->
                     <div class="p-6">
                         <!-- Payments Tab -->
-                        <div id="payments1" class="tab-content opacity-0 transition-all duration-300">
+                        <div id="payments" class="tab-content block">
                             <div class="space-y-4">
                                 <?php foreach ($tenant['payments'] as $payment): ?>
                                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -238,7 +237,7 @@ try {
                                         </div>
                                         <div>
                                             <p class="font-medium">Payment Date</p>
-                                            <p class="text-sm text-gray-500"><?= htmlspecialchars($payment['date']) ?> - <?= htmlspecialchars($payment['method']) ?></p>
+                                            <p class="text-sm text-gray-500"><?= htmlspecialchars($payment['date']) ?></p>
                                         </div>
                                     </div>
                                     <span class="text-lg font-semibold">₱<?= number_format($payment['amount'], 2) ?></span>
@@ -248,7 +247,7 @@ try {
                         </div>
 
                         <!-- Maintenance Tab -->
-                        <div id="maintenance1" class="tab-content opacity-0 transition-all duration-300 hidden">
+                        <div id="maintenance" class="tab-content hidden">
                             <h3 class="text-lg font-semibold mb-2">
                                 <i data-feather="tool" class="inline-block w-4 h-4 mr-1"></i> Maintenance Requests
                             </h3>
@@ -258,7 +257,7 @@ try {
                         </div>
 
                         <!-- Reservations Tab -->
-                        <div id="reservations1" class="tab-content opacity-0 transition-all duration-300 hidden">
+                        <div id="reservations" class="tab-content hidden">
                             <h3 class="text-lg font-semibold mb-2">
                                 <i data-feather="calendar" class="inline-block w-4 h-4 mr-1"></i> Upcoming Reservations
                             </h3>
@@ -267,7 +266,7 @@ try {
                         </div>
 
                         <!-- Unit Rented Tab -->
-                        <div id="unit_rented1" class="tab-content opacity-0 transition-all duration-300 hidden">
+                        <div id="unit_rented" class="tab-content hidden">
                             <div class="space-y-4">
                                 <h3 class="text-lg font-semibold mb-4">
                                     <i data-feather="home" class="inline-block w-4 h-4 mr-1"></i> Rented Units
@@ -340,39 +339,41 @@ try {
             });
         });
 
-        // Modified tab switching function
-        document.querySelectorAll(".tab-btn").forEach(button => {
-            button.addEventListener("click", function() {
-                const tabGroup = this.closest(".tenant-card");
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const card = this.closest('.tenant-card');
+                const tabId = this.getAttribute('data-tab');
                 
-                // Remove active states from all tabs
-                tabGroup.querySelectorAll(".tab-btn").forEach(btn => {
-                    btn.classList.remove("text-blue-600", "border-blue-600");
-                    btn.classList.add("text-gray-600", "border-transparent");
+                // Remove active class from all tabs in this card
+                card.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('text-blue-600', 'border-blue-600');
+                    btn.classList.add('text-gray-600', 'border-transparent');
                 });
-
-                // Add active state to clicked tab
-                this.classList.remove("text-gray-600", "border-transparent");
-                this.classList.add("text-blue-600", "border-blue-600");
-
-                // Handle content transition
-                const targetId = this.dataset.tab;
-                tabGroup.querySelectorAll(".tab-content").forEach(tab => {
-                    if (tab.id === targetId) {
-                        tab.classList.remove('hidden');
-                        // Force a reflow before removing opacity
-                        void tab.offsetWidth;
-                        tab.classList.remove('opacity-0');
-                    } else {
-                        tab.classList.add('opacity-0');
-                        tab.addEventListener('transitionend', function handler() {
-                            if (!tab.classList.contains('opacity-0')) return;
-                            tab.classList.add('hidden');
-                            tab.removeEventListener('transitionend', handler);
-                        });
-                    }
+                
+                // Add active class to clicked tab
+                this.classList.remove('text-gray-600', 'border-transparent');
+                this.classList.add('text-blue-600', 'border-blue-600');
+                
+                // Hide all tab content in this card
+                card.querySelectorAll('.tab-content').forEach(content => {
+                    content.style.display = 'none';
                 });
+                
+                // Show selected tab content
+                card.querySelector(`#${tabId}`).style.display = 'block';
             });
+        });
+
+        // Initialize first tab as active for each card
+        document.querySelectorAll('.tenant-card').forEach(card => {
+            const firstTab = card.querySelector('.tab-btn');
+            const firstContent = card.querySelector('.tab-content');
+            
+            if (firstTab && firstContent) {
+                firstTab.classList.add('text-blue-600', 'border-blue-600');
+                firstContent.style.display = 'block';
+            }
         });
 
         // Unit details toggle function
@@ -389,16 +390,6 @@ try {
                 chevron.style.transform = 'rotate(0deg)';
             }
         }
-
-        // Initialize first tab as active
-        document.querySelectorAll(".tenant-card").forEach(card => {
-            const firstTab = card.querySelector(".tab-btn");
-            const firstContent = card.querySelector(".tab-content");
-            if (firstTab && firstContent) {
-                firstTab.classList.add("text-blue-600", "border-blue-600");
-                firstContent.classList.remove("hidden", "opacity-0");
-            }
-        });
     </script>
 
     <!-- Include Toastify JS -->

@@ -46,7 +46,7 @@ try {
         
         if (!isset($tenants[$tenant_name])) {
             // Set default profile image if none exists
-            $profileImage = $row['profile_image'] ? $row['profile_image'] : '../images/avatar_default.png';
+            $profileImage = $row['profile_image'] ? $row['profile_image'] : '../images/avatar_final.png';
             
             $tenants[$tenant_name] = [
                 'user_id' => $row['user_id'],
@@ -153,7 +153,7 @@ try {
                                     <div class="flex items-center space-x-4">
                                         <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
                                              alt="<?= htmlspecialchars($tenant['name']) ?>'s Photo" 
-                                             onerror="this.src='../images/avatar_default.png'"
+                                             onerror="this.src='../images/avatar_final.png'"
                                              class="w-16 h-16 rounded-full object-cover">
                                         <div>
                                             <h2 class="text-xl font-bold text-gray-800">

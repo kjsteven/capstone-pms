@@ -38,16 +38,23 @@
         </div>
 
         <!-- Search and Filter Section -->
-        <div class="mb-6 bg-white rounded-lg shadow-sm p-4">
-            <div class="relative max-w-xl mx-auto">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i data-feather="search" class="h-5 w-5 text-gray-400"></i>
+        <div class="mb-6">
+            <div class="relative max-w-3xl">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-feather="search" class="h-5 w-5 text-gray-500"></i>
                 </div>
-                <input type="text" id="searchTenant" 
+                <input type="text" 
+                    id="searchTenant" 
                     placeholder="Search by tenant name, unit, or status..."
-                    class="w-full pl-10 pr-4 py-3 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg 
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                    transition-all duration-300">
+                    class="w-full pl-12 pr-4 py-3.5 text-gray-700 bg-white border border-gray-200 
+                           rounded-xl shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+                           transition-all duration-300 text-base"
+                >
+                <div class="absolute inset-y-0 right-0 flex items-center pr-4">
+                    <button class="text-gray-400 hover:text-gray-600">
+                        <i data-feather="sliders" class="h-5 w-5"></i>
+                    </button>
+                </div>
             </div>
         </div>
 

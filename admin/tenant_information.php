@@ -167,9 +167,52 @@ try {
                                 </div>
                             </div>
 
+                            <!-- Tabs Navigation -->
+                            <div class="border-b bg-gray-50">
+                                <div class="flex">
+                                    <button class="tab-btn active flex items-center px-6 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600" data-tab="payments-<?= $tenant['user_id'] ?>">
+                                        <i data-feather="credit-card" class="w-4 h-4 mr-2"></i>
+                                        Payments
+                                    </button>
+                                    <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="maintenance-<?= $tenant['user_id'] ?>">
+                                        <i data-feather="tool" class="w-4 h-4 mr-2"></i>
+                                        Maintenance
+                                    </button>
+                                    <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="reservations-<?= $tenant['user_id'] ?>">
+                                        <i data-feather="calendar" class="w-4 h-4 mr-2"></i>
+                                        Reservations
+                                    </button>
+                                    <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="unit_rented-<?= $tenant['user_id'] ?>">
+                                        <i data-feather="home" class="w-4 h-4 mr-2"></i>
+                                        Unit
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- Tab Content -->
                             <div class="p-6">
-                                <!-- Only show the Units tab content initially -->
+                                <!-- Payments Tab (Empty for now) -->
+                                <div id="payments-<?= $tenant['user_id'] ?>" class="tab-content hidden">
+                                    <div class="text-center text-gray-500 py-4">
+                                        Payment history will be added later
+                                    </div>
+                                </div>
+
+                                <!-- Maintenance Tab (Empty for now) -->
+                                <div id="maintenance-<?= $tenant['user_id'] ?>" class="tab-content hidden">
+                                    <div class="text-center text-gray-500 py-4">
+                                        Maintenance history will be added later
+                                    </div>
+                                </div>
+
+                                <!-- Reservations Tab (Empty for now) -->
+                                <div id="reservations-<?= $tenant['user_id'] ?>" class="tab-content hidden">
+                                    <div class="text-center text-gray-500 py-4">
+                                        Reservation history will be added later
+                                    </div>
+                                </div>
+
+                                <!-- Unit Tab -->
                                 <div id="unit_rented-<?= $tenant['user_id'] ?>" class="tab-content block">
                                     <div class="space-y-4">
                                         <h3 class="text-lg font-semibold mb-4">
@@ -256,6 +299,32 @@ try {
                 chevron.style.transform = 'rotate(0deg)';
             }
         }
+
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const card = this.closest('.tenant-card');
+                const tabId = this.getAttribute('data-tab');
+                
+                // Remove active class from all tabs in this card
+                card.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('text-blue-600', 'border-blue-600');
+                    btn.classList.add('text-gray-600', 'border-transparent');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.remove('text-gray-600', 'border-transparent');
+                this.classList.add('text-blue-600', 'border-blue-600');
+                
+                // Hide all tab content in this card
+                card.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Show selected tab content
+                card.querySelector(`#${tabId}`).classList.remove('hidden');
+            });
+        });
     </script>
 
 </body>

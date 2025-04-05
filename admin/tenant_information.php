@@ -1,7 +1,8 @@
 <?php
-// Start session first before any output
-require_once '../session/session_manager.php';
+
 require '../session/db.php';
+
+session_start();
 
 // Buffer output to prevent headers already sent error
 ob_start();

@@ -1,5 +1,5 @@
 <?php
-// Start output buffering
+// Start output buffering - but DON'T clear it before output!
 ob_start();
 
 require '../session/db.php';
@@ -36,6 +36,9 @@ try {
         throw new Exception("Query execution failed: " . $conn->error);
     }
 
+    // Print debug information about query results - this is critical for debugging
+    echo "<!-- Debug: Query returned " . $result->num_rows . " rows -->\n";
+    
     $tenants = [];
     while ($row = $result->fetch_assoc()) {
         $tenant_name = $row['tenant_name'];
@@ -62,13 +65,13 @@ try {
         ];
     }
     
+    // Print debug info about processed tenants
+    echo "<!-- Debug: Processed " . count($tenants) . " tenant records -->\n";
+    
 } catch (Exception $e) {
     error_log("Error in tenant_information.php: " . $e->getMessage());
     $tenants = [];
 }
-
-// Clear any previous output
-ob_clean();
 ?>
 
 <!DOCTYPE html>
@@ -134,7 +137,7 @@ ob_clean();
             <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <?php if (empty($tenants)): ?>
                     <div class="col-span-2 text-center py-8">
-                        <p class="text-gray-500">No active tenants found.</p>
+                        <p class="text-gray-500">No active tenants found. (<?= count($tenants) ?> tenants in data)</p>
                     </div>
                 <?php else: ?>
                     <?php foreach ($tenants as $tenant): ?>

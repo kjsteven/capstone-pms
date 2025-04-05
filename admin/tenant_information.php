@@ -2,13 +2,13 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 
-// Fetch all tenants and their units
+// Fetch all tenants and their units with profile images
 $query = "
     SELECT 
         t.tenant_id, t.user_id, t.unit_rented, t.rent_from, t.rent_until,
         t.monthly_rate, t.outstanding_balance, t.downpayment_amount,
         t.payable_months, t.downpayment_receipt, t.created_at,
-        u.name AS tenant_name, u.profile_picture,
+        u.name AS tenant_name, u.profile_image,
         p.unit_no, p.unit_type, p.unit_size
     FROM tenants t
     JOIN users u ON t.user_id = u.user_id
@@ -24,10 +24,13 @@ $tenants = [];
 while ($row = $result->fetch_assoc()) {
     $tenant_name = $row['tenant_name'];
     if (!isset($tenants[$tenant_name])) {
+        // Use default profile image if none is set
+        $profile_image = !empty($row['profile_image']) ? $row['profile_image'] : '../images/default-avatar.jpg';
+        
         $tenants[$tenant_name] = [
             'user_id' => $row['user_id'],
             'name' => $tenant_name,
-            'profile_picture' => $row['profile_picture'] ?? '../images/default_avatar.png',
+            'profile_picture' => $profile_image,
             'units' => []
         ];
     }
@@ -115,8 +118,10 @@ while ($row = $result->fetch_assoc()) {
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" alt="Tenant Photo" 
-                                    class="w-16 h-16 rounded-full ring-2 ring-blue-500 ring-offset-2">
+                                <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
+                                     alt="Tenant Photo" 
+                                     class="w-16 h-16 rounded-full ring-2 ring-blue-500 ring-offset-2 object-cover"
+                                     onerror="this.src='../images/default-avatar.jpg'">
                                 <div>
                                     <h2 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($tenant['name']) ?></h2>
                                     <div class="flex items-center space-x-2 text-gray-500 text-sm">

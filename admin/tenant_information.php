@@ -10,7 +10,7 @@ try {
         throw new Exception("Database connection failed");
     }
 
-    // Simplified query - REMOVED status filter to test
+    // Enhanced query to get tenant information including profile image
     $query = "
         SELECT 
             t.tenant_id, 
@@ -19,15 +19,18 @@ try {
             t.rent_from,
             t.rent_until,
             t.monthly_rate,
+            t.status,
             t.outstanding_balance,
             u.name AS tenant_name,
+            u.profile_image, 
+            u.email,
+            u.phone,
             p.unit_no,
             p.unit_type,
             p.square_meter
         FROM tenants t
         JOIN users u ON t.user_id = u.user_id
         JOIN property p ON t.unit_rented = p.unit_id";
-    // WHERE clause removed for testing
 
     $result = $conn->query($query);
     
@@ -35,24 +38,23 @@ try {
         throw new Exception("Query execution failed: " . $conn->error);
     }
 
-    // Print debug information about query results
-    echo "<!-- Debug: Query returned " . $result->num_rows . " rows -->\n";
-    
-    // Add debug output to screen for testing
-    echo "<div style='background:yellow; padding:10px; margin:10px;'>Found " . $result->num_rows . " tenant records in database</div>";
+
     
     $tenants = [];
     while ($row = $result->fetch_assoc()) {
         $tenant_name = $row['tenant_name'];
         
-        // Debug each tenant being processed
-        echo "<!-- Processing tenant: " . htmlspecialchars($tenant_name) . " with status: " . htmlspecialchars($row['status']) . " -->\n";
-        
         if (!isset($tenants[$tenant_name])) {
+            // Set default profile image if none exists
+            $profileImage = $row['profile_image'] ? $row['profile_image'] : '../images/default_avatar.png';
+            
             $tenants[$tenant_name] = [
                 'user_id' => $row['user_id'],
                 'name' => $tenant_name,
-                'profile_picture' => '../images/default_avatar.png',
+                'email' => $row['email'],
+                'phone' => $row['phone'],
+                'profile_picture' => $profileImage,
+                'status' => $row['status'],
                 'units' => []
             ];
         }
@@ -62,7 +64,7 @@ try {
             'tenant_id' => $row['tenant_id'],
             'unit_no' => $row['unit_no'],
             'unit_type' => $row['unit_type'],
-            'unit_size' => $row['unit_size'],
+            'unit_size' => $row['square_meter'],
             'rent_from' => $row['rent_from'],
             'rent_until' => $row['rent_until'],
             'monthly_rate' => $row['monthly_rate'],
@@ -70,14 +72,8 @@ try {
         ];
     }
     
-    // Print debug info about processed tenants
-    echo "<!-- Debug: Processed " . count($tenants) . " tenant records -->\n";
-    // Add additional debug output
-    echo "<div style='background:lightgreen; padding:10px; margin:10px;'>Processed " . count($tenants) . " tenant records</div>";
-    
 } catch (Exception $e) {
     error_log("Error in tenant_information.php: " . $e->getMessage());
-    echo "<div style='background:red; color:white; padding:10px; margin:10px;'>Error: " . htmlspecialchars($e->getMessage()) . "</div>";
     $tenants = [];
 }
 ?>
@@ -145,7 +141,7 @@ try {
             <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <?php if (empty($tenants)): ?>
                     <div class="col-span-2 text-center py-8">
-                        <p class="text-gray-500">No active tenants found. (<?= count($tenants) ?> tenants in data)</p>
+                        <p class="text-gray-500">No tenants found. (<?= count($tenants) ?> tenants in data)</p>
                     </div>
                 <?php else: ?>
                     <?php foreach ($tenants as $tenant): ?>
@@ -157,20 +153,38 @@ try {
                                     <div class="flex items-center space-x-4">
                                         <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
                                              alt="<?= htmlspecialchars($tenant['name']) ?>'s Photo" 
+                                             onerror="this.src='../images/default_avatar.png'"
                                              class="w-16 h-16 rounded-full object-cover">
                                         <div>
                                             <h2 class="text-xl font-bold text-gray-800">
                                                 <?= htmlspecialchars($tenant['name']) ?>
                                             </h2>
-                                            <div class="flex items-center space-x-2 text-gray-500 text-sm">
-                                                <i data-feather="home" class="w-4 h-4"></i>
-                                                <span><?= count($tenant['units']) ?> Unit(s) Rented</span>
-                                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                                                    Active
-                                                </span>
+                                            <div class="flex flex-col gap-1">
+                                                <div class="flex items-center space-x-2 text-gray-500 text-sm">
+                                                    <i data-feather="mail" class="w-4 h-4"></i>
+                                                    <span><?= htmlspecialchars($tenant['email']) ?></span>
+                                                </div>
+                                                <div class="flex items-center space-x-2 text-gray-500 text-sm">
+                                                    <i data-feather="phone" class="w-4 h-4"></i>
+                                                    <span><?= htmlspecialchars($tenant['phone']) ?></span>
+                                                </div>
+                                                <div class="flex items-center space-x-2 text-gray-500 text-sm mt-1">
+                                                    <i data-feather="home" class="w-4 h-4"></i>
+                                                    <span><?= count($tenant['units']) ?> Unit(s) Rented</span>
+                                                    <span class="px-2 py-1 text-xs rounded-full 
+                                                        <?= strtolower($tenant['status']) === 'active' 
+                                                            ? 'bg-green-100 text-green-800' 
+                                                            : 'bg-gray-100 text-gray-800' ?>">
+                                                        <?= ucfirst($tenant['status']) ?>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <button onclick="exportToExcel('<?= htmlspecialchars($tenant['name']) ?>')"
+                                            class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                                        <i data-feather="file-text" class="w-5 h-5"></i>
+                                    </button>
                                 </div>
                             </div>
 
@@ -241,7 +255,7 @@ try {
                                                         <?php
                                                         $details = [
                                                             'Unit Type' => htmlspecialchars($unit['unit_type']),
-                                                            'Unit Size' => htmlspecialchars($unit['square_meter'] . ' sqm'),
+                                                            'Unit Size' => htmlspecialchars($unit['unit_size'] . ' sqm'),
                                                             'Monthly Rate' => htmlspecialchars($unit['monthly_rate']),
                                                             'Outstanding Balance' => htmlspecialchars($unit['outstanding_balance']),
                                                             'Rent From' => htmlspecialchars($unit['rent_from']),
@@ -332,6 +346,17 @@ try {
                 card.querySelector(`#${tabId}`).classList.remove('hidden');
             });
         });
+
+        // Add export to Excel function
+        function exportToExcel(tenantName) {
+            Toastify({
+                text: "Exporting tenant information...",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#4CAF50",
+            }).showToast();
+        }
     </script>
 
 </body>

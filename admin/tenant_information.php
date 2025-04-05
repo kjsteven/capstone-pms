@@ -5,18 +5,13 @@ error_reporting(E_ALL);
 require_once '../session/session_manager.php';
 require '../session/db.php';
 
-// Modify the query to handle profile images more safely
+// Simplify the query by removing profile image handling
 $query = "
     SELECT 
         t.tenant_id, t.user_id, t.unit_rented, t.rent_from, t.rent_until,
         t.monthly_rate, t.outstanding_balance, t.downpayment_amount,
         t.payable_months, t.downpayment_receipt, t.created_at,
-        u.name AS tenant_name, 
-        CASE 
-            WHEN u.profile_image IS NOT NULL AND u.profile_image != '' 
-            THEN u.profile_image 
-            ELSE '../images/default_avatar.png' 
-        END as profile_image,
+        u.name AS tenant_name,
         p.unit_no, p.unit_type, p.unit_size
     FROM tenants t
     JOIN users u ON t.user_id = u.user_id
@@ -33,23 +28,13 @@ try {
 
     $tenants = [];
 
-    // Group tenants by name with safer profile image handling
     while ($row = $result->fetch_assoc()) {
         $tenant_name = $row['tenant_name'];
         if (!isset($tenants[$tenant_name])) {
-            // Set default profile image path
-            $profile_image = '../images/default_avatar.png';
-            
-            // Only use uploaded image if it exists
-            if (!empty($row['profile_image']) && 
-                file_exists($_SERVER['DOCUMENT_ROOT'] . parse_url($row['profile_image'], PHP_URL_PATH))) {
-                $profile_image = $row['profile_image'];
-            }
-            
             $tenants[$tenant_name] = [
                 'user_id' => $row['user_id'],
                 'name' => $tenant_name,
-                'profile_picture' => $profile_image,
+                'profile_picture' => '../images/default_avatar.png', // Always use default avatar
                 'units' => []
             ];
         }
@@ -68,7 +53,6 @@ try {
         ];
     }
 } catch (Exception $e) {
-    // Log the error and show a user-friendly message
     error_log($e->getMessage());
     die("An error occurred while loading tenant information. Please try again later.");
 }
@@ -142,10 +126,9 @@ try {
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
+                                <img src="../images/default_avatar.png" 
                                      alt="<?= htmlspecialchars($tenant['name']) ?>'s Photo" 
-                                     class="w-16 h-16 rounded-full ring-2 ring-blue-500 ring-offset-2 object-cover"
-                                     onerror="this.src='../images/default_avatar.png'">
+                                     class="w-16 h-16 rounded-full ring-2 ring-blue-500 ring-offset-2 object-cover">
                                 <div>
                                     <h2 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($tenant['name']) ?></h2>
                                     <div class="flex items-center space-x-2 text-gray-500 text-sm">

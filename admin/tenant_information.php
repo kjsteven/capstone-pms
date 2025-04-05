@@ -151,37 +151,53 @@
                         <div id="unit_rented1" class="tab-content opacity-0 transition-all duration-300 hidden">
                             <div class="space-y-4">
                                 <h3 class="text-lg font-semibold mb-4">
-                                    <i data-feather="home" class="inline-block w-4 h-4 mr-1"></i> Unit Details
+                                    <i data-feather="home" class="inline-block w-4 h-4 mr-1"></i> Rented Units
                                 </h3>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Unit Number</p>
-                                        <p class="font-medium">101</p>
+                                <!-- Unit List -->
+                                <div class="space-y-3">
+                                    <!-- Unit Item -->
+                                    <div class="border rounded-lg overflow-hidden">
+                                        <button onclick="toggleUnitDetails('unit1')" 
+                                            class="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div class="flex items-center space-x-3">
+                                                <i data-feather="home" class="w-5 h-5 text-blue-600"></i>
+                                                <span class="font-medium">Unit 101</span>
+                                            </div>
+                                            <i data-feather="chevron-down" class="w-5 h-5 transform transition-transform unit-chevron"></i>
+                                        </button>
+                                        <!-- Unit Details (Hidden by default) -->
+                                        <div id="unit1" class="hidden p-4 border-t">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="p-3 bg-gray-50 rounded-lg">
+                                                    <p class="text-sm text-gray-600">Unit Type</p>
+                                                    <p class="font-medium">Warehouse</p>
+                                                </div>
+                                                <div class="p-3 bg-gray-50 rounded-lg">
+                                                    <p class="text-sm text-gray-600">Unit Size</p>
+                                                    <p class="font-medium">100 sqm</p>
+                                                </div>
+                                                <div class="p-3 bg-gray-50 rounded-lg">
+                                                    <p class="text-sm text-gray-600">Monthly Rent</p>
+                                                    <p class="font-medium">₱15,000</p>
+                                                </div>
+                                                <div class="p-3 bg-gray-50 rounded-lg">
+                                                    <p class="text-sm text-gray-600">Outstanding Balance</p>
+                                                    <p class="font-medium">₱1,000,000</p>
+                                                </div>
+                                                <div class="p-3 bg-gray-50 rounded-lg">
+                                                    <p class="text-sm text-gray-600">Rent From</p>
+                                                    <p class="font-medium">Dec 31, 2020</p>
+                                                </div>
+                                                <div class="p-3 bg-gray-50 rounded-lg">
+                                                    <p class="text-sm text-gray-600">Rent Until</p>
+                                                    <p class="font-medium">Dec 31, 2024</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Unit Type</p>
-                                        <p class="font-medium">Warehouse</p>
-                                    </div>
-                                    <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Unit Size</p>
-                                        <p class="font-medium">100 sqm</p>
 
-                                    <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Monthly Rent</p>
-                                        <p class="font-medium">₱15,000</p>
-                                    </div>
-                                    <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Outstanding Balance</p>
-                                        <p class="font-medium">₱1,000,000</p>
-                                    </div>
-                                    <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Rent From</p>
-                                        <p class="font-medium">Dec 31, 2020</p>
-                                    </div>
-                                    <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Rent Until</p>
-                                        <p class="font-medium">Dec 31, 2024</p>
-                                    </div>
+                                    <!-- Additional Unit Items (if needed) -->
+                                    <!-- Copy the Unit Item div above and change the IDs -->
                                 </div>
                             </div>
                         </div>
@@ -198,12 +214,7 @@
     <script>
         // Initialize Feather Icons
         feather.replace();
-    </script>
 
-    <!-- Include Toastify JS -->
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
-
-    <script>
         // Search Function with Animation
         document.getElementById("searchTenant").addEventListener("input", function () {
             const query = this.value.toLowerCase().trim();
@@ -219,32 +230,55 @@
             });
         });
 
-        // Enhanced tab switching with smooth transitions
+        // Modified tab switching function
         document.querySelectorAll(".tab-btn").forEach(button => {
             button.addEventListener("click", function() {
                 const tabGroup = this.closest(".tenant-card");
                 
-                // Remove active states
+                // Remove active states from all tabs
                 tabGroup.querySelectorAll(".tab-btn").forEach(btn => {
                     btn.classList.remove("text-blue-600", "border-blue-600");
                     btn.classList.add("text-gray-600", "border-transparent");
                 });
 
-                // Add active states
+                // Add active state to clicked tab
                 this.classList.remove("text-gray-600", "border-transparent");
                 this.classList.add("text-blue-600", "border-blue-600");
 
                 // Handle content transition
+                const targetId = this.dataset.tab;
                 tabGroup.querySelectorAll(".tab-content").forEach(tab => {
-                    tab.classList.add("opacity-0");
-                    setTimeout(() => tab.classList.add("hidden"), 300);
+                    if (tab.id === targetId) {
+                        tab.classList.remove('hidden');
+                        // Force a reflow before removing opacity
+                        void tab.offsetWidth;
+                        tab.classList.remove('opacity-0');
+                    } else {
+                        tab.classList.add('opacity-0');
+                        tab.addEventListener('transitionend', function handler() {
+                            if (!tab.classList.contains('opacity-0')) return;
+                            tab.classList.add('hidden');
+                            tab.removeEventListener('transitionend', handler);
+                        });
+                    }
                 });
-
-                const selectedTab = tabGroup.querySelector(`#${this.dataset.tab}`);
-                selectedTab.classList.remove("hidden");
-                setTimeout(() => selectedTab.classList.remove("opacity-0"), 10);
             });
         });
+
+        // Unit details toggle function
+        function toggleUnitDetails(unitId) {
+            const detailsDiv = document.getElementById(unitId);
+            const button = detailsDiv.previousElementSibling;
+            const chevron = button.querySelector('.unit-chevron');
+            
+            if (detailsDiv.classList.contains('hidden')) {
+                detailsDiv.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                detailsDiv.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
 
         // Initialize first tab as active
         document.querySelectorAll(".tenant-card").forEach(card => {
@@ -256,6 +290,9 @@
             }
         });
     </script>
+
+    <!-- Include Toastify JS -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
 
 </body>
 </html>

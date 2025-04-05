@@ -46,7 +46,7 @@ try {
         
         if (!isset($tenants[$tenant_name])) {
             // Set default profile image if none exists
-            $profileImage = $row['profile_image'] ? $row['profile_image'] : '../images/default_avatar.png';
+            $profileImage = $row['profile_image'] ? $row['profile_image'] : '../images/avatar_default.png';
             
             $tenants[$tenant_name] = [
                 'user_id' => $row['user_id'],
@@ -137,10 +137,10 @@ try {
                 </div>
             </div>
 
-            <!-- Cards Grid -->
-            <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Cards Grid - Changed to 3 columns for larger screens -->
+            <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <?php if (empty($tenants)): ?>
-                    <div class="col-span-2 text-center py-8">
+                    <div class="col-span-full text-center py-8">
                         <p class="text-gray-500">No tenants found. (<?= count($tenants) ?> tenants in data)</p>
                     </div>
                 <?php else: ?>
@@ -153,7 +153,7 @@ try {
                                     <div class="flex items-center space-x-4">
                                         <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
                                              alt="<?= htmlspecialchars($tenant['name']) ?>'s Photo" 
-                                             onerror="this.src='../images/default_avatar.png'"
+                                             onerror="this.src='../images/avatar_default.png'"
                                              class="w-16 h-16 rounded-full object-cover">
                                         <div>
                                             <h2 class="text-xl font-bold text-gray-800">
@@ -188,24 +188,24 @@ try {
                                 </div>
                             </div>
 
-                            <!-- Tabs Navigation -->
+                            <!-- Tabs Navigation - Fixed Active Tab -->
                             <div class="border-b bg-gray-50">
                                 <div class="flex">
-                                    <button class="tab-btn active flex items-center px-6 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600" data-tab="payments-<?= $tenant['user_id'] ?>">
-                                        <i data-feather="credit-card" class="w-4 h-4 mr-2"></i>
-                                        Payments
+                                    <button class="tab-btn flex items-center px-4 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="payments-<?= $tenant['user_id'] ?>">
+                                        <i data-feather="credit-card" class="w-4 h-4 mr-1"></i>
+                                        <span class="hidden sm:inline">Payments</span>
                                     </button>
-                                    <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="maintenance-<?= $tenant['user_id'] ?>">
-                                        <i data-feather="tool" class="w-4 h-4 mr-2"></i>
-                                        Maintenance
+                                    <button class="tab-btn flex items-center px-4 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="maintenance-<?= $tenant['user_id'] ?>">
+                                        <i data-feather="tool" class="w-4 h-4 mr-1"></i>
+                                        <span class="hidden sm:inline">Maint.</span>
                                     </button>
-                                    <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="reservations-<?= $tenant['user_id'] ?>">
-                                        <i data-feather="calendar" class="w-4 h-4 mr-2"></i>
-                                        Reservations
+                                    <button class="tab-btn flex items-center px-4 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="reservations-<?= $tenant['user_id'] ?>">
+                                        <i data-feather="calendar" class="w-4 h-4 mr-1"></i>
+                                        <span class="hidden sm:inline">Reserv.</span>
                                     </button>
-                                    <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="unit_rented-<?= $tenant['user_id'] ?>">
-                                        <i data-feather="home" class="w-4 h-4 mr-2"></i>
-                                        Unit
+                                    <button class="tab-btn active flex items-center px-4 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600" data-tab="unit_rented-<?= $tenant['user_id'] ?>">
+                                        <i data-feather="home" class="w-4 h-4 mr-1"></i>
+                                        <span class="hidden sm:inline">Unit</span>
                                     </button>
                                 </div>
                             </div>
@@ -344,6 +344,20 @@ try {
                 
                 // Show selected tab content
                 card.querySelector(`#${tabId}`).classList.remove('hidden');
+            });
+        });
+
+        // Initialize tab display correctly for each card
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.tenant-card').forEach(card => {
+                // Hide all tab contents except the active one
+                card.querySelectorAll('.tab-content').forEach(content => {
+                    if (content.id.includes('unit_rented')) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
             });
         });
 

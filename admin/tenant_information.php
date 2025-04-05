@@ -291,18 +291,67 @@ try {
         // Initialize Feather Icons
         feather.replace();
 
-        // Search Function with Animation
+        // Track the original order of tenant cards
+        let originalOrder = [];
+        
+        // Store original order on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tab display correctly for each card
+            document.querySelectorAll('.tenant-card').forEach(card => {
+                // Hide all tab contents except the active one
+                card.querySelectorAll('.tab-content').forEach(content => {
+                    if (content.id.includes('unit_rented')) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+            
+            // Store the original order of tenant cards
+            originalOrder = Array.from(document.querySelectorAll('.tenant-card'));
+        });
+
+        // Enhanced Search Function with Reordering
         document.getElementById("searchTenant").addEventListener("input", function () {
             const query = this.value.toLowerCase().trim();
             const tenantCards = document.querySelectorAll(".tenant-card");
-
+            const tenantList = document.getElementById("tenantList");
+            
+            // If search is empty, restore original order
+            if (!query) {
+                // Remove highlighting
+                tenantCards.forEach(card => {
+                    card.classList.remove("border-4", "border-blue-500", "shadow-xl", "scale-105");
+                });
+                
+                // Restore original order
+                originalOrder.forEach(card => {
+                    tenantList.appendChild(card);
+                });
+                return;
+            }
+            
+            // For non-empty search, reorganize cards
+            const matchingCards = [];
+            const nonMatchingCards = [];
+            
             tenantCards.forEach(card => {
                 const name = card.getAttribute("data-name");
-                if (query && name.includes(query)) {
+                if (name && name.includes(query)) {
+                    // Add highlighting
                     card.classList.add("border-4", "border-blue-500", "shadow-xl", "scale-105");
+                    matchingCards.push(card);
                 } else {
+                    // Remove highlighting
                     card.classList.remove("border-4", "border-blue-500", "shadow-xl", "scale-105");
+                    nonMatchingCards.push(card);
                 }
+            });
+            
+            // Reorder: first all matching cards, then non-matching ones
+            matchingCards.concat(nonMatchingCards).forEach(card => {
+                tenantList.appendChild(card);
             });
         });
 
@@ -344,20 +393,6 @@ try {
                 
                 // Show selected tab content
                 card.querySelector(`#${tabId}`).classList.remove('hidden');
-            });
-        });
-
-        // Initialize tab display correctly for each card
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.tenant-card').forEach(card => {
-                // Hide all tab contents except the active one
-                card.querySelectorAll('.tab-content').forEach(content => {
-                    if (content.id.includes('unit_rented')) {
-                        content.classList.remove('hidden');
-                    } else {
-                        content.classList.add('hidden');
-                    }
-                });
             });
         });
 

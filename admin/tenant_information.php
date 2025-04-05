@@ -10,9 +10,22 @@ try {
         throw new Exception("Database connection failed");
     }
 
-    // Simplified query to get only essential tenant information
+    // Debug connection
+    error_log("Database connection successful");
+
+    // First, let's get a count of active tenants (similar to dashboardAdmin.php)
+    $countQuery = "SELECT COUNT(DISTINCT u.name) as total 
+                   FROM tenants t 
+                   JOIN users u ON t.user_id = u.user_id 
+                   WHERE t.status = 'active'";
+    $countResult = $conn->query($countQuery);
+    $totalTenants = $countResult->fetch_assoc()['total'];
+    
+    error_log("Total active tenants found: " . $totalTenants);
+
+    // Modified query to match the working structure from dashboardAdmin
     $query = "
-        SELECT 
+        SELECT DISTINCT
             t.tenant_id, 
             t.user_id, 
             t.unit_rented, 
@@ -23,36 +36,45 @@ try {
             t.downpayment_amount,
             t.status,
             u.name AS tenant_name,
+            u.email,
+            u.phone,
             p.unit_no, 
             p.unit_type, 
             p.unit_size
         FROM tenants t
-        LEFT JOIN users u ON t.user_id = u.user_id
-        LEFT JOIN property p ON t.unit_rented = p.unit_id
+        JOIN users u ON t.user_id = u.user_id
+        JOIN property p ON t.unit_rented = p.unit_id
         WHERE t.status = 'active'
         ORDER BY u.name";
 
+    // Debug the query
+    error_log("Executing query: " . $query);
+    
     $result = $conn->query($query);
     
     if ($result === false) {
         throw new Exception("Query execution failed: " . $conn->error);
     }
 
-    // Debug log
-    error_log("Number of rows found: " . $result->num_rows);
+    error_log("Query executed successfully. Number of rows found: " . $result->num_rows);
 
     $tenants = [];
     while ($row = $result->fetch_assoc()) {
+        // Debug each row
+        error_log("Processing tenant: " . print_r($row, true));
+        
         $tenant_name = $row['tenant_name'];
         
-        // Initialize tenant data if not exists
         if (!isset($tenants[$tenant_name])) {
             $tenants[$tenant_name] = [
                 'user_id' => $row['user_id'],
                 'name' => $tenant_name,
+                'email' => $row['email'],
+                'phone' => $row['phone'],
                 'profile_picture' => '../images/default_avatar.png',
                 'units' => []
             ];
+            error_log("Added new tenant to array: " . $tenant_name);
         }
 
         // Add unit information
@@ -67,14 +89,30 @@ try {
             'outstanding_balance' => $row['outstanding_balance'],
             'downpayment_amount' => $row['downpayment_amount']
         ];
+        error_log("Added unit for tenant " . $tenant_name . ": Unit " . $row['unit_no']);
     }
 
-    // Debug log
-    error_log("Processed tenants: " . count($tenants));
+    error_log("Final tenant count: " . count($tenants));
+    
+    // If no tenants found, log additional information
+    if (empty($tenants)) {
+        error_log("No tenants found in the final array");
+        error_log("Last MySQL error: " . $conn->error);
+        error_log("MySQL info: " . $conn->info);
+    }
     
 } catch (Exception $e) {
-    error_log("Error: " . $e->getMessage());
+    error_log("Error in tenant_information.php: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     $tenants = [];
+}
+
+// Debug output at the top of the page (can be removed in production)
+if (empty($tenants)) {
+    echo "<!-- Debug: No tenants found -->\n";
+    echo "<!-- Last MySQL error: " . htmlspecialchars($conn->error) . " -->\n";
+} else {
+    echo "<!-- Debug: Found " . count($tenants) . " tenants -->\n";
 }
 ?>
 

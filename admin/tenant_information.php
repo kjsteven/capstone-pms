@@ -102,6 +102,10 @@
                                 <i data-feather="calendar" class="w-4 h-4 mr-2"></i>
                                 Reservations
                             </button>
+                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-600 transition-all" data-tab="reservations1">
+                                <i data-feather="house" class="w-4 h-4 mr-2"></i>
+                                Unit Rented
+                            </button>
                         </div>
                     </div>
 

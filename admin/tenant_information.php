@@ -6,26 +6,26 @@ require_once '../session/session_manager.php';
 require '../session/db.php';
 
 try {
-    // First, check database connection
+    // First check database connection
     if (!$conn) {
         throw new Exception("Database connection failed");
     }
 
-    // Improve query structure and add proper JOINs
+    // Modified query to include all necessary information
     $query = "
         SELECT 
             t.tenant_id, t.user_id, t.unit_rented, t.rent_from, t.rent_until,
             t.monthly_rate, t.outstanding_balance, t.downpayment_amount,
-            t.payable_months, t.downpayment_receipt, t.created_at, t.status,
-            u.name AS tenant_name, u.profile_image,
+            t.payable_months, t.downpayment_receipt, t.created_at,
+            u.name AS tenant_name,
             p.unit_no, p.unit_type, p.unit_size,
-            m.request_id, m.request_type, m.request_status,
-            pm.payment_id, pm.payment_amount, pm.payment_date, pm.payment_status
+            mr.request_type, mr.request_status,
+            pay.payment_amount, pay.payment_date, pay.payment_method
         FROM tenants t
         LEFT JOIN users u ON t.user_id = u.user_id
         LEFT JOIN property p ON t.unit_rented = p.unit_id
-        LEFT JOIN maintenance_requests m ON t.tenant_id = m.tenant_id
-        LEFT JOIN payments pm ON t.tenant_id = pm.tenant_id
+        LEFT JOIN maintenance_requests mr ON t.tenant_id = mr.tenant_id
+        LEFT JOIN payments pay ON t.tenant_id = pay.tenant_id
         WHERE t.status = 'active'
         ORDER BY u.name, t.created_at DESC
     ";
@@ -36,79 +36,80 @@ try {
         throw new Exception("Query execution failed: " . $conn->error);
     }
 
-    if ($result->num_rows === 0) {
-        // No results found - initialize empty array but don't throw error
-        $tenants = [];
-    } else {
-        $tenants = [];
-        while ($row = $result->fetch_assoc()) {
-            $tenant_name = $row['tenant_name'];
-            if (!isset($tenants[$tenant_name])) {
-                $tenants[$tenant_name] = [
-                    'user_id' => $row['user_id'],
-                    'name' => $tenant_name,
-                    'profile_picture' => $row['profile_image'] ?? '../images/default_avatar.png',
-                    'units' => [],
-                    'maintenance' => [],
-                    'payments' => []
-                ];
-            }
-            
-            // Add unit information if not already added
-            $unit_exists = false;
-            foreach ($tenants[$tenant_name]['units'] as $unit) {
-                if ($unit['tenant_id'] === $row['tenant_id']) {
-                    $unit_exists = true;
-                    break;
-                }
-            }
-            
-            if (!$unit_exists && $row['unit_no']) {
-                $tenants[$tenant_name]['units'][] = [
-                    'tenant_id' => $row['tenant_id'],
-                    'unit_no' => $row['unit_no'],
-                    'unit_type' => $row['unit_type'],
-                    'unit_size' => $row['unit_size'],
-                    'rent_from' => $row['rent_from'],
-                    'rent_until' => $row['rent_until'],
-                    'monthly_rate' => $row['monthly_rate'],
-                    'outstanding_balance' => $row['outstanding_balance'],
-                    'downpayment_amount' => $row['downpayment_amount'],
-                    'payable_months' => $row['payable_months'],
-                    'downpayment_receipt' => $row['downpayment_receipt']
-                ];
-            }
+    $tenants = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        if (!$row['tenant_name']) {
+            continue; // Skip if no tenant name is found
+        }
 
-            // Add maintenance request if exists
-            if ($row['request_id'] && !in_array($row['request_id'], array_column($tenants[$tenant_name]['maintenance'], 'request_id'))) {
-                $tenants[$tenant_name]['maintenance'][] = [
-                    'request_id' => $row['request_id'],
-                    'request_type' => $row['request_type'],
-                    'request_status' => $row['request_status']
-                ];
-            }
+        $tenant_name = $row['tenant_name'];
+        
+        // Initialize tenant data if not exists
+        if (!isset($tenants[$tenant_name])) {
+            $tenants[$tenant_name] = [
+                'user_id' => $row['user_id'],
+                'name' => $tenant_name,
+                'profile_picture' => '../images/default_avatar.png',
+                'units' => [],
+                'maintenance' => [],
+                'payments' => []
+            ];
+        }
 
-            // Add payment if exists
-            if ($row['payment_id'] && !in_array($row['payment_id'], array_column($tenants[$tenant_name]['payments'], 'payment_id'))) {
-                $tenants[$tenant_name]['payments'][] = [
-                    'payment_id' => $row['payment_id'],
-                    'payment_amount' => $row['payment_amount'],
-                    'payment_date' => $row['payment_date'],
-                    'payment_status' => $row['payment_status']
-                ];
+        // Add unit if not already added
+        $unit_exists = false;
+        foreach ($tenants[$tenant_name]['units'] as $unit) {
+            if ($unit['tenant_id'] === $row['tenant_id']) {
+                $unit_exists = true;
+                break;
             }
         }
+
+        if (!$unit_exists) {
+            $tenants[$tenant_name]['units'][] = [
+                'tenant_id' => $row['tenant_id'],
+                'unit_no' => $row['unit_no'],
+                'unit_type' => $row['unit_type'],
+                'unit_size' => $row['unit_size'],
+                'rent_from' => $row['rent_from'],
+                'rent_until' => $row['rent_until'],
+                'monthly_rate' => $row['monthly_rate'],
+                'outstanding_balance' => $row['outstanding_balance'],
+                'downpayment_amount' => $row['downpayment_amount'],
+                'payable_months' => $row['payable_months'],
+                'downpayment_receipt' => $row['downpayment_receipt']
+            ];
+        }
+
+        // Add maintenance request if exists
+        if ($row['request_type']) {
+            $tenants[$tenant_name]['maintenance'][] = [
+                'type' => $row['request_type'],
+                'status' => $row['request_status']
+            ];
+        }
+
+        // Add payment if exists
+        if ($row['payment_amount']) {
+            $tenants[$tenant_name]['payments'][] = [
+                'amount' => $row['payment_amount'],
+                'date' => $row['payment_date'],
+                'method' => $row['payment_method']
+            ];
+        }
     }
+
+    // Debug information
+    if (empty($tenants)) {
+        error_log("No tenants found in the database");
+    }
+
 } catch (Exception $e) {
-    // Log the error with detailed information
     error_log("Error in tenant_information.php: " . $e->getMessage());
     error_log("Stack trace: " . $e->getTraceAsString());
-    
-    // Set error message for display
     $error_message = "An error occurred while loading tenant information. Please try again later.";
-    
-    // Initialize empty array to prevent undefined variable errors
-    $tenants = [];
+    $tenants = []; // Initialize empty array to prevent undefined variable errors
 }
 ?>
 
@@ -180,7 +181,7 @@ try {
                     <div class="p-6 border-b border-gray-100">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <img src="<?= htmlspecialchars($tenant['profile_picture']) ?>" 
+                                <img src="../images/default_avatar.png" 
                                      alt="<?= htmlspecialchars($tenant['name']) ?>'s Photo" 
                                      class="w-16 h-16 rounded-full ring-2 ring-blue-500 ring-offset-2 object-cover">
                                 <div>
@@ -237,10 +238,10 @@ try {
                                         </div>
                                         <div>
                                             <p class="font-medium">Payment Date</p>
-                                            <p class="text-sm text-gray-500"><?= htmlspecialchars($payment['payment_date']) ?> - <?= htmlspecialchars($payment['payment_status']) ?></p>
+                                            <p class="text-sm text-gray-500"><?= htmlspecialchars($payment['date']) ?> - <?= htmlspecialchars($payment['method']) ?></p>
                                         </div>
                                     </div>
-                                    <span class="text-lg font-semibold">₱<?= number_format($payment['payment_amount'], 2) ?></span>
+                                    <span class="text-lg font-semibold">₱<?= number_format($payment['amount'], 2) ?></span>
                                 </div>
                                 <?php endforeach; ?>
                             </div>
@@ -252,7 +253,7 @@ try {
                                 <i data-feather="tool" class="inline-block w-4 h-4 mr-1"></i> Maintenance Requests
                             </h3>
                             <?php foreach ($tenant['maintenance'] as $request): ?>
-                            <p><i data-feather="<?= $request['request_status'] === 'Completed' ? 'check-circle' : 'alert-circle' ?>" class="inline-block w-4 h-4 mr-1"></i> <?= htmlspecialchars($request['request_type']) ?> (<?= htmlspecialchars($request['request_status']) ?>)</p>
+                            <p><i data-feather="<?= $request['status'] === 'Completed' ? 'check-circle' : 'alert-circle' ?>" class="inline-block w-4 h-4 mr-1"></i> <?= htmlspecialchars($request['type']) ?> (<?= htmlspecialchars($request['status']) ?>)</p>
                             <?php endforeach; ?>
                         </div>
 

@@ -20,7 +20,6 @@ try {
             t.rent_until,
             t.monthly_rate,
             t.outstanding_balance,
-            t.status,
             u.name AS tenant_name,
             p.unit_no,
             p.unit_type,

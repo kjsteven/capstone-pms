@@ -30,7 +30,7 @@
     <?php include('sidebarAdmin.php'); ?>
 
     <!-- Main Content -->
-    <div class="p-4 sm:ml-64 mt-20">
+    <div class="sm:ml-64 p-8 mt-20 mx-auto">
         <!-- Header Section -->
         <div class="mb-6">
             <h1 class="text-3xl font-semibold text-gray-800">Tenant Information</h1>
@@ -156,18 +156,30 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="p-4 bg-gray-50 rounded-lg">
                                         <p class="text-sm text-gray-600">Unit Number</p>
-                                        <p class="font-medium">A-101</p>
+                                        <p class="font-medium">101</p>
                                     </div>
                                     <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Floor</p>
-                                        <p class="font-medium">1st Floor</p>
+                                        <p class="text-sm text-gray-600">Unit Type</p>
+                                        <p class="font-medium">Warehouse</p>
                                     </div>
+                                    <div class="p-4 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">Unit Size</p>
+                                        <p class="font-medium">100 sqm</p>
+
                                     <div class="p-4 bg-gray-50 rounded-lg">
                                         <p class="text-sm text-gray-600">Monthly Rent</p>
                                         <p class="font-medium">₱15,000</p>
                                     </div>
                                     <div class="p-4 bg-gray-50 rounded-lg">
-                                        <p class="text-sm text-gray-600">Contract End</p>
+                                        <p class="text-sm text-gray-600">Outstanding Balance</p>
+                                        <p class="font-medium">₱1,000,000</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">Rent From</p>
+                                        <p class="font-medium">Dec 31, 2020</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">Rent Until</p>
                                         <p class="font-medium">Dec 31, 2024</p>
                                     </div>
                                 </div>

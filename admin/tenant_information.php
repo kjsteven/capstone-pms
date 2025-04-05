@@ -32,36 +32,33 @@
     <!-- Main Content -->
     <div class="p-4 sm:ml-64 mt-14">
         <!-- Header Section -->
-        <div class="mb-6 mt-5">
+        <div class="mb-6">
             <h1 class="text-3xl font-semibold text-gray-800">Tenant Information</h1>
             <p class="text-gray-600">Manage and view detailed tenant profiles</p>
         </div>
 
-        <!-- Main Container for Search and Cards -->
-        <div class="max-w-7xl mx-auto">
-            <!-- Search and Filter Section -->
-            <div class="mb-8 flex justify-center">
-                <div class="relative w-full max-w-2xl">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i data-feather="search" class="h-5 w-5 text-gray-500"></i>
-                    </div>
-                    <input type="text" 
-                        id="searchTenant" 
-                        placeholder="Search by tenant name, unit, or status..."
-                        class="w-full pl-12 pr-12 py-3.5 text-gray-700 bg-white border border-gray-200 
-                               rounded-xl shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                               transition-all duration-300 text-base"
-                    >
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-4">
-                        <button class="text-gray-400 hover:text-gray-600">
-                            <i data-feather="sliders" class="h-5 w-5"></i>
-                        </button>
-                    </div>
+        <!-- Container for both Search and Cards -->
+        <div class="max-w-7xl mx-auto px-4">
+            <!-- Search Bar -->
+            <div class="relative w-full max-w-xl mx-auto mb-8">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-feather="search" class="h-5 w-5 text-gray-500"></i>
+                </div>
+                <input type="text" 
+                    id="searchTenant" 
+                    placeholder="Search by tenant name, unit, or status..."
+                    class="w-full pl-12 pr-12 py-3.5 text-gray-700 bg-white border border-gray-200 
+                           rounded-xl shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
+                           transition-all duration-300 text-base">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-4">
+                    <button class="text-gray-400 hover:text-gray-600">
+                        <i data-feather="sliders" class="h-5 w-5"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- Tenant List Container -->
-            <div id="tenantList" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Cards Grid -->
+            <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 <!-- Tenant Card -->
                 <div class="tenant-card bg-white shadow-lg rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl" 
                     data-name="john doe">

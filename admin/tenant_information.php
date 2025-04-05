@@ -1,15 +1,22 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 require_once '../session/session_manager.php';
 require '../session/db.php';
 
-// Modify the query to properly handle profile images
+// Modify the query to handle profile images more safely
 $query = "
     SELECT 
         t.tenant_id, t.user_id, t.unit_rented, t.rent_from, t.rent_until,
         t.monthly_rate, t.outstanding_balance, t.downpayment_amount,
         t.payable_months, t.downpayment_receipt, t.created_at,
         u.name AS tenant_name, 
-        COALESCE(u.profile_image, '../images/default-avatar.jpg') as profile_image,
+        CASE 
+            WHEN u.profile_image IS NOT NULL AND u.profile_image != '' 
+            THEN u.profile_image 
+            ELSE '../images/default_avatar.png' 
+        END as profile_image,
         p.unit_no, p.unit_type, p.unit_size
     FROM tenants t
     JOIN users u ON t.user_id = u.user_id
@@ -18,41 +25,52 @@ $query = "
     ORDER BY u.name, t.created_at DESC
 ";
 
-$result = $conn->query($query);
-$tenants = [];
+try {
+    $result = $conn->query($query);
+    if (!$result) {
+        throw new Exception("Database query failed: " . $conn->error);
+    }
 
-// Group tenants by name
-while ($row = $result->fetch_assoc()) {
-    $tenant_name = $row['tenant_name'];
-    if (!isset($tenants[$tenant_name])) {
-        // Ensure the profile image path is valid
-        $profile_image = $row['profile_image'];
-        if (!empty($profile_image) && file_exists($profile_image)) {
-            $profile_image = $row['profile_image'];
-        } else {
+    $tenants = [];
+
+    // Group tenants by name with safer profile image handling
+    while ($row = $result->fetch_assoc()) {
+        $tenant_name = $row['tenant_name'];
+        if (!isset($tenants[$tenant_name])) {
+            // Set default profile image path
             $profile_image = '../images/default_avatar.png';
+            
+            // Only use uploaded image if it exists
+            if (!empty($row['profile_image']) && 
+                file_exists($_SERVER['DOCUMENT_ROOT'] . parse_url($row['profile_image'], PHP_URL_PATH))) {
+                $profile_image = $row['profile_image'];
+            }
+            
+            $tenants[$tenant_name] = [
+                'user_id' => $row['user_id'],
+                'name' => $tenant_name,
+                'profile_picture' => $profile_image,
+                'units' => []
+            ];
         }
-        
-        $tenants[$tenant_name] = [
-            'user_id' => $row['user_id'],
-            'name' => $tenant_name,
-            'profile_picture' => $profile_image,
-            'units' => []
+        $tenants[$tenant_name]['units'][] = [
+            'tenant_id' => $row['tenant_id'],
+            'unit_no' => $row['unit_no'],
+            'unit_type' => $row['unit_type'],
+            'unit_size' => $row['unit_size'],
+            'rent_from' => $row['rent_from'],
+            'rent_until' => $row['rent_until'],
+            'monthly_rate' => $row['monthly_rate'],
+            'outstanding_balance' => $row['outstanding_balance'],
+            'downpayment_amount' => $row['downpayment_amount'],
+            'payable_months' => $row['payable_months'],
+            'downpayment_receipt' => $row['downpayment_receipt']
         ];
     }
-    $tenants[$tenant_name]['units'][] = [
-        'tenant_id' => $row['tenant_id'],
-        'unit_no' => $row['unit_no'],
-        'unit_type' => $row['unit_type'],
-        'unit_size' => $row['unit_size'],
-        'rent_from' => $row['rent_from'],
-        'rent_until' => $row['rent_until'],
-        'monthly_rate' => $row['monthly_rate'],
-        'outstanding_balance' => $row['outstanding_balance'],
-        'downpayment_amount' => $row['downpayment_amount'],
-        'payable_months' => $row['payable_months'],
-        'downpayment_receipt' => $row['downpayment_receipt']
-    ];
+} catch (Exception $e) {
+    // Log the error and show a user-friendly message
+    error_log($e->getMessage());
+    die("An error occurred while loading tenant information. Please try again later.");
 }
 ?>
 

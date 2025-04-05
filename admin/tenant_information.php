@@ -30,17 +30,17 @@
     <?php include('sidebarAdmin.php'); ?>
 
     <!-- Main Content -->
-    <div class="p-4 sm:ml-64 mt-14">
+    <div class="p-4 sm:ml-64 mt-20">
         <!-- Header Section -->
         <div class="mb-6">
             <h1 class="text-3xl font-semibold text-gray-800">Tenant Information</h1>
             <p class="text-gray-600">Manage and view detailed tenant profiles</p>
         </div>
 
-        <!-- Container for both Search and Cards -->
-        <div class="max-w-7xl mx-auto px-4">
-            <!-- Search Bar -->
-            <div class="relative w-full max-w-xl mx-auto mb-8">
+        <!-- Combined Container for Search and Cards -->
+        <div class="max-w-7xl mx-auto px-4 space-y-6">
+            <!-- Search Section -->
+            <div class="relative max-w-xl mx-auto">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <i data-feather="search" class="h-5 w-5 text-gray-500"></i>
                 </div>
@@ -58,7 +58,7 @@
             </div>
 
             <!-- Cards Grid -->
-            <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Tenant Card -->
                 <div class="tenant-card bg-white shadow-lg rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl" 
                     data-name="john doe">
@@ -102,8 +102,8 @@
                                 <i data-feather="calendar" class="w-4 h-4 mr-2"></i>
                                 Reservations
                             </button>
-                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-600 transition-all" data-tab="reservations1">
-                                <i data-feather="house" class="w-4 h-4 mr-2"></i>
+                            <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-600 transition-all" data-tab="unit_rented1">
+                                <i data-feather="home" class="w-4 h-4 mr-2"></i>
                                 Unit Rented
                             </button>
                         </div>
@@ -145,6 +145,33 @@
                             </h3>
                             <p><i data-feather="activity" class="inline-block w-4 h-4 mr-1"></i> Gym - April 5, 2024</p>
                             <p><i data-feather="home" class="inline-block w-4 h-4 mr-1"></i> Clubhouse - April 20, 2024</p>
+                        </div>
+
+                        <!-- Unit Rented Tab -->
+                        <div id="unit_rented1" class="tab-content opacity-0 transition-all duration-300 hidden">
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-semibold mb-4">
+                                    <i data-feather="home" class="inline-block w-4 h-4 mr-1"></i> Unit Details
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-4 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">Unit Number</p>
+                                        <p class="font-medium">A-101</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">Floor</p>
+                                        <p class="font-medium">1st Floor</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">Monthly Rent</p>
+                                        <p class="font-medium">₱15,000</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">Contract End</p>
+                                        <p class="font-medium">Dec 31, 2024</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

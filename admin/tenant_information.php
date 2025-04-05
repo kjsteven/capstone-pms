@@ -104,7 +104,7 @@
                             </button>
                             <button class="tab-btn flex items-center px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-blue-600 hover:border-blue-600 transition-all" data-tab="unit_rented1">
                                 <i data-feather="home" class="w-4 h-4 mr-2"></i>
-                                Unit Rented
+                                Unit
                             </button>
                         </div>
                     </div>

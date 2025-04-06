@@ -38,8 +38,6 @@ try {
         throw new Exception("Query execution failed: " . $conn->error);
     }
 
-
-    
     $tenants = [];
     while ($row = $result->fetch_assoc()) {
         $tenant_name = $row['tenant_name'];
@@ -55,7 +53,8 @@ try {
                 'phone' => $row['phone'],
                 'profile_picture' => $profileImage,
                 'status' => $row['status'],
-                'units' => []
+                'units' => [],
+                'payments' => [] // Initialize payments array
             ];
         }
 
@@ -70,6 +69,39 @@ try {
             'monthly_rate' => $row['monthly_rate'],
             'outstanding_balance' => $row['outstanding_balance']
         ];
+    }
+    
+    // Fetch payment history for each tenant
+    foreach ($tenants as $tenant_name => &$tenant_data) {
+        $user_id = $tenant_data['user_id'];
+        
+        $payment_query = "
+            SELECT 
+                p.payment_id,
+                p.amount,
+                p.payment_date,
+                p.reference_number,
+                p.status,
+                p.receipt_image,
+                p.gcash_number,
+                p.payment_type,
+                p.bill_item,
+                pr.unit_no
+            FROM payments p
+            JOIN tenants t ON p.tenant_id = t.tenant_id
+            JOIN property pr ON t.unit_rented = pr.unit_id
+            WHERE t.user_id = ?
+            ORDER BY p.payment_date DESC";
+        
+        $stmt = $conn->prepare($payment_query);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $payment_result = $stmt->get_result();
+        
+        while ($payment = $payment_result->fetch_assoc()) {
+            $tenant_data['payments'][] = $payment;
+        }
+        $stmt->close();
     }
     
 } catch (Exception $e) {
@@ -191,7 +223,7 @@ try {
                             <!-- Tabs Navigation - Fixed Active Tab -->
                             <div class="border-b bg-gray-50">
                                 <div class="flex">
-                                    <button class="tab-btn flex items-center px-4 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="payments-<?= $tenant['user_id'] ?>">
+                                    <button class="tab-btn active flex items-center px-4 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600" data-tab="payments-<?= $tenant['user_id'] ?>">
                                         <i data-feather="credit-card" class="w-4 h-4 mr-1"></i>
                                         <span class="hidden sm:inline">Payments</span>
                                     </button>
@@ -203,7 +235,7 @@ try {
                                         <i data-feather="calendar" class="w-4 h-4 mr-1"></i>
                                         <span class="hidden sm:inline">Reserv.</span>
                                     </button>
-                                    <button class="tab-btn active flex items-center px-4 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600" data-tab="unit_rented-<?= $tenant['user_id'] ?>">
+                                    <button class="tab-btn flex items-center px-4 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent" data-tab="unit_rented-<?= $tenant['user_id'] ?>">
                                         <i data-feather="home" class="w-4 h-4 mr-1"></i>
                                         <span class="hidden sm:inline">Unit</span>
                                     </button>
@@ -212,10 +244,71 @@ try {
 
                             <!-- Tab Content -->
                             <div class="p-6">
-                                <!-- Payments Tab (Empty for now) -->
-                                <div id="payments-<?= $tenant['user_id'] ?>" class="tab-content hidden">
-                                    <div class="text-center text-gray-500 py-4">
-                                        Payment history will be added later
+                                <!-- Payments Tab -->
+                                <div id="payments-<?= $tenant['user_id'] ?>" class="tab-content block">
+                                    <div class="space-y-4">
+                                        <h3 class="text-lg font-semibold mb-4">
+                                            <i data-feather="credit-card" class="inline-block w-4 h-4 mr-1"></i> Payment History
+                                        </h3>
+                                        <?php if (empty($tenant['payments'])): ?>
+                                            <div class="text-center text-gray-500 py-4">
+                                                No payment history available for this tenant
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full min-w-full border border-gray-300">
+                                                    <thead>
+                                                        <tr class="bg-gray-200">
+                                                            <th class="py-2 px-4 border text-sm">Unit</th>
+                                                            <th class="py-2 px-4 border text-sm">Amount</th>
+                                                            <th class="py-2 px-4 border text-sm">Type</th>
+                                                            <th class="py-2 px-4 border text-sm">Date</th>
+                                                            <th class="py-2 px-4 border text-sm">Status</th>
+                                                            <th class="py-2 px-4 border text-sm">Receipt</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($tenant['payments'] as $payment): ?>
+                                                            <tr>
+                                                                <td class="py-2 px-4 border text-sm"><?= htmlspecialchars($payment['unit_no']) ?></td>
+                                                                <td class="py-2 px-4 border text-sm">₱<?= number_format($payment['amount'], 2) ?></td>
+                                                                <td class="py-2 px-4 border text-sm">
+                                                                    <?php 
+                                                                        $paymentType = $payment['payment_type'] ?? 'rent';
+                                                                        echo ucfirst(htmlspecialchars($paymentType));
+                                                                        if (!empty($payment['bill_item'])) {
+                                                                            echo '<br><span class="text-xs text-gray-500">' . htmlspecialchars($payment['bill_item']) . '</span>';
+                                                                        }
+                                                                    ?>
+                                                                </td>
+                                                                <td class="py-2 px-4 border text-sm"><?= date('Y-m-d', strtotime($payment['payment_date'])) ?></td>
+                                                                <td class="py-2 px-4 border text-sm">
+                                                                    <?php if ($payment['status'] === 'Received'): ?>
+                                                                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Received</span>
+                                                                    <?php elseif ($payment['status'] === 'Pending'): ?>
+                                                                        <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                                                    <?php elseif ($payment['status'] === 'Rejected'): ?>
+                                                                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Rejected</span>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                                <td class="py-2 px-4 border text-sm text-center">
+                                                                    <?php if (!empty($payment['receipt_image'])): ?>
+                                                                        <button 
+                                                                            class="view-receipt bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                                                                            data-receipt="../<?php echo htmlspecialchars($payment['receipt_image']); ?>"
+                                                                        >
+                                                                            <i class="fas fa-eye mr-1"></i> View
+                                                                        </button>
+                                                                    <?php else: ?>
+                                                                        <span class="text-gray-500 text-xs">No receipt</span>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 
@@ -234,7 +327,7 @@ try {
                                 </div>
 
                                 <!-- Unit Tab -->
-                                <div id="unit_rented-<?= $tenant['user_id'] ?>" class="tab-content block">
+                                <div id="unit_rented-<?= $tenant['user_id'] ?>" class="tab-content hidden">
                                     <div class="space-y-4">
                                         <h3 class="text-lg font-semibold mb-4">
                                             <i data-feather="home" class="inline-block w-4 h-4 mr-1"></i> Rented Units
@@ -283,9 +376,31 @@ try {
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <!-- Receipt Modal -->
+    <div id="receipt-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Payment Receipt</h3>
+                <button id="close-receipt-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex justify-center">
+                <img id="modal-receipt-img" class="max-h-96 object-contain" src="" alt="Payment Receipt">
+            </div>
+            <div class="mt-4 flex justify-center">
+                <a id="download-receipt" href="#" download class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-download mr-2"></i>Download Receipt
+                </a>
+            </div>
+        </div>
+    </div>
 
+    <!-- JavaScript -->
     <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
+    <!-- Add Toastify CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
 
     <script>
         // Initialize Feather Icons
@@ -300,7 +415,7 @@ try {
             document.querySelectorAll('.tenant-card').forEach(card => {
                 // Hide all tab contents except the active one
                 card.querySelectorAll('.tab-content').forEach(content => {
-                    if (content.id.includes('unit_rented')) {
+                    if (content.id.includes('payments')) {
                         content.classList.remove('hidden');
                     } else {
                         content.classList.add('hidden');
@@ -406,6 +521,33 @@ try {
                 backgroundColor: "#4CAF50",
             }).showToast();
         }
+
+        // View Receipt functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('view-receipt') || e.target.closest('.view-receipt')) {
+                const button = e.target.classList.contains('view-receipt') ? e.target : e.target.closest('.view-receipt');
+                const receiptPath = button.getAttribute('data-receipt');
+                
+                // Set the image in the modal
+                document.getElementById('modal-receipt-img').src = receiptPath;
+                document.getElementById('download-receipt').href = receiptPath;
+                
+                // Show the modal
+                document.getElementById('receipt-modal').classList.remove('hidden');
+            }
+        });
+
+        // Close receipt modal
+        document.getElementById('close-receipt-modal').addEventListener('click', function() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('receipt-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
     </script>
 
 </body>

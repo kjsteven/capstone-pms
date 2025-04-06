@@ -269,17 +269,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                                     <button type="submit" name="update_status" value="Update" class="text-blue-600 hover:text-blue-900 edit-btn">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="text-indigo-600 hover:text-indigo-900" onclick="sendMaintenance(<?= $row['id'] ?>)">
+                                    <button class="text-indigo-600 hover:text-indigo-900">
                                         <i class="fas fa-paper-plane"></i>
                                     </button>
-                                    <?php if ($row['status'] !== 'completed'): ?>
-                                        <button class="text-green-600 hover:text-green-900" onclick="toggleMaintenanceStatus(<?= $row['id'] ?>, 'completed')" title="Mark as Completed">
-                                            <i class="fas fa-check-circle"></i>
-                                        </button>
-                                    <?php endif; ?>
-                                    <button class="text-red-600 hover:text-red-900" onclick="archiveRequest(<?= $row['id'] ?>)">
+                                    <a href="archive_request.php?id=<?php echo $row['id']; ?>" class="text-red-600 hover:text-red-900">
                                         <i class="fas fa-archive"></i>
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

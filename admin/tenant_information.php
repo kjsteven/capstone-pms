@@ -847,7 +847,7 @@ try {
                 }).showToast();
 
                 // Create and trigger download using absolute path
-                const exportUrl = `${window.location.origin}/capstone-pms/admin/export_tenant.php?tenant_id=${tenantId}`;
+                const exportUrl = `${window.location.origin}/admin/export_tenant.php?tenant_id=${tenantId}`;
                 window.location.href = exportUrl;
             } catch (error) {
                 console.error('Export error:', error);

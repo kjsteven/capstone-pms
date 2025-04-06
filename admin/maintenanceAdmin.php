@@ -107,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 }
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -114,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/css/font-awesome/5.15.4/css/all.min.css">
     <title>Maintenance Requests</title>
     <link rel="icon" href="../images/logo.png" type="image/png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -602,9 +603,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         fetch('updateBilling.php', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.status === 'success') {
                 Toastify({
@@ -614,31 +623,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     position: "right",
                     backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
                 }).showToast();
-
-                // Update the displayed cost in the table
-                const requestId = formData.get('request_id');
-                const row = document.querySelector(`td:first-child`).textContent.trim() === requestId;
-                if (row) {
-                    const costCell = row.querySelector('td:nth-last-child(2)');
-                    costCell.textContent = '₱' + parseFloat(data.cost).toFixed(2);
-                }
-
+                
                 closeBillingModalFn();
                 setTimeout(() => window.location.reload(), 1000);
             } else {
-                Toastify({
-                    text: data.message,
-                    duration: 3000,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
-                }).showToast();
+                throw new Error(data.message || 'Failed to update maintenance cost');
             }
         })
         .catch(error => {
             console.error('Error:', error);
             Toastify({
-                text: "An error occurred while updating the maintenance cost",
+                text: error.message || "An error occurred while updating the maintenance cost",
                 duration: 3000,
                 gravity: "top",
                 position: "right",

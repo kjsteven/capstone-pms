@@ -3,31 +3,38 @@ require_once '../session/session_manager.php';
 require '../session/db.php';
 require '../session/audit_trail.php';
 
+// Prevent any output before headers
+ob_clean();
 start_secure_session();
 
 header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
-    exit;
-}
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'Not authorized']);
     exit;
 }
 
-$request_id = $_POST['request_id'] ?? null;
-$cost = $_POST['cost'] ?? null;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    exit;
+}
 
-if (!$request_id || !$cost) {
-    echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
+// Validate inputs
+$request_id = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
+$cost = isset($_POST['cost']) ? (float)$_POST['cost'] : 0;
+
+if (!$request_id || $cost <= 0) {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request ID or cost']);
     exit;
 }
 
 try {
     // Update the maintenance cost
     $stmt = $conn->prepare("UPDATE maintenance_requests SET maintenance_cost = ? WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception($conn->error);
+    }
+    
     $stmt->bind_param("di", $cost, $request_id);
     
     if ($stmt->execute()) {
@@ -43,6 +50,8 @@ try {
     } else {
         throw new Exception($stmt->error);
     }
+    
+    $stmt->close();
 } catch (Exception $e) {
     echo json_encode([
         'status' => 'error',
@@ -50,5 +59,4 @@ try {
     ]);
 }
 
-$stmt->close();
 $conn->close();

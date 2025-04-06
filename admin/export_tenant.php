@@ -138,8 +138,8 @@ try {
             'PHP ' . number_format($payment['amount'], 2, '.', ','),
             cleanData($payment['payment_type']),
             !empty($payment['gcash_number']) ? 'GCash' : 'Cash',
-            strval($payment['reference_number'] ?? 'N/A'),
-            strval($payment['gcash_number'] ?? 'N/A'),
+            "'" . strval($payment['reference_number'] ?? 'N/A'), // Add quote prefix
+            strval($payment['gcash_number'] ?? 'N/A'),    // Add quote prefix
             cleanData($payment['status']),
             cleanData($payment['bill_item'] ?? 'N/A')
         ));

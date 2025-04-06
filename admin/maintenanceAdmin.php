@@ -603,14 +603,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         fetch('updateBilling.php', {
             method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            body: formData
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new TypeError("Expected JSON response but got " + contentType);
             }
             return response.json();
         })

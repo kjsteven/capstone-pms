@@ -267,9 +267,14 @@ try {
                                                             <th class="py-2 px-4 border text-sm">Receipt</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody>
-                                                        <?php foreach ($tenant['payments'] as $payment): ?>
-                                                            <tr>
+                                                    <tbody class="payment-history" data-tenant="<?= $tenant['user_id'] ?>">
+                                                        <?php 
+                                                        $paymentCount = 0;
+                                                        foreach ($tenant['payments'] as $payment): 
+                                                            $hideClass = $paymentCount >= 3 ? 'hidden' : '';
+                                                            $paymentCount++;
+                                                        ?>
+                                                            <tr class="payment-row <?= $hideClass ?>">
                                                                 <td class="py-2 px-4 border text-sm"><?= htmlspecialchars($payment['unit_no']) ?></td>
                                                                 <td class="py-2 px-4 border text-sm">₱<?= number_format($payment['amount'], 2) ?></td>
                                                                 <td class="py-2 px-4 border text-sm">
@@ -307,6 +312,17 @@ try {
                                                         <?php endforeach; ?>
                                                     </tbody>
                                                 </table>
+                                                <?php if ($paymentCount > 3): ?>
+                                                    <div class="text-center mt-3">
+                                                        <button 
+                                                            class="toggle-payments bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm"
+                                                            data-tenant="<?= $tenant['user_id'] ?>"
+                                                            data-expanded="false"
+                                                        >
+                                                            Show More Payments
+                                                        </button>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -547,6 +563,31 @@ try {
             if (e.target === this) {
                 this.classList.add('hidden');
             }
+        });
+
+        // Add payment history toggle functionality
+        document.querySelectorAll('.toggle-payments').forEach(button => {
+            button.addEventListener('click', function() {
+                const tenantId = this.getAttribute('data-tenant');
+                const isExpanded = this.getAttribute('data-expanded') === 'true';
+                const tbody = document.querySelector(`.payment-history[data-tenant="${tenantId}"]`);
+                const rows = tbody.querySelectorAll('.payment-row');
+
+                rows.forEach((row, index) => {
+                    if (index >= 3) {
+                        row.classList.toggle('hidden');
+                    }
+                });
+
+                // Update button text and state
+                if (isExpanded) {
+                    this.textContent = 'Show More Payments';
+                    this.setAttribute('data-expanded', 'false');
+                } else {
+                    this.textContent = 'Show Less Payments';
+                    this.setAttribute('data-expanded', 'true');
+                }
+            });
         });
     </script>
 

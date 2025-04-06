@@ -606,6 +606,26 @@ try {
         </div>
     </div>
 
+    <!-- Tenant Detail Modal -->
+    <div id="tenant-detail-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-2xl font-semibold text-gray-800">Tenant Profile</h3>
+                    <button onclick="closeTenantModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Content -->
+                <div id="tenant-detail-content" class="p-6">
+                    <!-- Content will be dynamically populated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
     <!-- Add Toastify CSS and JS -->
@@ -825,7 +845,93 @@ try {
                 }
             });
         });
+
+        // Add these new functions after existing JavaScript
+        function showTenantModal(tenant) {
+            const modal = document.getElementById('tenant-detail-modal');
+            const content = document.getElementById('tenant-detail-content');
+            
+            // Clone the tenant card content but remove the export button
+            const cardContent = tenant.closest('.tenant-card').cloneNode(true);
+            cardContent.querySelector('[onclick*="exportToExcel"]').remove();
+            
+            // Modify styles for modal view
+            cardContent.classList.remove('bg-white', 'shadow-lg', 'rounded-xl');
+            cardContent.classList.add('space-y-6');
+            
+            // Make profile section larger
+            const profileSection = cardContent.querySelector('.p-6.border-b');
+            if (profileSection) {
+                const profileImg = profileSection.querySelector('img');
+                profileImg.classList.remove('w-16', 'h-16');
+                profileImg.classList.add('w-32', 'h-32');
+                
+                const nameHeading = profileSection.querySelector('h2');
+                nameHeading.classList.remove('text-xl');
+                nameHeading.classList.add('text-2xl');
+            }
+            
+            // Make tables full width and more readable
+            cardContent.querySelectorAll('table').forEach(table => {
+                table.classList.add('text-base');
+                table.querySelectorAll('th, td').forEach(cell => {
+                    cell.classList.remove('text-sm');
+                    cell.classList.add('text-base', 'py-3');
+                });
+            });
+            
+            // Clear and append content
+            content.innerHTML = '';
+            content.appendChild(cardContent);
+            
+            // Show modal with animation
+            modal.classList.remove('hidden');
+            modal.querySelector('.bg-white').classList.add('animate-scale-in');
+            
+            // Initialize Feather icons in modal
+            feather.replace();
+        }
+
+        function closeTenantModal() {
+            const modal = document.getElementById('tenant-detail-modal');
+            modal.classList.add('hidden');
+        }
+
+        // Add click handler to tenant names
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.tenant-card h2').forEach(name => {
+                name.style.cursor = 'pointer';
+                name.addEventListener('click', function() {
+                    showTenantModal(this);
+                });
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('tenant-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTenantModal();
+            }
+        });
     </script>
+
+    <style>
+    /* Add these styles to your existing styles */
+    @keyframes scale-in {
+        from {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .animate-scale-in {
+        animation: scale-in 0.2s ease-out forwards;
+    }
+    </style>
 
 </body>
 </html>

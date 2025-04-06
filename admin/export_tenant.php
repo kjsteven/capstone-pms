@@ -1,5 +1,7 @@
 <?php
 require '../session/db.php';
+
+// Set proper headers
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="tenant_information_' . date('Y-m-d') . '.csv"');
 
@@ -23,7 +25,6 @@ try {
     }
 
     $output = fopen('php://output', 'w');
-    fputs($output, "\xEF\xBB\xBF"); // UTF-8 BOM
 
     // First get the tenant's basic information
     $tenant_query = "
@@ -92,10 +93,10 @@ try {
             cleanData($unit['unit_no']),
             cleanData($unit['unit_type']),
             cleanData($unit['square_meter']),
-            '₱' . number_format($unit['monthly_rate'], 2),
+            'PHP ' . number_format($unit['monthly_rate'], 2, '.', ','),
             date('Y-m-d', strtotime($unit['rent_from'])),
             date('Y-m-d', strtotime($unit['rent_until'])),
-            '₱' . number_format($unit['outstanding_balance'], 2)
+            'PHP ' . number_format($unit['outstanding_balance'], 2, '.', ',')
         ));
     }
     fputcsv($output, array());
@@ -134,11 +135,11 @@ try {
         fputcsv($output, array(
             date('Y-m-d', strtotime($payment['payment_date'])),
             cleanData($payment['unit_no']),
-            number_format($payment['amount'], 2),
+            'PHP ' . number_format($payment['amount'], 2, '.', ','),
             cleanData($payment['payment_type']),
             !empty($payment['gcash_number']) ? 'GCash' : 'Cash',
-            cleanData($payment['reference_number'] ?? 'N/A'),
-            cleanData($payment['gcash_number'] ?? 'N/A'),
+            strval($payment['reference_number'] ?? 'N/A'),
+            strval($payment['gcash_number'] ?? 'N/A'),
             cleanData($payment['status']),
             cleanData($payment['bill_item'] ?? 'N/A')
         ));
@@ -217,8 +218,8 @@ try {
             date('h:i A', strtotime($reservation['viewing_time'])),
             cleanData($reservation['unit_no']),
             cleanData($reservation['unit_type']),
-            number_format($reservation['monthly_rent'], 2),
-            cleanData($reservation['square_meter']),
+            'PHP ' . number_format($reservation['monthly_rent'], 2, '.', ','),
+            cleanData($reservation['square_meter']) . ' sqm',
             cleanData($reservation['status']),
             date('Y-m-d H:i:s', strtotime($reservation['created_at']))
         ));

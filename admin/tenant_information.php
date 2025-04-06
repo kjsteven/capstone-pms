@@ -54,7 +54,8 @@ try {
                 'profile_picture' => $profileImage,
                 'status' => $row['status'],
                 'units' => [],
-                'payments' => [] // Initialize payments array
+                'payments' => [], // Initialize payments array
+                'maintenance' => [] // Initialize maintenance array
             ];
         }
 
@@ -100,6 +101,31 @@ try {
         
         while ($payment = $payment_result->fetch_assoc()) {
             $tenant_data['payments'][] = $payment;
+        }
+        $stmt->close();
+
+        // Fetch maintenance requests
+        $maintenance_query = "
+            SELECT 
+                m.id,
+                m.unit,
+                m.issue,
+                m.description,
+                m.service_date,
+                m.status,
+                m.image,
+                m.archived
+            FROM maintenance_requests m
+            WHERE m.user_id = ? AND m.archived = 0
+            ORDER BY m.service_date DESC";
+        
+        $stmt = $conn->prepare($maintenance_query);
+        $stmt->bind_param("i", $tenant_data['user_id']);
+        $stmt->execute();
+        $maintenance_result = $stmt->get_result();
+        
+        while ($maintenance = $maintenance_result->fetch_assoc()) {
+            $tenant_data['maintenance'][] = $maintenance;
         }
         $stmt->close();
     }
@@ -328,10 +354,80 @@ try {
                                     </div>
                                 </div>
 
-                                <!-- Maintenance Tab (Empty for now) -->
+                                <!-- Maintenance Tab -->
                                 <div id="maintenance-<?= $tenant['user_id'] ?>" class="tab-content hidden">
-                                    <div class="text-center text-gray-500 py-4">
-                                        Maintenance history will be added later
+                                    <div class="space-y-4">
+                                        <h3 class="text-lg font-semibold mb-4">
+                                            <i data-feather="tool" class="inline-block w-4 h-4 mr-1"></i> Maintenance History
+                                        </h3>
+                                        <?php if (empty($tenant['maintenance'])): ?>
+                                            <div class="text-center text-gray-500 py-4">
+                                                No maintenance requests found
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full min-w-full border border-gray-300">
+                                                    <thead>
+                                                        <tr class="bg-gray-200">
+                                                            <th class="py-2 px-4 border text-sm">Unit</th>
+                                                            <th class="py-2 px-4 border text-sm">Issue</th>
+                                                            <th class="py-2 px-4 border text-sm">Description</th>
+                                                            <th class="py-2 px-4 border text-sm">Service Date</th>
+                                                            <th class="py-2 px-4 border text-sm">Status</th>
+                                                            <th class="py-2 px-4 border text-sm">Image</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="maintenance-history" data-tenant="<?= $tenant['user_id'] ?>">
+                                                        <?php foreach ($tenant['maintenance'] as $index => $maintenance): 
+                                                            $hideClass = $index >= 3 ? 'hidden' : '';
+                                                        ?>
+                                                            <tr class="maintenance-row <?= $hideClass ?>">
+                                                                <td class="py-2 px-4 border text-sm"><?= htmlspecialchars($maintenance['unit']) ?></td>
+                                                                <td class="py-2 px-4 border text-sm"><?= htmlspecialchars($maintenance['issue']) ?></td>
+                                                                <td class="py-2 px-4 border text-sm"><?= htmlspecialchars($maintenance['description']) ?></td>
+                                                                <td class="py-2 px-4 border text-sm"><?= date('Y-m-d', strtotime($maintenance['service_date'])) ?></td>
+                                                                <td class="py-2 px-4 border text-sm">
+                                                                    <?php
+                                                                        $statusClass = match($maintenance['status']) {
+                                                                            'Completed' => 'bg-green-100 text-green-800',
+                                                                            'In Progress' => 'bg-blue-100 text-blue-800',
+                                                                            'Pending' => 'bg-yellow-100 text-yellow-800',
+                                                                            default => 'bg-gray-100 text-gray-800'
+                                                                        };
+                                                                    ?>
+                                                                    <span class="px-2 py-1 text-xs rounded-full <?= $statusClass ?>">
+                                                                        <?= htmlspecialchars($maintenance['status']) ?>
+                                                                    </span>
+                                                                </td>
+                                                                <td class="py-2 px-4 border text-sm text-center">
+                                                                    <?php if (!empty($maintenance['image'])): ?>
+                                                                        <button 
+                                                                            class="view-maintenance-image bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                                                                            data-image="<?= htmlspecialchars($maintenance['image']) ?>"
+                                                                        >
+                                                                            <i class="fas fa-eye mr-1"></i> View
+                                                                        </button>
+                                                                    <?php else: ?>
+                                                                        <span class="text-gray-500 text-xs">No image</span>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                                <?php if (count($tenant['maintenance']) > 3): ?>
+                                                    <div class="text-center mt-3">
+                                                        <button 
+                                                            class="toggle-maintenance bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm"
+                                                            data-tenant="<?= $tenant['user_id'] ?>"
+                                                            data-expanded="false"
+                                                        >
+                                                            Show More Maintenance Requests
+                                                        </button>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 
@@ -588,6 +684,44 @@ try {
                     this.setAttribute('data-expanded', 'true');
                 }
             });
+        });
+
+        // Add maintenance history toggle functionality
+        document.querySelectorAll('.toggle-maintenance').forEach(button => {
+            button.addEventListener('click', function() {
+                const tenantId = this.getAttribute('data-tenant');
+                const isExpanded = this.getAttribute('data-expanded') === 'true';
+                const tbody = document.querySelector(`.maintenance-history[data-tenant="${tenantId}"]`);
+                const rows = tbody.querySelectorAll('.maintenance-row');
+
+                rows.forEach((row, index) => {
+                    if (index >= 3) {
+                        row.classList.toggle('hidden');
+                    }
+                });
+
+                // Update button text and state
+                if (isExpanded) {
+                    this.textContent = 'Show More Maintenance Requests';
+                    this.setAttribute('data-expanded', 'false');
+                } else {
+                    this.textContent = 'Show Less Maintenance Requests';
+                    this.setAttribute('data-expanded', 'true');
+                }
+            });
+        });
+
+        // View maintenance image functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('view-maintenance-image') || e.target.closest('.view-maintenance-image')) {
+                const button = e.target.classList.contains('view-maintenance-image') ? e.target : e.target.closest('.view-maintenance-image');
+                const imagePath = button.getAttribute('data-image');
+                
+                // Use the existing receipt modal
+                document.getElementById('modal-receipt-img').src = imagePath;
+                document.getElementById('download-receipt').href = imagePath;
+                document.getElementById('receipt-modal').classList.remove('hidden');
+            }
         });
     </script>
 

@@ -183,6 +183,59 @@ try {
         body {
             font-family: 'Poppins', sans-serif;
         }
+
+        /* Add these styles to your existing styles */
+        @keyframes scale-in {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .animate-scale-in {
+            animation: scale-in 0.2s ease-out forwards;
+        }
+
+        /* Add hover animation for tenant names */
+        .tenant-card h2 {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tenant-card h2:hover {
+            color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .tenant-card h2::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #2563eb;
+            transition: width 0.3s ease;
+        }
+
+        .tenant-card h2:hover::after {
+            width: 100%;
+        }
+
+        /* Add a subtle cursor indicator */
+        .tenant-card h2:hover::before {
+            content: '👆';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            opacity: 0.7;
+        }
     </style>
 
 </head>
@@ -919,7 +972,34 @@ try {
                         }
                     }
                 });
-                
+
+                // After cloning the content, reinitialize unit toggles for the modal
+                const modalUnits = document.getElementById('modal-units');
+                if (modalUnits) {
+                    const toggleButtons = modalUnits.querySelectorAll('button[onclick^="toggleUnitDetails"]');
+                    toggleButtons.forEach(button => {
+                        // Remove the original onclick attribute
+                        const unitId = button.getAttribute('onclick').match(/'([^']+)'/)[1];
+                        button.removeAttribute('onclick');
+                        
+                        // Add new click event listener
+                        button.addEventListener('click', () => {
+                            const detailsDiv = modalUnits.querySelector(`#${unitId}`);
+                            const chevron = button.querySelector('.unit-chevron');
+                            
+                            if (detailsDiv) {
+                                if (detailsDiv.classList.contains('hidden')) {
+                                    detailsDiv.classList.remove('hidden');
+                                    chevron.style.transform = 'rotate(180deg)';
+                                } else {
+                                    detailsDiv.classList.add('hidden');
+                                    chevron.style.transform = 'rotate(0deg)';
+                                }
+                            }
+                        });
+                    });
+                }
+
                 modal.classList.remove('hidden');
                 feather.replace();
                 

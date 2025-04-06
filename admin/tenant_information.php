@@ -320,7 +320,7 @@ try {
                                             </div>
                                         </div>
                                     </div>
-                                    <button onclick="exportToExcel('<?= htmlspecialchars($tenant['name']) ?>')"
+                                    <button onclick="exportToExcel('<?= htmlspecialchars($tenant['tenant_id']) ?>')"
                                             class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
                                         <i data-feather="file-text" class="w-5 h-5"></i>
                                     </button>
@@ -831,14 +831,29 @@ try {
         });
 
         // Add export to Excel function
-        function exportToExcel(tenantName) {
-            Toastify({
-                text: "Exporting tenant information...",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "#4CAF50",
-            }).showToast();
+        function exportToExcel(tenantId) {
+            try {
+                // Show loading toast
+                Toastify({
+                    text: "Exporting tenant information...",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#4CAF50",
+                }).showToast();
+
+                // Create and trigger download
+                window.location.href = `export_tenant.php?tenant_id=${tenantId}`;
+            } catch (error) {
+                console.error('Export error:', error);
+                Toastify({
+                    text: "Error exporting tenant information",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#ff6b6b",
+                }).showToast();
+            }
         }
 
         // Update view receipt functionality

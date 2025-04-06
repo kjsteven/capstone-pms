@@ -320,7 +320,7 @@ try {
                                             </div>
                                         </div>
                                     </div>
-                                    <button onclick="exportToExcel('<?= htmlspecialchars($tenant['tenant_id']) ?>')"
+                                    <button onclick="exportToExcel('<?= htmlspecialchars($tenant['units'][0]['tenant_id']) ?>')"
                                             class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
                                         <i data-feather="file-text" class="w-5 h-5"></i>
                                     </button>
@@ -833,6 +833,10 @@ try {
         // Add export to Excel function
         function exportToExcel(tenantId) {
             try {
+                if (!tenantId) {
+                    throw new Error('No tenant ID provided');
+                }
+
                 // Show loading toast
                 Toastify({
                     text: "Exporting tenant information...",
@@ -842,12 +846,13 @@ try {
                     backgroundColor: "#4CAF50",
                 }).showToast();
 
-                // Create and trigger download
-                window.location.href = `export_tenant.php?tenant_id=${tenantId}`;
+                // Create and trigger download using absolute path
+                const exportUrl = `${window.location.origin}/capstone-pms/admin/export_tenant.php?tenant_id=${tenantId}`;
+                window.location.href = exportUrl;
             } catch (error) {
                 console.error('Export error:', error);
                 Toastify({
-                    text: "Error exporting tenant information",
+                    text: "Error exporting tenant information: " + error.message,
                     duration: 3000,
                     gravity: "top",
                     position: "right",

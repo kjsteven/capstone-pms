@@ -35,7 +35,8 @@ $query = "
         mr.image,
         mr.report_pdf, 
         s.name AS staff_name, 
-        mr.status
+        mr.status,
+        mr.maintenance_cost
     FROM maintenance_requests mr
     JOIN users u ON mr.user_id = u.user_id
     LEFT JOIN staff s ON mr.assigned_to = s.staff_id
@@ -195,6 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Report</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Assign To</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Cost</th>
                         <th class="px-6 py-3 border-b-2 border-gray-200 bg-gray-200 text-left text-sm font-semibold text-gray-800 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
@@ -263,13 +265,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 
 
                             </td>
-
+                            <td class="px-6 py-3 border-b border-gray-200">
+                                <?php echo $row['maintenance_cost'] ? '₱' . number_format($row['maintenance_cost'], 2) : 'Not set'; ?>
+                            </td>
                             <td class="px-6 py-3 border-b border-gray-200">
                                 <div class="flex space-x-2">
                                     <button type="submit" name="update_status" value="Update" class="text-blue-600 hover:text-blue-900 edit-btn">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="text-green-600 hover:text-green-900">
+                                    <button class="text-green-600 hover:text-green-900 billing-btn">
                                         <i class="fas fa-money-bill"></i>
                                     </button>
                                     <a href="archive_request.php?id=<?php echo $row['id']; ?>" class="text-red-600 hover:text-red-900">
@@ -351,6 +355,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 </button>
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
                     Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Billing Modal -->
+<div id="billing-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
+    <div class="bg-white rounded-lg p-6 w-96">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Update Maintenance Cost</h3>
+            <button type="button" class="text-gray-500 hover:text-gray-700" id="close-billing-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="billing-form">
+            <input type="hidden" id="billing-request-id" name="request_id">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Maintenance Cost (₱)</label>
+                <input type="number" 
+                       name="cost" 
+                       id="maintenance-cost"
+                       step="0.01" 
+                       min="0" 
+                       class="w-full p-2 border rounded-md" 
+                       required>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" 
+                        class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600" 
+                        id="cancel-billing-btn">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Save
                 </button>
             </div>
         </form>
@@ -528,9 +568,86 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </script>
 
+<!-- Billing Modal Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const billingModal = document.getElementById('billing-modal');
+    const billingForm = document.getElementById('billing-form');
+    const closeBillingModal = document.getElementById('close-billing-modal');
+    const cancelBillingBtn = document.getElementById('cancel-billing-btn');
 
+    // Open billing modal
+    document.querySelectorAll('.billing-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const requestId = this.closest('tr').querySelector('td:first-child').textContent.trim();
+            document.getElementById('billing-request-id').value = requestId;
+            billingModal.classList.remove('hidden');
+        });
+    });
 
+    // Close modal functions
+    function closeBillingModalFn() {
+        billingModal.classList.add('hidden');
+        billingForm.reset();
+    }
 
+    closeBillingModal.addEventListener('click', closeBillingModalFn);
+    cancelBillingBtn.addEventListener('click', closeBillingModalFn);
+
+    // Handle form submission
+    billingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('updateBilling.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                Toastify({
+                    text: data.message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                }).showToast();
+
+                // Update the displayed cost in the table
+                const requestId = formData.get('request_id');
+                const row = document.querySelector(`td:first-child`).textContent.trim() === requestId;
+                if (row) {
+                    const costCell = row.querySelector('td:nth-last-child(2)');
+                    costCell.textContent = '₱' + parseFloat(data.cost).toFixed(2);
+                }
+
+                closeBillingModalFn();
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                Toastify({
+                    text: data.message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                }).showToast();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Toastify({
+                text: "An error occurred while updating the maintenance cost",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+            }).showToast();
+        });
+    });
+});
+</script>
 
 <!-- Archive Request -->
 

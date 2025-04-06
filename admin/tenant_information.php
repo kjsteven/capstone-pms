@@ -87,7 +87,11 @@ try {
                 p.gcash_number,
                 p.payment_type,
                 p.bill_item,
-                pr.unit_no
+                pr.unit_no,
+                CASE 
+                    WHEN p.gcash_number IS NOT NULL THEN 'GCash'
+                    ELSE 'Cash'
+                END as payment_method
             FROM payments p
             JOIN tenants t ON p.tenant_id = t.tenant_id
             JOIN property pr ON t.unit_rented = pr.unit_id
@@ -288,6 +292,9 @@ try {
                                                             <th class="py-2 px-4 border text-sm">Unit</th>
                                                             <th class="py-2 px-4 border text-sm">Amount</th>
                                                             <th class="py-2 px-4 border text-sm">Type</th>
+                                                            <th class="py-2 px-4 border text-sm">Method</th>
+                                                            <th class="py-2 px-4 border text-sm">Reference #</th>
+                                                            <th class="py-2 px-4 border text-sm">GCash #</th>
                                                             <th class="py-2 px-4 border text-sm">Date</th>
                                                             <th class="py-2 px-4 border text-sm">Status</th>
                                                             <th class="py-2 px-4 border text-sm">Receipt</th>
@@ -312,6 +319,21 @@ try {
                                                                         }
                                                                     ?>
                                                                 </td>
+                                                                <td class="py-2 px-4 border text-sm">
+                                                                    <?php if ($payment['payment_method'] === 'GCash'): ?>
+                                                                        <span class="flex items-center">
+                                                                            <img src="../images/gcash.png" alt="GCash" class="w-4 h-4 mr-1">
+                                                                            GCash
+                                                                        </span>
+                                                                    <?php else: ?>
+                                                                        <span class="flex items-center">
+                                                                            <i class="fas fa-money-bill-wave text-green-600 mr-1"></i>
+                                                                            Cash
+                                                                        </span>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                                <td class="py-2 px-4 border text-sm"><?= !empty($payment['reference_number']) ? htmlspecialchars($payment['reference_number']) : 'N/A' ?></td>
+                                                                <td class="py-2 px-4 border text-sm"><?= !empty($payment['gcash_number']) ? htmlspecialchars($payment['gcash_number']) : 'N/A' ?></td>
                                                                 <td class="py-2 px-4 border text-sm"><?= date('Y-m-d', strtotime($payment['payment_date'])) ?></td>
                                                                 <td class="py-2 px-4 border text-sm">
                                                                     <?php if ($payment['status'] === 'Received'): ?>

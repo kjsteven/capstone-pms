@@ -20,7 +20,7 @@ try {
     $output = fopen('php://output', 'w');
     fputs($output, "\xEF\xBB\xBF"); // UTF-8 BOM
 
-    // Get tenant basic information using the same query from tenant_information.php
+    // Using the same query from tenant_information.php
     $query = "
         SELECT 
             t.tenant_id, 
@@ -32,6 +32,7 @@ try {
             t.status,
             t.outstanding_balance,
             u.name AS tenant_name,
+            u.profile_image, 
             u.email,
             u.phone,
             p.unit_no,
@@ -93,78 +94,80 @@ try {
     }
     fputcsv($output, array());
 
-    // SECTION 3: Payment History
+    // SECTION 3: Payment History using same query from tenant_information.php
     fputcsv($output, array("============= PAYMENT HISTORY ============="));
     fputcsv($output, array(
         "Date", "Unit", "Amount", "Type", "Method", 
         "Reference Number", "GCash Number", "Status", "Bill Item"
     ));
 
-    $paymentQuery = "
+    $payment_query = "
         SELECT 
             p.payment_id,
             p.amount,
             p.payment_date,
             p.reference_number,
             p.status,
+            p.receipt_image,
             p.gcash_number,
             p.payment_type,
             p.bill_item,
-            pr.unit_no,
-            CASE WHEN p.gcash_number IS NOT NULL THEN 'GCash' ELSE 'Cash' END as method
+            pr.unit_no
         FROM payments p
         JOIN tenants t ON p.tenant_id = t.tenant_id
         JOIN property pr ON t.unit_rented = pr.unit_id
         WHERE t.user_id = ?
         ORDER BY p.payment_date DESC";
 
-    $stmt = $conn->prepare($paymentQuery);
+    $stmt = $conn->prepare($payment_query);
     $stmt->bind_param("i", $tenantInfo['user_id']);
     $stmt->execute();
     $payments = $stmt->get_result();
 
     while ($payment = $payments->fetch_assoc()) {
         fputcsv($output, array(
-            cleanData($payment['payment_date']),
+            date('Y-m-d', strtotime($payment['payment_date'])),
             cleanData($payment['unit_no']),
-            cleanData($payment['amount']),
+            number_format($payment['amount'], 2),
             cleanData($payment['payment_type']),
-            cleanData($payment['method']),
-            cleanData($payment['reference_number']),
-            cleanData($payment['gcash_number']),
+            !empty($payment['gcash_number']) ? 'GCash' : 'Cash',
+            cleanData($payment['reference_number'] ?? 'N/A'),
+            cleanData($payment['gcash_number'] ?? 'N/A'),
             cleanData($payment['status']),
-            cleanData($payment['bill_item'])
+            cleanData($payment['bill_item'] ?? 'N/A')
         ));
     }
     fputcsv($output, array());
 
-    // SECTION 4: Maintenance History
+    // SECTION 4: Maintenance History using same query from tenant_information.php
     fputcsv($output, array("============= MAINTENANCE HISTORY ============="));
     fputcsv($output, array(
         "ID", "Date", "Unit", "Issue", "Description", "Status"
     ));
 
-    $maintenanceQuery = "
+    $maintenance_query = "
         SELECT 
             m.id,
             m.unit,
             m.issue,
             m.description,
             m.service_date,
-            m.status
+            m.status,
+            m.image,
+            m.archived
         FROM maintenance_requests m
         WHERE m.user_id = ? AND m.archived = 0
         ORDER BY m.service_date DESC";
 
-    $stmt = $conn->prepare($maintenanceQuery);
+    $stmt = $conn->prepare($maintenance_query);
     $stmt->bind_param("i", $tenantInfo['user_id']);
     $stmt->execute();
     $maintenance = $stmt->get_result();
 
     while ($request = $maintenance->fetch_assoc()) {
         fputcsv($output, array(
-            cleanData($request['id']),
-            cleanData($request['service_date']),
+            'MNT-' . str_pad($request['id'], 5, '0', STR_PAD_LEFT),
+            date('Y-m-d', strtotime($request['service_date'])),
             cleanData($request['unit']),
             cleanData($request['issue']),
             cleanData($request['description']),
@@ -173,14 +176,14 @@ try {
     }
     fputcsv($output, array());
 
-    // SECTION 5: Reservation History
+    // SECTION 5: Reservation History using same query from tenant_information.php
     fputcsv($output, array("============= RESERVATION HISTORY ============="));
     fputcsv($output, array(
         "ID", "Date", "Time", "Unit", "Type", "Monthly Rate", 
         "Square Meters", "Status", "Created At"
     ));
 
-    $reservationQuery = "
+    $reservation_query = "
         SELECT 
             r.reservation_id,
             r.viewing_date,
@@ -196,7 +199,7 @@ try {
         WHERE r.user_id = ? AND r.archived = 0
         ORDER BY r.viewing_date DESC";
 
-    $stmt = $conn->prepare($reservationQuery);
+    $stmt = $conn->prepare($reservation_query);
     $stmt->bind_param("i", $tenantInfo['user_id']);
     $stmt->execute();
     $reservations = $stmt->get_result();
@@ -204,22 +207,26 @@ try {
     while ($reservation = $reservations->fetch_assoc()) {
         fputcsv($output, array(
             'RSV-' . str_pad($reservation['reservation_id'], 5, '0', STR_PAD_LEFT),
-            cleanData($reservation['viewing_date']),
-            cleanData($reservation['viewing_time']),
+            date('Y-m-d', strtotime($reservation['viewing_date'])),
+            date('h:i A', strtotime($reservation['viewing_time'])),
             cleanData($reservation['unit_no']),
             cleanData($reservation['unit_type']),
-            cleanData($reservation['monthly_rent']),
+            number_format($reservation['monthly_rent'], 2),
             cleanData($reservation['square_meter']),
             cleanData($reservation['status']),
-            cleanData($reservation['created_at'])
+            date('Y-m-d H:i:s', strtotime($reservation['created_at']))
         ));
     }
 
-    // Add report footer
+    // Add report footer with statistics
     fputcsv($output, array());
     fputcsv($output, array("============= REPORT INFORMATION ============="));
     fputcsv($output, array("Generated on:", date('Y-m-d H:i:s')));
     fputcsv($output, array("Generated for:", $tenantInfo['tenant_name']));
+    fputcsv($output, array("Total Units:", $units->num_rows));
+    fputcsv($output, array("Total Payments:", $payments->num_rows));
+    fputcsv($output, array("Total Maintenance Requests:", $maintenance->num_rows));
+    fputcsv($output, array("Total Reservations:", $reservations->num_rows));
 
     fclose($output);
 

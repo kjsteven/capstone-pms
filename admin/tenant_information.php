@@ -488,21 +488,21 @@ try {
         </div>
     </div>
 
-    <!-- Receipt Modal -->
+    <!-- Modify the Receipt Modal to be more generic -->
     <div id="receipt-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Payment Receipt</h3>
+                <h3 class="text-lg font-semibold" id="modal-title">View Image</h3>
                 <button id="close-receipt-modal" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="flex justify-center">
-                <img id="modal-receipt-img" class="max-h-96 object-contain" src="" alt="Payment Receipt">
+                <img id="modal-receipt-img" class="max-h-96 object-contain" src="" alt="Image Preview">
             </div>
             <div class="mt-4 flex justify-center">
                 <a id="download-receipt" href="#" download class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
-                    <i class="fas fa-download mr-2"></i>Download Receipt
+                    <i class="fas fa-download mr-2"></i><span id="download-text">Download</span>
                 </a>
             </div>
         </div>
@@ -634,17 +634,34 @@ try {
             }).showToast();
         }
 
-        // View Receipt functionality
+        // Update view receipt functionality
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('view-receipt') || e.target.closest('.view-receipt')) {
                 const button = e.target.classList.contains('view-receipt') ? e.target : e.target.closest('.view-receipt');
                 const receiptPath = button.getAttribute('data-receipt');
                 
-                // Set the image in the modal
+                // Set modal for payment receipt
+                document.getElementById('modal-title').textContent = 'Payment Receipt';
+                document.getElementById('download-text').textContent = 'Download Receipt';
                 document.getElementById('modal-receipt-img').src = receiptPath;
                 document.getElementById('download-receipt').href = receiptPath;
                 
-                // Show the modal
+                document.getElementById('receipt-modal').classList.remove('hidden');
+            }
+        });
+
+        // Update maintenance image functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('view-maintenance-image') || e.target.closest('.view-maintenance-image')) {
+                const button = e.target.classList.contains('view-maintenance-image') ? e.target : e.target.closest('.view-maintenance-image');
+                const imagePath = button.getAttribute('data-image');
+                
+                // Set modal for maintenance image
+                document.getElementById('modal-title').textContent = 'Maintenance Image';
+                document.getElementById('download-text').textContent = 'Download Image';
+                document.getElementById('modal-receipt-img').src = imagePath;
+                document.getElementById('download-receipt').href = imagePath;
+                
                 document.getElementById('receipt-modal').classList.remove('hidden');
             }
         });
@@ -709,19 +726,6 @@ try {
                     this.setAttribute('data-expanded', 'true');
                 }
             });
-        });
-
-        // View maintenance image functionality
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('view-maintenance-image') || e.target.closest('.view-maintenance-image')) {
-                const button = e.target.classList.contains('view-maintenance-image') ? e.target : e.target.closest('.view-maintenance-image');
-                const imagePath = button.getAttribute('data-image');
-                
-                // Use the existing receipt modal
-                document.getElementById('modal-receipt-img').src = imagePath;
-                document.getElementById('download-receipt').href = imagePath;
-                document.getElementById('receipt-modal').classList.remove('hidden');
-            }
         });
     </script>
 

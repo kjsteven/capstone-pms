@@ -320,7 +320,6 @@ try {
                                                                         <span class="flex items-center">
                                                                             <img src="../images/gcash.png" alt="GCash" class="w-4 h-4 mr-1">
                                                                             GCash
-                                                                            <span class="text-xs text-gray-500 ml-1">(<?= htmlspecialchars($payment['gcash_number']) ?>)</span>
                                                                         </span>
                                                                     <?php else: ?>
                                                                         <span class="flex items-center">

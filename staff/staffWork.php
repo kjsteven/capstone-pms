@@ -136,13 +136,10 @@ while ($row = $result->fetch_assoc()) {
                                 <textarea id="actionTaken" name="actionTaken" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"></textarea>
                             </div>
 
-                            <!-- Maintenance Cost -->
+                            <!-- Materials Used (replacing Maintenance Cost) -->
                             <div class="mb-3 sm:mb-4">
-                                <label for="maintenanceCost" class="block text-sm font-medium text-gray-700 text-left mb-1">Maintenance Cost</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₱</span>
-                                    <input type="number" id="maintenanceCost" name="maintenanceCost" step="0.01" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-8 pr-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm">
-                                </div>
+                                <label for="materialsUsed" class="block text-sm font-medium text-gray-700 text-left mb-1">Materials Used</label>
+                                <textarea id="materialsUsed" name="materialsUsed" rows="3" placeholder="List materials used for the maintenance work" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"></textarea>
                             </div>
 
                             <!-- Completion Date -->

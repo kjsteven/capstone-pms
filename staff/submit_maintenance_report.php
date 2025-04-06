@@ -66,7 +66,7 @@ try {
     $status = $_POST['status'];
     $issueDescription = $_POST['modalDescription']; // Using the modal field
     $actionTaken = $_POST['actionTaken'];
-    $maintenanceCost = $_POST['maintenanceCost'];
+    $materialsUsed = $_POST['materialsUsed'];
     $completionDate = $_POST['completionDate'];
 
     // Fix path handling - use clean absolute paths
@@ -129,7 +129,7 @@ try {
     $pdf->Cell(50, 7, 'Report Details:', 0, 1);
     $pdf->SetFont('helvetica', '', 12);
     
-    // Create details array with added fields
+    // Create details array with materials used instead of maintenance cost
     $details = array(
         'Date Generated' => date('F j, Y'),
         'Staff Name' => $staffName,
@@ -137,8 +137,7 @@ try {
         'Service Date' => $_POST['modalServiceDate'],
         'Issue Type' => $_POST['modalIssue'],
         'Status' => $status,
-        'Completion Date' => date('F j, Y', strtotime($completionDate)),
-        'Maintenance Cost' => 'PHP ' . number_format($maintenanceCost, 2) // Changed ₱ to PHP to avoid encoding issues
+        'Completion Date' => date('F j, Y', strtotime($completionDate))
     );
 
     // Add details to PDF
@@ -157,6 +156,13 @@ try {
     $pdf->Cell(0, 7, 'Issue Description:', 0, 1);
     $pdf->SetFont('helvetica', '', 11);
     $pdf->MultiCell(0, 7, $issueDescription, 0);
+    $pdf->Ln(5);
+
+    // Add Materials Used section before Action Taken
+    $pdf->SetFont('helvetica', 'B', 11);
+    $pdf->Cell(0, 7, 'Materials Used:', 0, 1);
+    $pdf->SetFont('helvetica', '', 11);
+    $pdf->MultiCell(0, 7, $materialsUsed, 0);
     $pdf->Ln(5);
 
     // Action Taken
@@ -231,7 +237,7 @@ try {
              SET status = ?, 
                  report_pdf = ?,
                  completion_date = ?,
-                 maintenance_cost = ?,
+                 materials_used = ?,
                  action_taken = ?
              WHERE id = ? AND assigned_to = ?";
 
@@ -239,11 +245,11 @@ try {
         throw new Exception('Database prepare failed: ' . $conn->error);
     }
 
-    if (!$stmt->bind_param('sssdsis', 
+    if (!$stmt->bind_param('sssssii', 
         $status,
         $pdfFileName,
         $completionDate,
-        $maintenanceCost,
+        $materialsUsed,
         $actionTaken,
         $requestId,
         $staffId

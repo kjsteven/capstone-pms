@@ -609,18 +609,54 @@ try {
     <!-- Tenant Detail Modal -->
     <div id="tenant-detail-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl mx-auto">
                 <!-- Modal Header -->
                 <div class="flex justify-between items-center p-6 border-b">
-                    <h3 class="text-2xl font-semibold text-gray-800">Tenant Profile</h3>
+                    <div class="flex items-center space-x-4">
+                        <img id="modal-profile-img" class="w-24 h-24 rounded-full object-cover" src="" alt="Profile">
+                        <div>
+                            <h3 id="modal-tenant-name" class="text-2xl font-semibold text-gray-800"></h3>
+                            <div class="flex flex-col gap-1 mt-1">
+                                <div class="flex items-center space-x-2 text-gray-600">
+                                    <i data-feather="mail" class="w-4 h-4"></i>
+                                    <span id="modal-email"></span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-gray-600">
+                                    <i data-feather="phone" class="w-4 h-4"></i>
+                                    <span id="modal-phone"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button onclick="closeTenantModal()" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
 
+                <!-- Modal Tabs -->
+                <div class="border-b bg-gray-50">
+                    <div class="flex" id="modal-tabs">
+                        <button class="modal-tab-btn active flex items-center px-6 py-4 text-sm font-medium border-b-2" data-tab="modal-payments">
+                            <i data-feather="credit-card" class="w-4 h-4 mr-2"></i>Payments
+                        </button>
+                        <button class="modal-tab-btn flex items-center px-6 py-4 text-sm font-medium border-b-2" data-tab="modal-maintenance">
+                            <i data-feather="tool" class="w-4 h-4 mr-2"></i>Maintenance
+                        </button>
+                        <button class="modal-tab-btn flex items-center px-6 py-4 text-sm font-medium border-b-2" data-tab="modal-reservations">
+                            <i data-feather="calendar" class="w-4 h-4 mr-2"></i>Reservations
+                        </button>
+                        <button class="modal-tab-btn flex items-center px-6 py-4 text-sm font-medium border-b-2" data-tab="modal-units">
+                            <i data-feather="home" class="w-4 h-4 mr-2"></i>Units
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Modal Content -->
-                <div id="tenant-detail-content" class="p-6">
-                    <!-- Content will be dynamically populated -->
+                <div class="p-6">
+                    <div id="modal-payments" class="modal-tab-content"></div>
+                    <div id="modal-maintenance" class="modal-tab-content hidden"></div>
+                    <div id="modal-reservations" class="modal-tab-content hidden"></div>
+                    <div id="modal-units" class="modal-tab-content hidden"></div>
                 </div>
             </div>
         </div>
@@ -846,52 +882,115 @@ try {
             });
         });
 
-        // Add these new functions after existing JavaScript
-        function showTenantModal(tenant) {
+        function showTenantModal(nameElement) {
+            const card = nameElement.closest('.tenant-card');
             const modal = document.getElementById('tenant-detail-modal');
-            const content = document.getElementById('tenant-detail-content');
             
-            // Clone the tenant card content but remove the export button
-            const cardContent = tenant.closest('.tenant-card').cloneNode(true);
-            cardContent.querySelector('[onclick*="exportToExcel"]').remove();
+            // Set tenant info
+            document.getElementById('modal-profile-img').src = card.querySelector('img').src;
+            document.getElementById('modal-tenant-name').textContent = card.querySelector('h2').textContent.trim();
+            document.getElementById('modal-email').textContent = card.querySelector('[data-feather="mail"]').nextElementSibling.textContent;
+            document.getElementById('modal-phone').textContent = card.querySelector('[data-feather="phone"]').nextElementSibling.textContent;
             
-            // Modify styles for modal view
-            cardContent.classList.remove('bg-white', 'shadow-lg', 'rounded-xl');
-            cardContent.classList.add('space-y-6');
+            // Clone content for each tab
+            const tabContents = {
+                'modal-payments': card.querySelector(`[id^="payments-"]`),
+                'modal-maintenance': card.querySelector(`[id^="maintenance-"]`),
+                'modal-reservations': card.querySelector(`[id^="reservations-"]`),
+                'modal-units': card.querySelector(`[id^="unit_rented-"]`)
+            };
             
-            // Make profile section larger
-            const profileSection = cardContent.querySelector('.p-6.border-b');
-            if (profileSection) {
-                const profileImg = profileSection.querySelector('img');
-                profileImg.classList.remove('w-16', 'h-16');
-                profileImg.classList.add('w-32', 'h-32');
-                
-                const nameHeading = profileSection.querySelector('h2');
-                nameHeading.classList.remove('text-xl');
-                nameHeading.classList.add('text-2xl');
-            }
-            
-            // Make tables full width and more readable
-            cardContent.querySelectorAll('table').forEach(table => {
-                table.classList.add('text-base');
-                table.querySelectorAll('th, td').forEach(cell => {
-                    cell.classList.remove('text-sm');
-                    cell.classList.add('text-base', 'py-3');
-                });
+            Object.entries(tabContents).forEach(([modalId, content]) => {
+                if (content) {
+                    const modalContent = document.getElementById(modalId);
+                    modalContent.innerHTML = content.innerHTML;
+                    
+                    // Reinitialize toggle functionality for the cloned content
+                    initializeToggles(modalContent);
+                    
+                    // Reinitialize view buttons
+                    initializeViewButtons(modalContent);
+                }
             });
             
-            // Clear and append content
-            content.innerHTML = '';
-            content.appendChild(cardContent);
-            
-            // Show modal with animation
             modal.classList.remove('hidden');
-            modal.querySelector('.bg-white').classList.add('animate-scale-in');
-            
-            // Initialize Feather icons in modal
             feather.replace();
+            
+            // Show first tab content
+            showModalTab('modal-payments');
         }
 
+        function initializeToggles(container) {
+            // Reinitialize show more/less buttons
+            container.querySelectorAll('[class*="toggle-"]').forEach(button => {
+                const originalButton = button.cloneNode(true);
+                button.parentNode.replaceChild(originalButton, button);
+                
+                originalButton.addEventListener('click', function() {
+                    const isPayments = this.classList.contains('toggle-payments');
+                    const tbody = this.closest('.overflow-x-auto').querySelector('tbody');
+                    const rows = tbody.querySelectorAll(isPayments ? '.payment-row' : '.maintenance-row');
+                    
+                    rows.forEach((row, index) => {
+                        if (index >= 3) {
+                            row.classList.toggle('hidden');
+                        }
+                    });
+                    
+                    this.textContent = this.textContent.includes('More') ? 
+                        `Show Less ${isPayments ? 'Payments' : 'Maintenance Requests'}` :
+                        `Show More ${isPayments ? 'Payments' : 'Maintenance Requests'}`;
+                });
+            });
+        }
+
+        function initializeViewButtons(container) {
+            // Reinitialize receipt/image view buttons
+            container.querySelectorAll('.view-receipt, .view-maintenance-image').forEach(button => {
+                const originalButton = button.cloneNode(true);
+                button.parentNode.replaceChild(originalButton, button);
+                
+                originalButton.addEventListener('click', function() {
+                    const receiptModal = document.getElementById('receipt-modal');
+                    const modalImg = document.getElementById('modal-receipt-img');
+                    const downloadLink = document.getElementById('download-receipt');
+                    const imagePath = this.getAttribute('data-receipt') || this.getAttribute('data-image');
+                    
+                    modalImg.src = imagePath;
+                    downloadLink.href = imagePath;
+                    receiptModal.classList.remove('hidden');
+                });
+            });
+        }
+
+        function showModalTab(tabId) {
+            // Handle tab button styling
+            document.querySelectorAll('.modal-tab-btn').forEach(btn => {
+                btn.classList.remove('text-blue-600', 'border-blue-600');
+                btn.classList.add('text-gray-600', 'border-transparent');
+            });
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('text-blue-600', 'border-blue-600');
+            
+            // Show selected content
+            document.querySelectorAll('.modal-tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+
+        // Add modal tab functionality
+        document.querySelectorAll('.modal-tab-btn').forEach(button => {
+            button.addEventListener('click', () => showModalTab(button.getAttribute('data-tab')));
+        });
+
+        // Modify the search function to exclude modal content
+        document.getElementById("searchTenant").addEventListener("input", function () {
+            const query = this.value.toLowerCase().trim();
+            const tenantCards = document.querySelectorAll("#tenantList > .tenant-card");
+            // Rest of the search function remains the same...
+        });
+
+        // Add these new functions after existing JavaScript
         function closeTenantModal() {
             const modal = document.getElementById('tenant-detail-modal');
             modal.classList.add('hidden');

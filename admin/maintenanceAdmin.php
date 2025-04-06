@@ -267,10 +267,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                             <td class="px-6 py-3 border-b border-gray-200">
                                 <div class="flex space-x-2">
                                     <button type="submit" name="update_status" value="Update" class="text-blue-600 hover:text-blue-900 edit-btn">
-                                        <i class="fas fa-eye"></i>
+                                        <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="text-indigo-600 hover:text-indigo-900">
-                                        <i class="fas fa-paper-plane"></i>
+                                    <button class="text-green-600 hover:text-green-900">
+                                        <i class="fas fa-money-bill"></i>
                                     </button>
                                     <a href="archive_request.php?id=<?php echo $row['id']; ?>" class="text-red-600 hover:text-red-900">
                                         <i class="fas fa-archive"></i>

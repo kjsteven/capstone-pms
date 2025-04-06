@@ -5,6 +5,8 @@ if (ob_get_level()) ob_end_clean();
 // Start new output buffering
 ob_start();
 
+session_start();
+
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require '../session/audit_trail.php';

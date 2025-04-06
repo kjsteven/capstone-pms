@@ -155,21 +155,21 @@ try {
     $pdf->SetFont('helvetica', 'B', 11);
     $pdf->Cell(0, 7, 'Issue Description:', 0, 1);
     $pdf->SetFont('helvetica', '', 11);
-    $pdf->MultiCell(0, 7, $issueDescription, 0);
+    $pdf->MultiCell(0, 7, $issueDescription, 0, 'L', false, 1, '', '', true, 0, false, false, 0, 'T', false);
     $pdf->Ln(5);
 
     // Add Materials Used section before Action Taken
     $pdf->SetFont('helvetica', 'B', 11);
     $pdf->Cell(0, 7, 'Materials Used:', 0, 1);
     $pdf->SetFont('helvetica', '', 11);
-    $pdf->MultiCell(0, 7, $materialsUsed, 0);
+    $pdf->MultiCell(180, 7, $materialsUsed, 0, 'L', false, 1, '', '', true, 0, false, false, 0, 'T', false);
     $pdf->Ln(5);
 
     // Action Taken
     $pdf->SetFont('helvetica', 'B', 11);
     $pdf->Cell(0, 7, 'Action Taken:', 0, 1);
     $pdf->SetFont('helvetica', '', 11);
-    $pdf->MultiCell(0, 7, $actionTaken, 0);
+    $pdf->MultiCell(180, 7, $actionTaken, 0, 'L', false, 1, '', '', true, 0, false, false, 0, 'T', false);
     $pdf->Ln(5);
 
     // Add Materials Official Receipt with fixed dimensions

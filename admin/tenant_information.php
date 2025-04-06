@@ -87,11 +87,7 @@ try {
                 p.gcash_number,
                 p.payment_type,
                 p.bill_item,
-                pr.unit_no,
-                CASE 
-                    WHEN p.gcash_number IS NOT NULL THEN 'GCash'
-                    ELSE 'Cash'
-                END as payment_method
+                pr.unit_no
             FROM payments p
             JOIN tenants t ON p.tenant_id = t.tenant_id
             JOIN property pr ON t.unit_rented = pr.unit_id
@@ -320,10 +316,11 @@ try {
                                                                     ?>
                                                                 </td>
                                                                 <td class="py-2 px-4 border text-sm">
-                                                                    <?php if ($payment['payment_method'] === 'GCash'): ?>
+                                                                    <?php if (!empty($payment['gcash_number'])): ?>
                                                                         <span class="flex items-center">
                                                                             <img src="../images/gcash.png" alt="GCash" class="w-4 h-4 mr-1">
                                                                             GCash
+                                                                            <span class="text-xs text-gray-500 ml-1">(<?= htmlspecialchars($payment['gcash_number']) ?>)</span>
                                                                         </span>
                                                                     <?php else: ?>
                                                                         <span class="flex items-center">

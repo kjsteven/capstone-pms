@@ -403,7 +403,7 @@ try {
                                                                     <?php if (!empty($maintenance['image'])): ?>
                                                                         <button 
                                                                             class="view-maintenance-image bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                                                                            data-image="<?= htmlspecialchars($maintenance['image']) ?>"
+                                                                            data-image="../users/<?php echo htmlspecialchars($maintenance['image']); ?>"
                                                                         >
                                                                             <i class="fas fa-eye mr-1"></i> View
                                                                         </button>

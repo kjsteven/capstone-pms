@@ -172,7 +172,7 @@ try {
     $pdf->MultiCell(0, 7, $actionTaken, 0);
     $pdf->Ln(5);
 
-    // Add Materials Official Receipt
+    // Add Materials Official Receipt with fixed dimensions
     if (!empty($_FILES['receiptImage']['tmp_name'])) {
         $pdf->SetFont('helvetica', 'B', 11);
         $pdf->Cell(0, 7, 'Materials Official Receipt:', 0, 1);
@@ -182,49 +182,48 @@ try {
         if (is_uploaded_file($tmp_name)) {
             $img_info = getimagesize($tmp_name);
             if ($img_info !== false) {
-                $max_width = 120; // 120 mm width
-                $width = $img_info[0] * 0.264583; // Convert pixels to mm
-                $height = $img_info[1] * 0.264583;
-                
-                if ($width > $max_width) {
-                    $ratio = $max_width / $width;
-                    $width = $max_width;
-                    $height = $height * $ratio;
-                }
+                // Fixed dimensions for receipt
+                $fixed_width = 160; // mm
+                $fixed_height = 100; // mm
                 
                 // Center the receipt image
-                $x = (210 - $width) / 2; // 210 is A4 width in mm
-                $pdf->Image($tmp_name, $x, null, $width, $height);
-                $pdf->Ln(($height + 5));
+                $x = (210 - $fixed_width) / 2; // 210 is A4 width in mm
+                $y = $pdf->GetY(); // Get current Y position
+                
+                // Add image with fixed dimensions
+                $pdf->Image($tmp_name, $x, $y, $fixed_width, $fixed_height, '', '', '', false, 300, '', false, false, 0, 'CM');
+                $pdf->Ln($fixed_height + 10); // Add space after image
             }
         }
     }
 
-    // Handle image uploads with proper error checking - updated image sizing
+    // Handle maintenance images with fixed dimensions
     if (!empty($_FILES['uploadImages']['name'][0])) {
         $pdf->SetFont('helvetica', 'B', 11);
         $pdf->Cell(0, 7, 'Maintenance Images:', 0, 1);
         $pdf->Ln(5);
 
+        // Fixed dimensions for maintenance images
+        $fixed_width = 160; // mm
+        $fixed_height = 120; // mm
+        
         foreach($_FILES['uploadImages']['tmp_name'] as $key => $tmp_name) {
             if (is_uploaded_file($tmp_name)) {
                 $img_info = getimagesize($tmp_name);
                 if ($img_info !== false) {
-                    // Reduce maximum width to make images smaller
-                    $max_width = 120; // Changed from 180 to 120 mm
-                    $width = $img_info[0] * 0.264583; // Convert pixels to mm
-                    $height = $img_info[1] * 0.264583;
-                    
-                    if ($width > $max_width) {
-                        $ratio = $max_width / $width;
-                        $width = $max_width;
-                        $height = $height * $ratio;
+                    // Check if adding another image would exceed page height
+                    if ($pdf->GetY() + $fixed_height > 270) { // 270mm is approximate safe height for A4
+                        $pdf->AddPage(); // Add new page if needed
+                        $pdf->Ln(5);
                     }
                     
                     // Center the image
-                    $x = (210 - $width) / 2; // 210 is A4 width in mm
-                    $pdf->Image($tmp_name, $x, null, $width, $height);
-                    $pdf->Ln(($height + 5)); // Add some space after the image
+                    $x = (210 - $fixed_width) / 2; // 210 is A4 width in mm
+                    $y = $pdf->GetY(); // Get current Y position
+                    
+                    // Add image with fixed dimensions
+                    $pdf->Image($tmp_name, $x, $y, $fixed_width, $fixed_height, '', '', '', false, 300, '', false, false, 0, 'CM');
+                    $pdf->Ln($fixed_height + 10); // Add space after image
                 }
             }
         }

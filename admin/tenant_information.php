@@ -236,6 +236,155 @@ try {
             font-size: 14px;
             opacity: 0.7;
         }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .tenant-card {
+                margin-bottom: 1rem;
+            }
+            
+            .tenant-card .flex {
+                flex-direction: column;
+            }
+            
+            .tenant-card .space-x-4 > * + * {
+                margin-left: 0;
+                margin-top: 1rem;
+            }
+            
+            .tenant-card .text-xl {
+                font-size: 1.1rem;
+            }
+            
+            /* Make tables scroll horizontally on mobile */
+            .overflow-x-auto {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Adjust modal padding and width */
+            #tenant-detail-modal .max-w-6xl {
+                margin: 0 1rem;
+            }
+            
+            #tenant-detail-modal .p-6 {
+                padding: 1rem;
+            }
+            
+            /* Stack modal header content on mobile */
+            #tenant-detail-modal .flex.items-center.space-x-4 {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            #tenant-detail-modal .w-24.h-24 {
+                width: 5rem;
+                height: 5rem;
+                margin-bottom: 1rem;
+            }
+            
+            /* Make modal tabs scrollable */
+            #modal-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+                padding: 0.5rem;
+            }
+            
+            .modal-tab-btn {
+                padding: 0.75rem 1rem;
+            }
+            
+            /* Adjust table cells for mobile */
+            td, th {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+            }
+            
+            /* Stack grid columns on mobile */
+            .grid.grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Medium screens */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .tenant-card .flex {
+                flex-wrap: wrap;
+            }
+            
+            #tenant-detail-modal .max-w-6xl {
+                margin: 0 2rem;
+            }
+            
+            .grid.grid-cols-2 {
+                gap: 1rem;
+            }
+        }
+
+        /* Large screens */
+        @media (min-width: 1025px) {
+            .tenant-card {
+                transition: transform 0.2s ease;
+            }
+            
+            .tenant-card:hover {
+                transform: translateY(-2px);
+            }
+        }
+
+        /* Table responsiveness */
+        .responsive-table {
+            @media (max-width: 768px) {
+                display: block;
+                
+                thead {
+                    display: none;
+                }
+                
+                tr {
+                    display: block;
+                    margin-bottom: 1rem;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 0.5rem;
+                    padding: 0.5rem;
+                }
+                
+                td {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0.5rem;
+                    border: none;
+                    
+                    &::before {
+                        content: attr(data-label);
+                        font-weight: 600;
+                        margin-right: 1rem;
+                    }
+                }
+            }
+        }
+
+        /* Modal responsiveness */
+        .modal-responsive {
+            @media (max-width: 768px) {
+                margin: 0 1rem;
+                max-height: 90vh;
+                
+                .modal-content {
+                    padding: 1rem;
+                }
+                
+                .modal-header {
+                    flex-direction: column;
+                    text-align: center;
+                    
+                    img {
+                        margin-bottom: 1rem;
+                    }
+                }
+            }
+        }
     </style>
 
 </head>
@@ -277,7 +426,7 @@ try {
             </div>
 
             <!-- Cards Grid - Changed to 3 columns for larger screens -->
-            <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="tenantList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <?php if (empty($tenants)): ?>
                     <div class="col-span-full text-center py-8">
                         <p class="text-gray-500">No tenants found. (<?= count($tenants) ?> tenants in data)</p>
@@ -363,7 +512,7 @@ try {
                                             </div>
                                         <?php else: ?>
                                             <div class="overflow-x-auto">
-                                                <table class="w-full min-w-full border border-gray-300">
+                                                <table class="w-full min-w-full border border-gray-300 responsive-table">
                                                     <thead>
                                                         <tr class="bg-gray-200">
                                                             <th class="py-2 px-4 border text-sm">Unit</th>
@@ -465,7 +614,7 @@ try {
                                             </div>
                                         <?php else: ?>
                                             <div class="overflow-x-auto">
-                                                <table class="w-full min-w-full border border-gray-300">
+                                                <table class="w-full min-w-full border border-gray-300 responsive-table">
                                                     <thead>
                                                         <tr class="bg-gray-200">
                                                             <th class="py-2 px-4 border text-sm">Unit</th>
@@ -542,7 +691,7 @@ try {
                                             </div>
                                         <?php else: ?>
                                             <div class="overflow-x-auto">
-                                                <table class="w-full min-w-full border border-gray-300">
+                                                <table class="w-full min-w-full border border-gray-300 responsive-table">
                                                     <thead>
                                                         <tr class="bg-gray-200">
                                                             <th class="py-2 px-4 border text-sm">ID</th>
@@ -661,8 +810,8 @@ try {
 
     <!-- Tenant Detail Modal -->
     <div id="tenant-detail-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl mx-auto">
+        <div class="flex items-center justify-center min-h-screen p-2 sm:p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl mx-auto modal-responsive">
                 <!-- Modal Header -->
                 <div class="flex justify-between items-center p-6 border-b">
                     <div class="flex items-center space-x-4">

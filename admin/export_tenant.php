@@ -17,37 +17,38 @@ function cleanData($str) {
 
 try {
     $tenant_id = isset($_GET['tenant_id']) ? intval($_GET['tenant_id']) : null;
+
+    if (!$tenant_id) {
+        throw new Exception("Invalid tenant ID");
+    }
+
     $output = fopen('php://output', 'w');
     fputs($output, "\xEF\xBB\xBF"); // UTF-8 BOM
 
-    // Using the same query from tenant_information.php
-    $query = "
+    // First get the tenant's basic information
+    $tenant_query = "
         SELECT 
-            t.tenant_id, 
             t.user_id,
-            t.unit_rented,
-            t.rent_from,
-            t.rent_until,
-            t.monthly_rate,
             t.status,
-            t.outstanding_balance,
             u.name AS tenant_name,
-            u.profile_image, 
             u.email,
-            u.phone,
-            p.unit_no,
-            p.unit_type,
-            p.square_meter
+            u.phone
         FROM tenants t
         JOIN users u ON t.user_id = u.user_id
-        JOIN property p ON t.unit_rented = p.unit_id
-        WHERE t.tenant_id = ?";
+        WHERE t.tenant_id = ?
+        LIMIT 1";
 
-    $stmt = $conn->prepare($query);
+    $stmt = $conn->prepare($tenant_query);
     $stmt->bind_param("i", $tenant_id);
     $stmt->execute();
     $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+        throw new Exception("Tenant not found");
+    }
+
     $tenantInfo = $result->fetch_assoc();
+    $user_id = $tenantInfo['user_id'];
 
     // SECTION 1: Tenant Information
     fputcsv($output, array("============= TENANT INFORMATION ============="));
@@ -58,7 +59,7 @@ try {
         cleanData($tenantInfo['phone']),
         cleanData($tenantInfo['status'])
     ));
-    fputcsv($output, array()); // Empty line for spacing
+    fputcsv($output, array());
 
     // SECTION 2: Units Information
     fputcsv($output, array("============= RENTED UNITS ============="));
@@ -67,17 +68,22 @@ try {
         "Rent From", "Rent Until", "Outstanding Balance"
     ));
 
-    // Get all units for this tenant using user_id
-    $unitsQuery = "
+    // Get all units for this tenant
+    $units_query = "
         SELECT 
-            p.unit_no, p.unit_type, p.square_meter,
-            t.monthly_rate, t.rent_from, t.rent_until, t.outstanding_balance
+            p.unit_no,
+            p.unit_type,
+            p.square_meter,
+            t.monthly_rate,
+            t.rent_from,
+            t.rent_until,
+            t.outstanding_balance
         FROM tenants t
         JOIN property p ON t.unit_rented = p.unit_id
         WHERE t.user_id = ?";
 
-    $stmt = $conn->prepare($unitsQuery);
-    $stmt->bind_param("i", $tenantInfo['user_id']);
+    $stmt = $conn->prepare($units_query);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $units = $stmt->get_result();
 
@@ -86,15 +92,15 @@ try {
             cleanData($unit['unit_no']),
             cleanData($unit['unit_type']),
             cleanData($unit['square_meter']),
-            cleanData($unit['monthly_rate']),
-            cleanData($unit['rent_from']),
-            cleanData($unit['rent_until']),
-            cleanData($unit['outstanding_balance'])
+            '₱' . number_format($unit['monthly_rate'], 2),
+            date('Y-m-d', strtotime($unit['rent_from'])),
+            date('Y-m-d', strtotime($unit['rent_until'])),
+            '₱' . number_format($unit['outstanding_balance'], 2)
         ));
     }
     fputcsv($output, array());
 
-    // SECTION 3: Payment History using same query from tenant_information.php
+    // SECTION 3: Payment History
     fputcsv($output, array("============= PAYMENT HISTORY ============="));
     fputcsv($output, array(
         "Date", "Unit", "Amount", "Type", "Method", 
@@ -120,7 +126,7 @@ try {
         ORDER BY p.payment_date DESC";
 
     $stmt = $conn->prepare($payment_query);
-    $stmt->bind_param("i", $tenantInfo['user_id']);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $payments = $stmt->get_result();
 
@@ -139,7 +145,7 @@ try {
     }
     fputcsv($output, array());
 
-    // SECTION 4: Maintenance History using same query from tenant_information.php
+    // SECTION 4: Maintenance History
     fputcsv($output, array("============= MAINTENANCE HISTORY ============="));
     fputcsv($output, array(
         "ID", "Date", "Unit", "Issue", "Description", "Status"
@@ -160,7 +166,7 @@ try {
         ORDER BY m.service_date DESC";
 
     $stmt = $conn->prepare($maintenance_query);
-    $stmt->bind_param("i", $tenantInfo['user_id']);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $maintenance = $stmt->get_result();
 
@@ -176,7 +182,7 @@ try {
     }
     fputcsv($output, array());
 
-    // SECTION 5: Reservation History using same query from tenant_information.php
+    // SECTION 5: Reservation History
     fputcsv($output, array("============= RESERVATION HISTORY ============="));
     fputcsv($output, array(
         "ID", "Date", "Time", "Unit", "Type", "Monthly Rate", 
@@ -200,7 +206,7 @@ try {
         ORDER BY r.viewing_date DESC";
 
     $stmt = $conn->prepare($reservation_query);
-    $stmt->bind_param("i", $tenantInfo['user_id']);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $reservations = $stmt->get_result();
 

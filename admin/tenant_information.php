@@ -883,41 +883,58 @@ try {
         });
 
         function showTenantModal(nameElement) {
-            const card = nameElement.closest('.tenant-card');
-            const modal = document.getElementById('tenant-detail-modal');
-            
-            // Set tenant info
-            document.getElementById('modal-profile-img').src = card.querySelector('img').src;
-            document.getElementById('modal-tenant-name').textContent = card.querySelector('h2').textContent.trim();
-            document.getElementById('modal-email').textContent = card.querySelector('[data-feather="mail"]').nextElementSibling.textContent;
-            document.getElementById('modal-phone').textContent = card.querySelector('[data-feather="phone"]').nextElementSibling.textContent;
-            
-            // Clone content for each tab
-            const tabContents = {
-                'modal-payments': card.querySelector(`[id^="payments-"]`),
-                'modal-maintenance': card.querySelector(`[id^="maintenance-"]`),
-                'modal-reservations': card.querySelector(`[id^="reservations-"]`),
-                'modal-units': card.querySelector(`[id^="unit_rented-"]`)
-            };
-            
-            Object.entries(tabContents).forEach(([modalId, content]) => {
-                if (content) {
-                    const modalContent = document.getElementById(modalId);
-                    modalContent.innerHTML = content.innerHTML;
-                    
-                    // Reinitialize toggle functionality for the cloned content
-                    initializeToggles(modalContent);
-                    
-                    // Reinitialize view buttons
-                    initializeViewButtons(modalContent);
-                }
-            });
-            
-            modal.classList.remove('hidden');
-            feather.replace();
-            
-            // Show first tab content
-            showModalTab('modal-payments');
+            try {
+                const card = nameElement.closest('.tenant-card');
+                const modal = document.getElementById('tenant-detail-modal');
+                
+                // Get elements with error handling
+                const profileImg = card.querySelector('img')?.src || '../images/avatar_fallback.png';
+                const tenantName = card.querySelector('h2')?.textContent?.trim() || 'N/A';
+                
+                // Get email and phone with better selectors
+                const emailSpan = card.querySelector('.flex.items-center.space-x-2:nth-child(1) span')?.textContent || 'N/A';
+                const phoneSpan = card.querySelector('.flex.items-center.space-x-2:nth-child(2) span')?.textContent || 'N/A';
+                
+                // Set tenant info safely
+                document.getElementById('modal-profile-img').src = profileImg;
+                document.getElementById('modal-tenant-name').textContent = tenantName;
+                document.getElementById('modal-email').textContent = emailSpan;
+                document.getElementById('modal-phone').textContent = phoneSpan;
+                
+                // Clone content for each tab
+                const tabContents = {
+                    'modal-payments': card.querySelector(`[id^="payments-"]`),
+                    'modal-maintenance': card.querySelector(`[id^="maintenance-"]`),
+                    'modal-reservations': card.querySelector(`[id^="reservations-"]`),
+                    'modal-units': card.querySelector(`[id^="unit_rented-"]`)
+                };
+                
+                Object.entries(tabContents).forEach(([modalId, content]) => {
+                    if (content) {
+                        const modalContent = document.getElementById(modalId);
+                        if (modalContent) {
+                            modalContent.innerHTML = content.innerHTML;
+                            initializeToggles(modalContent);
+                            initializeViewButtons(modalContent);
+                        }
+                    }
+                });
+                
+                modal.classList.remove('hidden');
+                feather.replace();
+                
+                // Show first tab content
+                showModalTab('modal-payments');
+            } catch (error) {
+                console.error('Error in showTenantModal:', error);
+                Toastify({
+                    text: "Error loading tenant details",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#ff6b6b",
+                }).showToast();
+            }
         }
 
         function initializeToggles(container) {

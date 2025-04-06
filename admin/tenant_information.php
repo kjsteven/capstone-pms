@@ -55,7 +55,8 @@ try {
                 'status' => $row['status'],
                 'units' => [],
                 'payments' => [], // Initialize payments array
-                'maintenance' => [] // Initialize maintenance array
+                'maintenance' => [], // Initialize maintenance array
+                'reservations' => [] // Initialize reservations array
             ];
         }
 
@@ -126,6 +127,33 @@ try {
         
         while ($maintenance = $maintenance_result->fetch_assoc()) {
             $tenant_data['maintenance'][] = $maintenance;
+        }
+        $stmt->close();
+
+        // Fetch reservation history
+        $reservation_query = "
+            SELECT 
+                r.reservation_id,
+                r.viewing_date,
+                r.viewing_time,
+                r.created_at,
+                r.status,
+                u.unit_no,
+                u.unit_type,
+                u.monthly_rent,
+                u.square_meter
+            FROM reservations r
+            JOIN property u ON r.unit_id = u.unit_id
+            WHERE r.user_id = ? AND r.archived = 0
+            ORDER BY r.viewing_date DESC";
+        
+        $stmt = $conn->prepare($reservation_query);
+        $stmt->bind_param("i", $tenant_data['user_id']);
+        $stmt->execute();
+        $reservation_result = $stmt->get_result();
+        
+        while ($reservation = $reservation_result->fetch_assoc()) {
+            $tenant_data['reservations'][] = $reservation;
         }
         $stmt->close();
     }
@@ -449,10 +477,62 @@ try {
                                     </div>
                                 </div>
 
-                                <!-- Reservations Tab (Empty for now) -->
+                                <!-- Reservations Tab -->
                                 <div id="reservations-<?= $tenant['user_id'] ?>" class="tab-content hidden">
-                                    <div class="text-center text-gray-500 py-4">
-                                        Reservation history will be added later
+                                    <div class="space-y-4">
+                                        <h3 class="text-lg font-semibold mb-4">
+                                            <i data-feather="calendar" class="inline-block w-4 h-4 mr-1"></i> Reservation History
+                                        </h3>
+                                        <?php if (empty($tenant['reservations'])): ?>
+                                            <div class="text-center text-gray-500 py-4">
+                                                No reservation history found
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full min-w-full border border-gray-300">
+                                                    <thead>
+                                                        <tr class="bg-gray-200">
+                                                            <th class="py-2 px-4 border text-sm">ID</th>
+                                                            <th class="py-2 px-4 border text-sm">Unit</th>
+                                                            <th class="py-2 px-4 border text-sm">Type</th>
+                                                            <th class="py-2 px-4 border text-sm">Rate</th>
+                                                            <th class="py-2 px-4 border text-sm">Size</th>
+                                                            <th class="py-2 px-4 border text-sm">Viewing Date</th>
+                                                            <th class="py-2 px-4 border text-sm">Time</th>
+                                                            <th class="py-2 px-4 border text-sm">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($tenant['reservations'] as $reservation): ?>
+                                                            <tr>
+                                                                <td class="py-2 px-4 border text-sm text-center">
+                                                                    RSV-<?= str_pad($reservation['reservation_id'], 5, '0', STR_PAD_LEFT) ?>
+                                                                </td>
+                                                                <td class="py-2 px-4 border text-sm text-center"><?= htmlspecialchars($reservation['unit_no']) ?></td>
+                                                                <td class="py-2 px-4 border text-sm text-center"><?= htmlspecialchars($reservation['unit_type']) ?></td>
+                                                                <td class="py-2 px-4 border text-sm text-center">₱<?= number_format($reservation['monthly_rent'], 2) ?></td>
+                                                                <td class="py-2 px-4 border text-sm text-center"><?= htmlspecialchars($reservation['square_meter']) ?> sqm</td>
+                                                                <td class="py-2 px-4 border text-sm text-center"><?= date('M d, Y', strtotime($reservation['viewing_date'])) ?></td>
+                                                                <td class="py-2 px-4 border text-sm text-center"><?= date('h:i A', strtotime($reservation['viewing_time'])) ?></td>
+                                                                <td class="py-2 px-4 border text-sm text-center">
+                                                                    <?php
+                                                                        $statusClass = match(strtolower($reservation['status'])) {
+                                                                            'confirmed' => 'bg-green-100 text-green-800',
+                                                                            'completed' => 'bg-blue-100 text-blue-800',
+                                                                            'cancelled' => 'bg-red-100 text-red-800',
+                                                                            default => 'bg-yellow-100 text-yellow-800'
+                                                                        };
+                                                                    ?>
+                                                                    <span class="px-2 py-1 text-xs rounded-full <?= $statusClass ?>">
+                                                                        <?= ucfirst($reservation['status']) ?>
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 

@@ -172,6 +172,34 @@ try {
     $pdf->MultiCell(0, 7, $actionTaken, 0);
     $pdf->Ln(5);
 
+    // Add Materials Official Receipt
+    if (!empty($_FILES['receiptImage']['tmp_name'])) {
+        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->Cell(0, 7, 'Materials Official Receipt:', 0, 1);
+        $pdf->Ln(5);
+
+        $tmp_name = $_FILES['receiptImage']['tmp_name'];
+        if (is_uploaded_file($tmp_name)) {
+            $img_info = getimagesize($tmp_name);
+            if ($img_info !== false) {
+                $max_width = 120; // 120 mm width
+                $width = $img_info[0] * 0.264583; // Convert pixels to mm
+                $height = $img_info[1] * 0.264583;
+                
+                if ($width > $max_width) {
+                    $ratio = $max_width / $width;
+                    $width = $max_width;
+                    $height = $height * $ratio;
+                }
+                
+                // Center the receipt image
+                $x = (210 - $width) / 2; // 210 is A4 width in mm
+                $pdf->Image($tmp_name, $x, null, $width, $height);
+                $pdf->Ln(($height + 5));
+            }
+        }
+    }
+
     // Handle image uploads with proper error checking - updated image sizing
     if (!empty($_FILES['uploadImages']['name'][0])) {
         $pdf->SetFont('helvetica', 'B', 11);

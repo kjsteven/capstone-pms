@@ -266,14 +266,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 
                             <td class="px-6 py-3 border-b border-gray-200">
                                 <div class="flex space-x-2">
-                                    <button type="submit" name="update_status" value="Update" class="bg-blue-600 text-white edit-btn px-3 py-1 rounded-md inline-flex items-center">
-                                        <i data-feather="edit-2" class="w-4 h-4 mr-1"></i>
-                                        Edit
+                                    <button type="submit" name="update_status" value="Update" class="text-blue-600 hover:text-blue-900 edit-btn">
+                                        <i class="fas fa-eye"></i>
                                     </button>
-                                    <a href="archive_request.php?id=<?php echo $row['id']; ?>" class="bg-red-600 text-white px-3 py-1 rounded-md inline-flex items-center">
-                                        <i data-feather="archive" class="w-4 h-4 mr-1"></i>
-                                        Archive
-                                    </a>
+                                    <button class="text-indigo-600 hover:text-indigo-900" onclick="sendMaintenance(<?= $row['id'] ?>)">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                    <?php if ($row['status'] !== 'completed'): ?>
+                                        <button class="text-green-600 hover:text-green-900" onclick="toggleMaintenanceStatus(<?= $row['id'] ?>, 'completed')" title="Mark as Completed">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                    <button class="text-red-600 hover:text-red-900" onclick="archiveRequest(<?= $row['id'] ?>)">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>

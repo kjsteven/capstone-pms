@@ -389,14 +389,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['payable_months'] ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['created_at'] ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column">
-                    <button class="inline-flex items-center justify-center px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" 
-                            onclick="archiveTenant(<?= $tenant['tenant_id'] ?>)" 
-                            title="Archive this tenant">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                        </svg>
-                        Archive
-                    </button>
+                    <div class="flex gap-2">
+                        <button class="inline-flex items-center justify-center px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                                onclick="editTenant(<?= $tenant['tenant_id'] ?>)"
+                                title="Edit contract">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Edit
+                        </button>
+                        <button class="inline-flex items-center justify-center px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" 
+                                onclick="archiveTenant(<?= $tenant['tenant_id'] ?>)" 
+                                title="Archive this tenant">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            Archive
+                        </button>
+                    </div>
                 </td>
             </tr>
             <?php endforeach; ?>
@@ -759,23 +769,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             fetch(`?action=edit&id=${tenantId}`)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('tenantModal').classList.remove('hidden');
-                    document.getElementById('tenant_id').value = data.tenant_id;
-                    document.getElementById('user_id').value = data.user_id;
+                    document.getElementById('existingTenantModal').classList.remove('hidden');
+                    document.getElementById('existing_tenant_id').value = data.tenant_id;
+                    document.getElementById('existing_user_id').value = data.user_id;
+                    document.getElementById('existing_unit_rented').value = data.unit_rented;
+                    document.getElementById('existing_monthly_rate').value = data.monthly_rate;
                     
-                    // Trigger user selection change to load units
-                    const userChangeEvent = new Event('change');
-                    document.getElementById('user_id').dispatchEvent(userChangeEvent);
-
-                    // Set remaining fields after a brief delay to ensure units are loaded
-                    setTimeout(() => {
-                        document.getElementById('unit_rented').value = data.unit_rented;
-                        document.getElementById('rent_from').value = data.rent_from;
-                        document.getElementById('rent_until').value = data.rent_until;
-                        document.getElementById('monthly_rate').value = data.monthly_rate;
-                        document.getElementById('downpayment_amount').value = data.downpayment_amount;
-                        document.getElementById('modalTitle').textContent = 'Edit Tenant';
-                    }, 500);
+                    // Set rent_from to today's date by default for renewal
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('existing_rent_from').value = today;
+                    
+                    // Clear other fields for new contract details
+                    document.getElementById('existing_rent_until').value = '';
+                    document.getElementById('existing_downpayment_amount').value = '';
+                    document.getElementById('existing_downpayment_receipt').value = '';
+                    
+                    document.getElementById('existingModalTitle').textContent = 'Renew Contract';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error loading tenant details', 'error');
                 });
         }
 

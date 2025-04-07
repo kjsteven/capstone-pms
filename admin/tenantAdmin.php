@@ -595,6 +595,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     </div>
 </div>
 
+<!-- Add a new modal specifically for contract renewal -->
+<div id="renewContractModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
+        <h2 class="text-xl font-semibold mb-4">Renew Contract</h2>
+        <form id="renewContractForm" method="POST" enctype="multipart/form-data">
+            <input type="hidden" id="renewal_tenant_id" name="tenant_id">
+            <input type="hidden" id="renewal_unit_id" name="unit_rented">
+            <input type="hidden" id="renewal_user_id" name="user_id">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700">Tenant Name</label>
+                <div id="renewal_tenant_name" class="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50"></div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold">Unit Being Renewed</label>
+                <div id="renewal_unit_no" class="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold">Monthly Rate</label>
+                <input type="text" id="renewal_monthly_rate" name="monthly_rate" readonly 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50">
+            </div>
+
+            <div class="mb-4">
+                <label for="renewal_rent_from" class="block text-sm font-semibold">Rent From</label>
+                <input type="date" id="renewal_rent_from" name="rent_from" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md">
+            </div>
+
+            <div class="mb-4">
+                <label for="renewal_rent_until" class="block text-sm font-semibold">Rent Until</label>
+                <input type="date" id="renewal_rent_until" name="rent_until" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md">
+            </div>
+
+            <div class="mb-4">
+                <label for="renewal_downpayment_amount" class="block text-sm font-semibold">Downpayment Amount</label>
+                <input type="number" id="renewal_downpayment_amount" name="downpayment_amount" required 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md"
+                       step="0.01" min="0">
+            </div>
+
+            <div class="mb-4">
+                <label for="renewal_downpayment_receipt" class="block text-sm font-semibold">Downpayment Receipt</label>
+                <input type="file" id="renewal_downpayment_receipt" name="downpayment_receipt" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md"
+                       accept="image/*">
+                <p class="text-xs text-gray-500 mt-1">Upload image of receipt (JPG, PNG)</p>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="button" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md mr-2" onclick="closeRenewalModal()">Cancel</button>
+                <button type="submit" class="px-4 py-2 text-white bg-blue-600 rounded-md">Renew Contract</button>
+            </div>
+        </form>
+    </div>
+</div>
 
     <script src="../node_modules/feather-icons/dist/feather.min.js"></script>
 
@@ -805,22 +864,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                         throw new Error(data.message || 'Unknown error');
                     }
                     
-                    document.getElementById('existingTenantModal').classList.remove('hidden');
-                    document.getElementById('existing_tenant_id').value = data.tenant_id;
-                    document.getElementById('existing_user_id').value = data.user_id;
-                    document.getElementById('existing_unit_rented').value = data.unit_rented;
-                    document.getElementById('existing_monthly_rate').value = data.monthly_rate;
+                    // Find the tenant name from the table
+                    const tenantRows = document.querySelectorAll('#tenantTableBody tr');
+                    let tenantName = 'Unknown';
+                    
+                    tenantRows.forEach(row => {
+                        if (row.cells[0].textContent.trim() == data.tenant_id) {
+                            tenantName = row.cells[1].textContent.trim();
+                        }
+                    });
+                    
+                    // Populate the renewal modal
+                    document.getElementById('renewal_tenant_id').value = data.tenant_id;
+                    document.getElementById('renewal_user_id').value = data.user_id;
+                    document.getElementById('renewal_unit_id').value = data.unit_rented;
+                    document.getElementById('renewal_tenant_name').textContent = tenantName;
+                    document.getElementById('renewal_unit_no').textContent = `Unit ${data.unit_no}`;
+                    document.getElementById('renewal_monthly_rate').value = data.monthly_rate;
                     
                     // Set rent_from to today's date by default for renewal
                     const today = new Date().toISOString().split('T')[0];
-                    document.getElementById('existing_rent_from').value = today;
+                    document.getElementById('renewal_rent_from').value = today;
                     
-                    // Clear other fields for new contract details
-                    document.getElementById('existing_rent_until').value = '';
-                    document.getElementById('existing_downpayment_amount').value = '';
-                    document.getElementById('existing_downpayment_receipt').value = '';
-                    
-                    document.getElementById('existingModalTitle').textContent = 'Renew Contract';
+                    // Show the renewal modal
+                    document.getElementById('renewContractModal').classList.remove('hidden');
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -828,7 +895,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 });
         }
 
+        // Close renewal modal
+        function closeRenewalModal() {
+            document.getElementById('renewContractModal').classList.add('hidden');
+            document.getElementById('renewContractForm').reset();
+        }
 
+        // Handle renewal form submission
+        document.getElementById('renewContractForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const unitNo = document.getElementById('renewal_unit_no').textContent;
+            const tenantName = document.getElementById('renewal_tenant_name').textContent;
+
+            fetch('', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    return response.json();
+                } else {
+                    // If response is not JSON, treat as success
+                    return { success: true, message: 'Contract renewed successfully!' };
+                }
+            })
+            .then(data => {
+                // Close modal first
+                closeRenewalModal();
+                
+                // Show success notification
+                Toastify({
+                    text: "Contract renewed successfully!",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        background: "#4CAF50"
+                    }
+                }).showToast();
+
+                // Log the activity separately
+                fetch('../session/log_activity.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'Renewed Tenant Contract',
+                        details: `Renewed contract for ${tenantName} on ${unitNo}`,
+                    })
+                });
+
+                // Reload the page after a delay
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Toastify({
+                    text: "An error occurred while renewing contract",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        background: "#f44336"
+                    }
+                }).showToast();
+            });
+        });
 
         // Search filter functionality
        document.getElementById('search-keyword').addEventListener('input', function () {

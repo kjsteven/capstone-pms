@@ -257,14 +257,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 'message' => 'Tenant successfully archived.'
             ]);
         } elseif ($_GET['action'] === 'edit' && isset($_GET['id'])) {
+            header('Content-Type: application/json');
             $tenant_id = (int)$_GET['id'];
-            $stmt = $conn->prepare("SELECT * FROM tenants WHERE tenant_id = ?");
-            $stmt->bind_param("i", $tenant_id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            $tenant = $result->fetch_assoc();
-            echo json_encode($tenant);
+            
+            try {
+                $stmt = $conn->prepare("
+                    SELECT t.*, p.unit_no, p.monthly_rent 
+                    FROM tenants t
+                    LEFT JOIN property p ON t.unit_rented = p.unit_id
+                    WHERE t.tenant_id = ?
+                ");
+                $stmt->bind_param("i", $tenant_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($tenant = $result->fetch_assoc()) {
+                    echo json_encode([
+                        'success' => true,
+                        'tenant_id' => $tenant['tenant_id'],
+                        'user_id' => $tenant['user_id'],
+                        'unit_rented' => $tenant['unit_rented'],
+                        'monthly_rate' => $tenant['monthly_rate'],
+                        'unit_no' => $tenant['unit_no']
+                    ]);
+                } else {
+                    throw new Exception('Tenant not found');
+                }
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]);
+            }
+            exit();
         }
     } catch (Exception $e) {
         http_response_code(500);

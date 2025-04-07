@@ -85,7 +85,7 @@
     }
 
     // Query to get maintenance requests
-    $query = "SELECT id, unit, issue, description, service_date, status, image 
+    $query = "SELECT id, unit, issue, description, service_date, status, image, maintenance_cost 
               FROM maintenance_requests 
               WHERE user_id = ? AND archived = 0";
               
@@ -268,9 +268,10 @@
                     <th class="py-2 px-4 border text-center align-middle">Unit No</th>
                     <th class="py-2 px-4 border text-center align-middle">Issue</th>
                     <th class="py-2 px-4 border text-center align-middle">Description</th>
-                    <th class="py-2 px-4 border text-center align-middle">Date for Service</th>
+                    <th class="py-2 px-4 border text-center align-middle">Schedule of Repair</th>
                     <th class="py-2 px-4 border text-center align-middle">Status</th>
                     <th class="py-2 px-4 border text-center align-middle">Image</th>
+                    <th class="py-2 px-4 border text-center align-middle">Maintenance Cost</th>
                     <th class="py-2 px-4 border text-center align-middle">Actions</th>
                 </tr>
             </thead>
@@ -305,6 +306,9 @@
                                     No Image
                                 <?php endif; ?>
                             </td>
+                            <td class="px-4 py-2 border-b border-gray-300 text-center">
+                                <?php echo $row['maintenance_cost'] ? '₱' . number_format($row['maintenance_cost'], 2) : 'Not set'; ?>
+                            </td>
                             <td class="py-2 px-4 text-center border-b">
                                 <div class="flex items-center justify-center space-x-2">
                                     <?php if ($row['status'] === 'Completed'): ?>
@@ -322,7 +326,7 @@
                         <?php endwhile; ?>
                     <?php
                     } else {
-                        echo "<tr><td colspan='7' class='text-center'>No request history found</td></tr>";
+                        echo "<tr><td colspan='8' class='text-center'>No request history found</td></tr>";
                     }
                     ?>
             </tbody>

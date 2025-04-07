@@ -257,6 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 'message' => 'Tenant successfully archived.'
             ]);
         } elseif ($_GET['action'] === 'edit' && isset($_GET['id'])) {
+            ob_clean();
             header('Content-Type: application/json');
             $tenant_id = (int)$_GET['id'];
             
@@ -793,8 +794,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         // Edit tenant function
         function editTenant(tenantId) {
             fetch(`?action=edit&id=${tenantId}`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Unknown error');
+                    }
+                    
                     document.getElementById('existingTenantModal').classList.remove('hidden');
                     document.getElementById('existing_tenant_id').value = data.tenant_id;
                     document.getElementById('existing_user_id').value = data.user_id;
@@ -814,7 +824,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showToast('Error loading tenant details', 'error');
+                    showToast('Error loading tenant details: ' + error.message, 'error');
                 });
         }
 

@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Get the tenant ID associated with the logged-in user
+// Get the tenant IDs associated with the logged-in user
 $user_id = $_SESSION['user_id'];
 $tenantQuery = "SELECT tenant_id FROM tenants WHERE user_id = ?";
 $tenantStmt = $conn->prepare($tenantQuery);
@@ -24,20 +24,32 @@ if ($tenantResult->num_rows === 0) {
     exit();
 }
 
-$tenant = $tenantResult->fetch_assoc();
-$tenant_id = $tenant['tenant_id'];
+// Collect all tenant IDs for this user
+$tenant_ids = [];
+while ($row = $tenantResult->fetch_assoc()) {
+    $tenant_ids[] = $row['tenant_id'];
+}
+
+// Debug information
+echo '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">';
+echo '<p class="text-yellow-700">Debug tenant info:<br>';
+echo "User ID: " . htmlspecialchars($user_id) . "<br>";
+echo "Tenant IDs: " . implode(', ', $tenant_ids) . "<br>";
+echo '</p></div>';
 
 // Function to check and update overdue invoices
-function updateOverdueInvoices($conn, $tenant_id) {
+function updateOverdueInvoices($conn, $tenant_ids) {
     // Get today's date
     $today = date('Y-m-d');
     
-    // Prepare and execute query to update status of overdue invoices for this tenant
+    // Prepare and execute query to update status of overdue invoices for these tenants
     $updateQuery = "UPDATE invoices SET status = 'overdue' 
-                   WHERE tenant_id = ? AND status = 'unpaid' AND due_date < ? AND status != 'paid'";
+                   WHERE tenant_id IN (" . str_repeat('?,', count($tenant_ids) - 1) . '?) AND status = \'unpaid\' AND due_date < ? AND status != \'paid\'';
     
     $stmt = $conn->prepare($updateQuery);
-    $stmt->bind_param("is", $tenant_id, $today);
+    $types = str_repeat('i', count($tenant_ids)) . 's';
+    $params = array_merge($tenant_ids, [$today]);
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
     
     $updatedRows = $stmt->affected_rows;
@@ -47,7 +59,7 @@ function updateOverdueInvoices($conn, $tenant_id) {
 }
 
 // Call the function to update overdue invoices on page load
-updateOverdueInvoices($conn, $tenant_id);
+updateOverdueInvoices($conn, $tenant_ids);
 
 // Pagination settings with validation
 $entriesPerPage = isset($_GET['entries']) ? (int)$_GET['entries'] : 10;
@@ -66,10 +78,10 @@ if ($offset < 0) {
     $offset = 0;
 }
 
-// Get total number of invoices for this tenant
-$totalQuery = "SELECT COUNT(*) as total FROM invoices WHERE tenant_id = ?";
+// Get total number of invoices for these tenants
+$totalQuery = "SELECT COUNT(*) as total FROM invoices WHERE tenant_id IN (" . str_repeat('?,', count($tenant_ids) - 1) . '?)';
 $totalStmt = $conn->prepare($totalQuery);
-$totalStmt->bind_param("i", $tenant_id);
+$totalStmt->bind_param(str_repeat('i', count($tenant_ids)), ...$tenant_ids);
 $totalStmt->execute();
 $totalResult = $totalStmt->get_result();
 $totalRows = $totalResult->fetch_assoc()['total'];
@@ -101,28 +113,11 @@ echo '</div>';
 echo '<div class="ml-3">';
 echo '<p class="text-sm text-yellow-700">';
 echo 'Debug Info:<br>';
-echo 'Tenant ID: ' . htmlspecialchars($tenant_id) . '<br>';
+echo 'Tenant IDs: ' . htmlspecialchars(implode(', ', $tenant_ids)) . '<br>';
 echo '</p>';
 echo '</div>';
 echo '</div>';
 echo '</div>';
-
-// Add debug query to check tenant existence
-$debugTenantQuery = "SELECT t.*, p.unit_no FROM tenants t 
-                    LEFT JOIN property p ON t.unit_rented = p.unit_id 
-                    WHERE t.tenant_id = ?";
-$debugStmt = $conn->prepare($debugTenantQuery);
-$debugStmt->bind_param("i", $tenant_id);
-$debugStmt->execute();
-$debugResult = $debugStmt->get_result();
-echo '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">';
-echo '<p class="text-yellow-700">Debug tenant info:<br>';
-if ($debugTenantRow = $debugResult->fetch_assoc()) {
-    echo "Found tenant: Unit=" . htmlspecialchars($debugTenantRow['unit_no']) . "<br>";
-} else {
-    echo "No tenant found with ID: " . htmlspecialchars($tenant_id) . "<br>";
-}
-echo '</p></div>';
 
 // Modified query to debug invoice retrieval
 $query = "SELECT i.*, CONCAT('INV-', LPAD(i.id, 5, '0')) as invoice_number,
@@ -131,11 +126,10 @@ $query = "SELECT i.*, CONCAT('INV-', LPAD(i.id, 5, '0')) as invoice_number,
           FROM invoices i 
           LEFT JOIN tenants t ON i.tenant_id = t.tenant_id 
           LEFT JOIN property p ON t.unit_rented = p.unit_id 
-          WHERE i.tenant_id = ?
+          WHERE i.tenant_id IN (" . str_repeat('?,', count($tenant_ids) - 1) . '?)
           ORDER BY i.created_at DESC
-          LIMIT ? OFFSET ?";
+          LIMIT ? OFFSET ?';
 
-// Add debug query execution
 $stmt = $conn->prepare($query);
 if (!$stmt) {
     echo '<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">';
@@ -144,15 +138,11 @@ if (!$stmt) {
     exit();
 }
 
-// Debug query parameters
-echo '<div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">';
-echo '<p class="text-blue-700">Query parameters:<br>';
-echo "tenant_id: " . htmlspecialchars($tenant_id) . "<br>";
-echo "entriesPerPage: " . htmlspecialchars($entriesPerPage) . "<br>";
-echo "offset: " . htmlspecialchars($offset) . "</p>";
-echo '</div>';
+// Create array of parameters for bind_param
+$params = array_merge($tenant_ids, [$entriesPerPage, $offset]);
+$types = str_repeat('i', count($tenant_ids)) . 'ii';
+$stmt->bind_param($types, ...$params);
 
-$stmt->bind_param("iii", $tenant_id, $entriesPerPage, $offset);
 if (!$stmt->execute()) {
     echo '<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">';
     echo '<p class="text-red-700">Execute failed: ' . htmlspecialchars($stmt->error) . '</p>';
@@ -162,7 +152,7 @@ if (!$stmt->execute()) {
 
 // Debug the raw SQL query
 $debugSql = str_replace('?', '%s', $query);
-$debugSql = sprintf($debugSql, $tenant_id, $entriesPerPage, $offset);
+$debugSql = sprintf($debugSql, ...$params);
 echo '<div class="bg-gray-50 border-l-4 border-gray-400 p-4 mb-4">';
 echo '<p class="text-gray-700">Debug SQL:<br>';
 echo htmlspecialchars($debugSql);

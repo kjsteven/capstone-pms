@@ -88,8 +88,24 @@ if ($page > $totalPages) {
 $todayDate = date('Y-m-d');
 $thirtyDaysAgo = date('Y-m-d', strtotime('-30 days'));
 
-// DEBUG: Show tenant ID for verification
-var_dump("Fetching invoices for tenant_id: " . $tenant_id);
+// Debug information displayed at the top of the page content
+echo '<div class="sm:ml-64 p-8 mt-20 mx-auto">';
+echo '<div class="container mx-auto max-w-7xl">';
+echo '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">';
+echo '<div class="flex">';
+echo '<div class="flex-shrink-0">';
+echo '<svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">';
+echo '<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>';
+echo '</svg>';
+echo '</div>';
+echo '<div class="ml-3">';
+echo '<p class="text-sm text-yellow-700">';
+echo 'Debug Info:<br>';
+echo 'Tenant ID: ' . htmlspecialchars($tenant_id) . '<br>';
+echo '</p>';
+echo '</div>';
+echo '</div>';
+echo '</div>';
 
 // Get invoice data with pagination for this tenant only
 $query = "SELECT i.*, CONCAT('INV-', LPAD(i.id, 5, '0')) as invoice_number,
@@ -104,18 +120,25 @@ $query = "SELECT i.*, CONCAT('INV-', LPAD(i.id, 5, '0')) as invoice_number,
 // Use a prepared statement
 $stmt = $conn->prepare($query);
 if (!$stmt) {
-    var_dump("Prepare failed: " . $conn->error);
+    echo '<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">';
+    echo '<p class="text-red-700">Prepare failed: ' . htmlspecialchars($conn->error) . '</p>';
+    echo '</div>';
     exit();
 }
 
 $stmt->bind_param("iii", $tenant_id, $entriesPerPage, $offset);
 if (!$stmt->execute()) {
-    var_dump("Execute failed: " . $stmt->error);
+    echo '<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">';
+    echo '<p class="text-red-700">Execute failed: ' . htmlspecialchars($stmt->error) . '</p>';
+    echo '</div>';
     exit();
 }
 
 $result = $stmt->get_result();
-var_dump("Query returned " . $result->num_rows . " rows");
+echo '<div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">';
+echo '<p class="text-blue-700">Query returned ' . $result->num_rows . ' rows</p>';
+echo '</div>';
+echo '</div></div>';
 
 $invoices = [];
 if ($result) {

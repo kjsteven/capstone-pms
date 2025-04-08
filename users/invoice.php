@@ -30,13 +30,6 @@ while ($row = $tenantResult->fetch_assoc()) {
     $tenant_ids[] = $row['tenant_id'];
 }
 
-// Debug information
-echo '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">';
-echo '<p class="text-yellow-700">Debug tenant info:<br>';
-echo "User ID: " . htmlspecialchars($user_id) . "<br>";
-echo "Tenant IDs: " . implode(', ', $tenant_ids) . "<br>";
-echo '</p></div>';
-
 // Function to check and update overdue invoices
 function updateOverdueInvoices($conn, $tenant_ids) {
     // Get today's date
@@ -100,26 +93,7 @@ if ($page > $totalPages) {
 $todayDate = date('Y-m-d');
 $thirtyDaysAgo = date('Y-m-d', strtotime('-30 days'));
 
-// Debug information displayed at the top of the page content
-echo '<div class="sm:ml-64 p-8 mt-20 mx-auto">';
-echo '<div class="container mx-auto max-w-7xl">';
-echo '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">';
-echo '<div class="flex">';
-echo '<div class="flex-shrink-0">';
-echo '<svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">';
-echo '<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>';
-echo '</svg>';
-echo '</div>';
-echo '<div class="ml-3">';
-echo '<p class="text-sm text-yellow-700">';
-echo 'Debug Info:<br>';
-echo 'Tenant IDs: ' . htmlspecialchars(implode(', ', $tenant_ids)) . '<br>';
-echo '</p>';
-echo '</div>';
-echo '</div>';
-echo '</div>';
-
-// Modified query to debug invoice retrieval
+// Modified query to fetch invoices for all tenant IDs
 $query = "SELECT i.*, CONCAT('INV-', LPAD(i.id, 5, '0')) as invoice_number,
           p.unit_no, t.unit_rented,
           COUNT(*) OVER() as total_count
@@ -132,10 +106,7 @@ $query = "SELECT i.*, CONCAT('INV-', LPAD(i.id, 5, '0')) as invoice_number,
 
 $stmt = $conn->prepare($query);
 if (!$stmt) {
-    echo '<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">';
-    echo '<p class="text-red-700">Prepare failed: ' . htmlspecialchars($conn->error) . '</p>';
-    echo '</div>';
-    exit();
+    die("Query preparation failed");
 }
 
 // Create array of parameters for bind_param
@@ -144,26 +115,10 @@ $types = str_repeat('i', count($tenant_ids)) . 'ii';
 $stmt->bind_param($types, ...$params);
 
 if (!$stmt->execute()) {
-    echo '<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">';
-    echo '<p class="text-red-700">Execute failed: ' . htmlspecialchars($stmt->error) . '</p>';
-    echo '</div>';
-    exit();
+    die("Query execution failed");
 }
 
-// Debug the raw SQL query
-$debugSql = str_replace('?', '%s', $query);
-$debugSql = sprintf($debugSql, ...$params);
-echo '<div class="bg-gray-50 border-l-4 border-gray-400 p-4 mb-4">';
-echo '<p class="text-gray-700">Debug SQL:<br>';
-echo htmlspecialchars($debugSql);
-echo '</p></div>';
-
 $result = $stmt->get_result();
-echo '<div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">';
-echo '<p class="text-blue-700">Query returned ' . $result->num_rows . ' rows</p>';
-echo '</div>';
-echo '</div></div>';
-
 $invoices = [];
 if ($result) {
     $invoices = $result->fetch_all(MYSQLI_ASSOC);
@@ -471,39 +426,43 @@ if ($result) {
 <script src="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.js"></script>
 
 <script>
+    // Wait for DOM content to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize date picker for date range
-        const dateRangeElement = document.getElementById('date-range');
-        if (dateRangeElement) {
-            flatpickr("#date-range", {
+        // Ensure all required elements exist before proceeding
+        const requiredElements = {
+            dateRange: document.getElementById('date-range'),
+            statusFilter: document.getElementById('status-filter'),
+            searchInput: document.getElementById('search-input'),
+            printInvoiceBtn: document.getElementById('print-invoice-btn'),
+            invoiceTableBody: document.getElementById('invoice-table-body')
+        };
+
+        // Check if all required elements exist
+        const missingElements = Object.entries(requiredElements)
+            .filter(([key, element]) => !element)
+            .map(([key]) => key);
+
+        if (missingElements.length > 0) {
+            console.error('Missing required elements:', missingElements);
+            return; // Exit if any required elements are missing
+        }
+
+        // Initialize flatpickr
+        try {
+            flatpickr(requiredElements.dateRange, {
                 mode: "range",
                 dateFormat: "Y-m-d",
                 placeholder: "Select date range"
             });
+        } catch (error) {
+            console.error("Error initializing flatpickr:", error);
         }
-        
-        // Apply filters on change - with null checks
-        const statusFilter = document.getElementById('status-filter');
-        if (statusFilter) {
-            statusFilter.addEventListener('change', applyFilters);
-        }
-        
-        if (dateRangeElement) {
-            dateRangeElement.addEventListener('change', applyFilters);
-        }
-        
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-            searchInput.addEventListener('keyup', applyFilters);
-        }
-        
-        // Print invoice - with null check
-        const printInvoiceBtn = document.getElementById('print-invoice-btn');
-        if (printInvoiceBtn) {
-            printInvoiceBtn.addEventListener('click', function() {
-                printInvoice();
-            });
-        }
+
+        // Add event listeners only after confirming elements exist
+        requiredElements.statusFilter.addEventListener('change', applyFilters);
+        requiredElements.dateRange.addEventListener('change', applyFilters);
+        requiredElements.searchInput.addEventListener('keyup', applyFilters);
+        requiredElements.printInvoiceBtn.addEventListener('click', printInvoice);
     });
     
     // Toggle view invoice modal

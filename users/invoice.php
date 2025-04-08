@@ -27,6 +27,10 @@ if ($tenantResult->num_rows === 0) {
 $tenant = $tenantResult->fetch_assoc();
 $tenant_id = $tenant['tenant_id'];
 
+// DEBUG: Output tenant ID to verify we have the correct tenant
+var_dump("Current user ID: " . $user_id);
+var_dump("Tenant ID: " . $tenant_id);
+
 // Function to check and update overdue invoices
 function updateOverdueInvoices($conn, $tenant_id) {
     // Get today's date
@@ -103,9 +107,15 @@ $stmt->bind_param("iii", $tenant_id, $entriesPerPage, $offset);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// DEBUG: Output query results for troubleshooting
+var_dump("SQL Query: " . $query);
+var_dump("Number of rows returned: " . ($result ? $result->num_rows : 0));
+
 $invoices = [];
 if ($result) {
     $invoices = $result->fetch_all(MYSQLI_ASSOC);
+    // DEBUG: Show the actual invoice data
+    var_dump("Invoice data:", $invoices);
 }
 ?>
 

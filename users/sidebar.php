@@ -146,6 +146,18 @@ $has_access = ($kyc_status === 'approved');
                     <?php endif; ?>
                 </a>
             </li>
+
+            <li>
+                <a href="<?= $has_access ? 'invoice.php' : '#' ?>" 
+                   class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group <?= !$has_access ? 'sidebar-item-disabled' : '' ?>">
+                    <svg data-feather="file-text" class="w-5 h-5 text-blue-500 transition duration-75 text-sm dark:text-white group-hover:text-blue-900 dark:group-hover:text-white"></svg>
+                    <span class="ms-3 text-white text-sm dark:text-white">Invoice</span>
+                    <?php if (!$has_access): ?>
+                        <span class="kyc-badge">Requires KYC</span>
+                    <?php endif; ?>
+                </a>
+            </li>
+
             <li>
                 <a href="<?= $has_access ? 'payment.php' : '#' ?>" 
                    class="flex items-center p-2 text-blue-900 rounded-lg dark:text-white hover:bg-blue-100 dark:hover:bg-blue-700 group <?= !$has_access ? 'sidebar-item-disabled' : '' ?>">

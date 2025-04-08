@@ -27,47 +27,6 @@ if ($tenantResult->num_rows === 0) {
 $tenant = $tenantResult->fetch_assoc();
 $tenant_id = $tenant['tenant_id'];
 
-// DEBUG: Output tenant ID to verify we have the correct tenant
-var_dump("Current user ID: " . $user_id);
-var_dump("Tenant ID: " . $tenant_id);
-
-// Check if the tenant has any invoices at all (simplified query)
-$basicCheckQuery = "SELECT COUNT(*) as invoice_count FROM invoices WHERE tenant_id = ?";
-$basicCheckStmt = $conn->prepare($basicCheckQuery);
-$basicCheckStmt->bind_param("i", $tenant_id);
-$basicCheckStmt->execute();
-$basicCheckResult = $basicCheckStmt->get_result();
-$invoiceCount = $basicCheckResult->fetch_assoc()['invoice_count'];
-
-var_dump("Basic invoice count for tenant_id $tenant_id: " . $invoiceCount);
-
-// Check if any invoices exist in the system at all
-$totalInvoicesQuery = "SELECT COUNT(*) as total FROM invoices";
-$totalInvoicesResult = $conn->query($totalInvoicesQuery);
-$totalInvoices = $totalInvoicesResult->fetch_assoc()['total'];
-
-var_dump("Total invoices in system: " . $totalInvoices);
-
-// Check if the tenant_id exists in any tenant records
-$tenantCheckQuery = "SELECT COUNT(*) as count FROM tenants WHERE tenant_id = ?";
-$tenantCheckStmt = $conn->prepare($tenantCheckQuery);
-$tenantCheckStmt->bind_param("i", $tenant_id);
-$tenantCheckStmt->execute();
-$tenantCheckResult = $tenantCheckStmt->get_result();
-$tenantExists = $tenantCheckResult->fetch_assoc()['count'];
-
-var_dump("Tenant with ID $tenant_id exists in tenants table: " . ($tenantExists ? 'Yes' : 'No'));
-
-// Check for a sample of tenants with invoices
-$sampleQuery = "SELECT DISTINCT tenant_id FROM invoices LIMIT 5";
-$sampleResult = $conn->query($sampleQuery);
-$sampleTenants = [];
-while ($row = $sampleResult->fetch_assoc()) {
-    $sampleTenants[] = $row['tenant_id'];
-}
-
-var_dump("Sample tenant IDs with invoices:", $sampleTenants);
-
 // Function to check and update overdue invoices
 function updateOverdueInvoices($conn, $tenant_id) {
     // Get today's date
@@ -129,36 +88,39 @@ if ($page > $totalPages) {
 $todayDate = date('Y-m-d');
 $thirtyDaysAgo = date('Y-m-d', strtotime('-30 days'));
 
+// DEBUG: Show tenant ID for verification
+var_dump("Fetching invoices for tenant_id: " . $tenant_id);
+
 // Get invoice data with pagination for this tenant only
-$query = "SELECT i.*, u.name as tenant_name, p.unit_no 
-          FROM invoices i
-          JOIN tenants t ON i.tenant_id = t.tenant_id
-          JOIN users u ON t.user_id = u.user_id
-          JOIN property p ON t.unit_rented = p.unit_id
-          WHERE i.tenant_id = ?
+$query = "SELECT i.*, CONCAT('INV-', LPAD(i.id, 5, '0')) as invoice_number,
+          p.unit_no, t.unit_rented 
+          FROM invoices i 
+          LEFT JOIN tenants t ON i.tenant_id = t.tenant_id 
+          LEFT JOIN property p ON t.unit_rented = p.unit_id 
+          WHERE i.tenant_id = ? 
           ORDER BY i.created_at DESC
           LIMIT ? OFFSET ?";
 
+// Use a prepared statement
 $stmt = $conn->prepare($query);
-$stmt->bind_param("iii", $tenant_id, $entriesPerPage, $offset);
-$stmt->execute();
-$result = $stmt->get_result();
+if (!$stmt) {
+    var_dump("Prepare failed: " . $conn->error);
+    exit();
+}
 
-// DEBUG: Output query results for troubleshooting
-var_dump("SQL Query: " . $query);
-var_dump("Query parameters: tenant_id=" . $tenant_id . ", limit=" . $entriesPerPage . ", offset=" . $offset);
-var_dump("Number of rows returned: " . ($result ? $result->num_rows : 0));
+$stmt->bind_param("iii", $tenant_id, $entriesPerPage, $offset);
+if (!$stmt->execute()) {
+    var_dump("Execute failed: " . $stmt->error);
+    exit();
+}
+
+$result = $stmt->get_result();
+var_dump("Query returned " . $result->num_rows . " rows");
 
 $invoices = [];
 if ($result) {
     $invoices = $result->fetch_all(MYSQLI_ASSOC);
-    // DEBUG: Show the actual invoice data
-    var_dump("Invoice data:", $invoices);
 }
-
-// Add a conditional to remove debug output after testing
-// Comment out this line when done debugging
-// exit("Debug testing complete - check the output above");
 ?>
 
 <!DOCTYPE html>
@@ -287,7 +249,7 @@ if ($result) {
                         <?php else : ?>
                             <?php foreach ($invoices as $invoice) : ?>
                             <tr class="table-cell-highlight">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">INV-<?= str_pad($invoice['id'], 5, '0', STR_PAD_LEFT) ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?= htmlspecialchars($invoice['invoice_number']) ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?= htmlspecialchars($invoice['unit_no']) ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">₱<?= number_format($invoice['amount'], 2) ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"><?= date('M d, Y', strtotime($invoice['due_date'])) ?></td>

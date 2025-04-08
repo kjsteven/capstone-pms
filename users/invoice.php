@@ -412,21 +412,37 @@ if ($result) {
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize date picker for date range
-        flatpickr("#date-range", {
-            mode: "range",
-            dateFormat: "Y-m-d",
-            placeholder: "Select date range"
-        });
+        const dateRangeElement = document.getElementById('date-range');
+        if (dateRangeElement) {
+            flatpickr("#date-range", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                placeholder: "Select date range"
+            });
+        }
         
-        // Apply filters on change
-        document.getElementById('status-filter').addEventListener('change', applyFilters);
-        document.getElementById('date-range').addEventListener('change', applyFilters);
-        document.getElementById('search-input').addEventListener('keyup', applyFilters);
+        // Apply filters on change - with null checks
+        const statusFilter = document.getElementById('status-filter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', applyFilters);
+        }
         
-        // Print invoice
-        document.getElementById('print-invoice-btn').addEventListener('click', function() {
-            printInvoice();
-        });
+        if (dateRangeElement) {
+            dateRangeElement.addEventListener('change', applyFilters);
+        }
+        
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', applyFilters);
+        }
+        
+        // Print invoice - with null check
+        const printInvoiceBtn = document.getElementById('print-invoice-btn');
+        if (printInvoiceBtn) {
+            printInvoiceBtn.addEventListener('click', function() {
+                printInvoice();
+            });
+        }
     });
     
     // Toggle view invoice modal
@@ -446,9 +462,12 @@ if ($result) {
         document.getElementById('view-invoice-content').classList.add('animate-pulse');
         
         // Store the current invoice ID for printing
-        document.getElementById('print-invoice-btn').dataset.invoiceId = invoiceId;
+        const printBtn = document.getElementById('print-invoice-btn');
+        if (printBtn) {
+            printBtn.dataset.invoiceId = invoiceId;
+        }
         
-        // Fetch invoice details
+        // Fetch invoice details - make sure to use the correct path to invoice_actions.php
         fetch(`../admin/invoice_actions.php?action=view&id=${invoiceId}`)
             .then(response => {
                 if (!response.ok) {
@@ -538,15 +557,18 @@ if ($result) {
             })
             .catch(error => {
                 console.error('Error:', error);
-                document.getElementById('view-invoice-content').innerHTML = `
-                    <div class="text-center p-6">
-                        <div class="text-red-500 text-xl mb-2">
-                            <i class="fas fa-exclamation-circle"></i>
+                const viewContent = document.getElementById('view-invoice-content');
+                if (viewContent) {
+                    viewContent.innerHTML = `
+                        <div class="text-center p-6">
+                            <div class="text-red-500 text-xl mb-2">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <p class="text-gray-700">Error loading invoice details.</p>
+                            <p class="text-gray-500 text-sm mt-1">${error.message}</p>
                         </div>
-                        <p class="text-gray-700">Error loading invoice details.</p>
-                        <p class="text-gray-500 text-sm mt-1">${error.message}</p>
-                    </div>
-                `;
+                    `;
+                }
             });
     }
     

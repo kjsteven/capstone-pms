@@ -107,17 +107,35 @@ echo '</div>';
 echo '</div>';
 echo '</div>';
 
-// Get invoice data with pagination for this tenant only
+// Add debug query to check tenant existence
+$debugTenantQuery = "SELECT t.*, p.unit_no FROM tenants t 
+                    LEFT JOIN property p ON t.unit_rented = p.unit_id 
+                    WHERE t.tenant_id = ?";
+$debugStmt = $conn->prepare($debugTenantQuery);
+$debugStmt->bind_param("i", $tenant_id);
+$debugStmt->execute();
+$debugResult = $debugStmt->get_result();
+echo '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">';
+echo '<p class="text-yellow-700">Debug tenant info:<br>';
+if ($debugTenantRow = $debugResult->fetch_assoc()) {
+    echo "Found tenant: Unit=" . htmlspecialchars($debugTenantRow['unit_no']) . "<br>";
+} else {
+    echo "No tenant found with ID: " . htmlspecialchars($tenant_id) . "<br>";
+}
+echo '</p></div>';
+
+// Modified query to debug invoice retrieval
 $query = "SELECT i.*, CONCAT('INV-', LPAD(i.id, 5, '0')) as invoice_number,
-          p.unit_no, t.unit_rented 
+          p.unit_no, t.unit_rented,
+          COUNT(*) OVER() as total_count
           FROM invoices i 
           LEFT JOIN tenants t ON i.tenant_id = t.tenant_id 
           LEFT JOIN property p ON t.unit_rented = p.unit_id 
-          WHERE i.tenant_id = ? 
+          WHERE i.tenant_id = ?
           ORDER BY i.created_at DESC
           LIMIT ? OFFSET ?";
 
-// Use a prepared statement
+// Add debug query execution
 $stmt = $conn->prepare($query);
 if (!$stmt) {
     echo '<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">';
@@ -126,6 +144,14 @@ if (!$stmt) {
     exit();
 }
 
+// Debug query parameters
+echo '<div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">';
+echo '<p class="text-blue-700">Query parameters:<br>';
+echo "tenant_id: " . htmlspecialchars($tenant_id) . "<br>";
+echo "entriesPerPage: " . htmlspecialchars($entriesPerPage) . "<br>";
+echo "offset: " . htmlspecialchars($offset) . "</p>";
+echo '</div>';
+
 $stmt->bind_param("iii", $tenant_id, $entriesPerPage, $offset);
 if (!$stmt->execute()) {
     echo '<div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">';
@@ -133,6 +159,14 @@ if (!$stmt->execute()) {
     echo '</div>';
     exit();
 }
+
+// Debug the raw SQL query
+$debugSql = str_replace('?', '%s', $query);
+$debugSql = sprintf($debugSql, $tenant_id, $entriesPerPage, $offset);
+echo '<div class="bg-gray-50 border-l-4 border-gray-400 p-4 mb-4">';
+echo '<p class="text-gray-700">Debug SQL:<br>';
+echo htmlspecialchars($debugSql);
+echo '</p></div>';
 
 $result = $stmt->get_result();
 echo '<div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">';

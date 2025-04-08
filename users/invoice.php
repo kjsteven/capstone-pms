@@ -31,6 +31,43 @@ $tenant_id = $tenant['tenant_id'];
 var_dump("Current user ID: " . $user_id);
 var_dump("Tenant ID: " . $tenant_id);
 
+// Check if the tenant has any invoices at all (simplified query)
+$basicCheckQuery = "SELECT COUNT(*) as invoice_count FROM invoices WHERE tenant_id = ?";
+$basicCheckStmt = $conn->prepare($basicCheckQuery);
+$basicCheckStmt->bind_param("i", $tenant_id);
+$basicCheckStmt->execute();
+$basicCheckResult = $basicCheckStmt->get_result();
+$invoiceCount = $basicCheckResult->fetch_assoc()['invoice_count'];
+
+var_dump("Basic invoice count for tenant_id $tenant_id: " . $invoiceCount);
+
+// Check if any invoices exist in the system at all
+$totalInvoicesQuery = "SELECT COUNT(*) as total FROM invoices";
+$totalInvoicesResult = $conn->query($totalInvoicesQuery);
+$totalInvoices = $totalInvoicesResult->fetch_assoc()['total'];
+
+var_dump("Total invoices in system: " . $totalInvoices);
+
+// Check if the tenant_id exists in any tenant records
+$tenantCheckQuery = "SELECT COUNT(*) as count FROM tenants WHERE tenant_id = ?";
+$tenantCheckStmt = $conn->prepare($tenantCheckQuery);
+$tenantCheckStmt->bind_param("i", $tenant_id);
+$tenantCheckStmt->execute();
+$tenantCheckResult = $tenantCheckStmt->get_result();
+$tenantExists = $tenantCheckResult->fetch_assoc()['count'];
+
+var_dump("Tenant with ID $tenant_id exists in tenants table: " . ($tenantExists ? 'Yes' : 'No'));
+
+// Check for a sample of tenants with invoices
+$sampleQuery = "SELECT DISTINCT tenant_id FROM invoices LIMIT 5";
+$sampleResult = $conn->query($sampleQuery);
+$sampleTenants = [];
+while ($row = $sampleResult->fetch_assoc()) {
+    $sampleTenants[] = $row['tenant_id'];
+}
+
+var_dump("Sample tenant IDs with invoices:", $sampleTenants);
+
 // Function to check and update overdue invoices
 function updateOverdueInvoices($conn, $tenant_id) {
     // Get today's date
@@ -109,6 +146,7 @@ $result = $stmt->get_result();
 
 // DEBUG: Output query results for troubleshooting
 var_dump("SQL Query: " . $query);
+var_dump("Query parameters: tenant_id=" . $tenant_id . ", limit=" . $entriesPerPage . ", offset=" . $offset);
 var_dump("Number of rows returned: " . ($result ? $result->num_rows : 0));
 
 $invoices = [];
@@ -117,6 +155,10 @@ if ($result) {
     // DEBUG: Show the actual invoice data
     var_dump("Invoice data:", $invoices);
 }
+
+// Add a conditional to remove debug output after testing
+// Comment out this line when done debugging
+// exit("Debug testing complete - check the output above");
 ?>
 
 <!DOCTYPE html>

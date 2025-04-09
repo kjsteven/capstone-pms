@@ -5,6 +5,7 @@ ob_start();
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';
+require_once '../notification/notif_handler.php'; // Add this line
 
 // Check if user is logged in and has valid session data
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
@@ -48,14 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bind_param("ssddss", $unit_no, $unit_type, $square_meter, $monthly_rent, $images, $status);
 
     if ($stmt->execute()) {
-        // Add error handling for logging
-        if (!logActivity(
-            $_SESSION['user_id'], 
-            "Added New Unit", 
-            "Added new unit: $unit_no ($unit_type)"
-        )) {
-            error_log("Failed to log activity for new unit creation");
-        }
+        // Log the activity
+        logActivity($_SESSION['user_id'], "Added New Unit", "Added new unit: $unit_no ($unit_type)");
+
+        // Create notification for admin
+        $adminMessage = "New unit added: Unit {$unit_no} ({$unit_type}) has been successfully added to the system.";
+        createNotification($_SESSION['user_id'], $adminMessage, 'property');
+
+        // Create notification for available tenants with approved KYC
+        $tenant_query = "SELECT user_id FROM kyc_verification WHERE verification_status = 'approved'";
+        $tenant_result = $conn->query($tenant_query);
+        
+
         $insert_status = 'success';
     } else {
         $insert_status = 'error';

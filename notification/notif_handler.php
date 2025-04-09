@@ -51,6 +51,16 @@ function createNotification($user_id, $message, $type = 'kyc') {
 
 function getNotificationIcon($type) {
     switch($type) {
+        case 'kyc_approved':
+            return 'check-circle';
+        case 'kyc_rejected':
+            return 'x-circle';
+        case 'admin_kyc':
+            return 'file-text';
+        case 'property':
+            return 'home';
+        case 'new_unit':
+            return 'plus-square';
         case 'payment':
             return 'credit-card';
         case 'admin_payment':
@@ -71,6 +81,26 @@ function getNotificationIcon($type) {
             return 'shield';
         case 'kyc':
             return 'user-check';
+        case 'reservation_confirmed':
+            return 'check-circle';
+        case 'reservation_completed':
+            return 'check-square';
+        case 'reservation_cancelled':
+            return 'x-circle';
+        case 'admin_reservation_confirmed':
+            return 'thumbs-up';
+        case 'admin_reservation_completed':
+            return 'check-square';
+        case 'admin_reservation_cancelled':
+            return 'x-square';
+        case 'invoice_sent':
+            return 'mail';
+        case 'invoice_paid':
+            return 'check-circle';
+        case 'invoice_overdue':
+            return 'alert-circle';
+        case 'admin_invoice':
+            return 'file-text';
         default:
             return 'bell';
     }

@@ -278,3 +278,55 @@ Stack trace:
 [08-Apr-2025 15:39:25 Europe/Berlin] Starting invoice_actions.php with action: view
 [08-Apr-2025 15:44:54 Europe/Berlin] Starting invoice_actions.php with action: view
 [08-Apr-2025 15:44:57 Europe/Berlin] Starting invoice_actions.php with action: view
+[09-Apr-2025 19:24:18 Europe/Berlin] Starting invoice_actions.php with action: create
+[09-Apr-2025 19:24:18 Europe/Berlin] Create invoice POST data: Array
+(
+    [tenant_id] => 53
+    [invoice_type] => rent
+    [amount] => 36000.00
+    [issue_date] => 2025-04-14
+    [due_date] => 2025-04-30
+    [description] => 
+    [line_items] => []
+)
+
+[09-Apr-2025 19:24:18 Europe/Berlin] Invoice created successfully with ID: 12 and invoice number: INV-20250409-5638
+[09-Apr-2025 19:24:29 Europe/Berlin] Starting invoice_actions.php with action: view
+[09-Apr-2025 19:24:32 Europe/Berlin] Starting invoice_actions.php with action: view
+[09-Apr-2025 19:24:40 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[09-Apr-2025 19:24:44 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function createNotification() in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:675
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(108): sendInvoiceEmail()
+#1 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 675
+[09-Apr-2025 19:27:05 Europe/Berlin] Starting invoice_actions.php with action: view
+[09-Apr-2025 19:27:09 Europe/Berlin] Starting invoice_actions.php with action: view
+[09-Apr-2025 19:27:11 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[09-Apr-2025 19:27:15 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function createNotification() in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:676
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(108): sendInvoiceEmail()
+#1 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 676
+[09-Apr-2025 19:27:58 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[09-Apr-2025 19:28:02 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function createNotification() in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:676
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(108): sendInvoiceEmail()
+#1 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 676
+[09-Apr-2025 19:28:43 Europe/Berlin] Starting invoice_actions.php with action: view
+[09-Apr-2025 19:28:47 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[09-Apr-2025 19:28:50 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function createNotification() in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:676
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(108): sendInvoiceEmail()
+#1 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 676
+[09-Apr-2025 19:30:34 Europe/Berlin] Starting invoice_actions.php with action: update_status
+[09-Apr-2025 19:30:34 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function createNotification() in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php:775
+Stack trace:
+#0 C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php(111): updateInvoiceStatus()
+#1 {main}
+  thrown in C:\xampp\htdocs\capstone-pms\admin\invoice_actions.php on line 775
+[09-Apr-2025 19:33:32 Europe/Berlin] Starting invoice_actions.php with action: update_status
+[09-Apr-2025 19:33:41 Europe/Berlin] Starting invoice_actions.php with action: view
+[09-Apr-2025 19:33:44 Europe/Berlin] Starting invoice_actions.php with action: send_email
+[09-Apr-2025 19:34:02 Europe/Berlin] Starting invoice_actions.php with action: update_status

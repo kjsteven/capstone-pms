@@ -2,6 +2,7 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require '../session/audit_trail.php';
+require_once '../notification/notif_handler.php'; // Add this line
 
 start_secure_session();
 
@@ -64,6 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         $status = $_POST['status'];
         $request_id = intval($_POST['request_id']);
 
+        // Get maintenance request details
+        $details_query = "SELECT mr.user_id, mr.unit, mr.issue FROM maintenance_requests mr WHERE mr.id = ?";
+        $stmt = $conn->prepare($details_query);
+        $stmt->bind_param("i", $request_id);
+        $stmt->execute();
+        $request_details = $stmt->get_result()->fetch_assoc();
+
         // Prepare and execute update
         $update_query = "UPDATE maintenance_requests SET status = ? WHERE id = ?";
         $stmt = $conn->prepare($update_query);
@@ -76,6 +84,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 $user_id = $_SESSION['user_id'];
                 $action_details = "Updated maintenance request #$request_id status to: $status";
                 logActivity($user_id, "Update Maintenance Status", $action_details);
+
+                // Create notification messages
+                $userMessage = "Your maintenance request for Unit {$request_details['unit']} ({$request_details['issue']}) has been marked as {$status}.";
+                $adminMessage = "Maintenance request #{$request_id} for Unit {$request_details['unit']} updated to {$status}.";
+
+                // Send notifications
+                createNotification($request_details['user_id'], $userMessage, 'maintenance');
+                createNotification($_SESSION['user_id'], $adminMessage, 'admin_maintenance');
 
                 echo json_encode([
                     'status' => 'success', 

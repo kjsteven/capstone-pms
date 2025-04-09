@@ -4,6 +4,7 @@ session_start();
 
 require_once '../session/db.php';
 require_once '../session/audit_trail.php';
+require_once '../notification/notif_handler.php';
 
 
 
@@ -45,7 +46,6 @@ try {
 
         case 'approve':
             $kycId = isset($_POST['kyc_id']) ? (int)$_POST['kyc_id'] : 0;
-            $action = isset($_POST['action']) ? $_POST['action'] : '';
             
             if (!$kycId) {
                 throw new Exception("Invalid KYC ID");
@@ -54,6 +54,19 @@ try {
             $conn->begin_transaction();
             
             try {
+                // Get user_id first
+                $userQuery = "SELECT user_id FROM kyc_verification WHERE kyc_id = ?";
+                $userStmt = $conn->prepare($userQuery);
+                $userStmt->bind_param("i", $kycId);
+                $userStmt->execute();
+                $userResult = $userStmt->get_result();
+                $userData = $userResult->fetch_assoc();
+                $userStmt->close();
+
+                if (!$userData) {
+                    throw new Exception("KYC record not found");
+                }
+
                 // Get admin name first
                 $adminQuery = "SELECT name FROM users WHERE user_id = ? AND role = 'Admin'";
                 $adminStmt = $conn->prepare($adminQuery);
@@ -87,6 +100,14 @@ try {
                 
                 // Log the action
                 logActivity($_SESSION['user_id'], 'KYC Approval', "Approved KYC verification #$kycId");
+
+                // Create notification for user
+                $userMessage = "Your KYC verification has been approved. You can now access all features.";
+                createNotification($userData['user_id'], $userMessage, 'kyc_approved');
+
+                // Create notification for admin
+                $adminMessage = "KYC verification #" . $kycId . " has been approved successfully.";
+                createNotification($_SESSION['user_id'], $adminMessage, 'admin_kyc');
                 
                 $conn->commit();
                 echo json_encode(['success' => true, 'message' => 'KYC verification approved successfully']);
@@ -97,7 +118,6 @@ try {
             break;
 
         case 'reject':
-            // Reject KYC verification
             $kycId = isset($_POST['kyc_id']) ? (int)$_POST['kyc_id'] : 0;
             $reason = isset($_POST['reason']) ? trim($_POST['reason']) : '';
             
@@ -108,6 +128,19 @@ try {
             $conn->begin_transaction();
             
             try {
+                // Get user_id first
+                $userQuery = "SELECT user_id FROM kyc_verification WHERE kyc_id = ?";
+                $userStmt = $conn->prepare($userQuery);
+                $userStmt->bind_param("i", $kycId);
+                $userStmt->execute();
+                $userResult = $userStmt->get_result();
+                $userData = $userResult->fetch_assoc();
+                $userStmt->close();
+
+                if (!$userData) {
+                    throw new Exception("KYC record not found");
+                }
+
                 // Get admin name first
                 $adminQuery = "SELECT name FROM users WHERE user_id = ? AND role = 'Admin'";
                 $adminStmt = $conn->prepare($adminQuery);
@@ -136,6 +169,14 @@ try {
                 
                 // Log the action
                 logActivity($_SESSION['user_id'], 'KYC Rejection', "Rejected KYC verification #$kycId");
+
+                // Create notification for user
+                $userMessage = "Your KYC verification was rejected. Reason: " . $reason;
+                createNotification($userData['user_id'], $userMessage, 'kyc_rejected');
+
+                // Create notification for admin
+                $adminMessage = "KYC verification #" . $kycId . " has been rejected.";
+                createNotification($_SESSION['user_id'], $adminMessage, 'admin_kyc');
                 
                 $conn->commit();
                 echo json_encode(['success' => true, 'message' => 'KYC verification rejected successfully']);

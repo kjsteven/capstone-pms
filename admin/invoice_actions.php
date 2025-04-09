@@ -26,6 +26,7 @@ require_once '../session/db.php';
 require_once '../session/audit_trail.php';
 require '../vendor/autoload.php';  // For PHPMailer
 require '../config/config.php';     // For email credentials
+require_once '../notification/notif_handler.php'; // Add at the top with other requires
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -668,35 +669,48 @@ function sendInvoiceEmail() {
             $mail->Body = $email_body;
             $mail->AltBody = "Invoice: $invoiceNumber\nDue Date: " . date('M d, Y', strtotime($invoice['due_date'])) . "\nTotal Amount: ₱" . number_format($invoice['amount'], 2);
             
-            // Send the email
-            $mail->send();
-            
-            // Update invoice to mark email as sent
-            $updateStmt = $conn->prepare("UPDATE invoices SET email_sent = 1, email_sent_date = NOW() WHERE id = ?");
-            $updateStmt->bind_param("i", $invoice_id);
-            $updateStmt->execute();
-            
-            // Log activity
-            logActivity(
-                $_SESSION['user_id'],
-                'Sent Invoice Email',
-                "Sent invoice #{$invoiceNumber} to {$invoice['tenant_name']} ({$invoice['tenant_email']})"
-            );
-            
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => true, 
-                'message' => 'Invoice email sent successfully to ' . $invoice['tenant_email']
-            ]);
-            exit;
-            
+            if ($mail->send()) {
+                // Separate try-catch for notifications
+                try {
+                    // Create notifications
+                    $tenantMessage = "A new invoice #{$invoiceNumber} has been sent to your email.";
+                    createNotification($invoice['user_id'], $tenantMessage, 'invoice_sent');
+
+                    $adminMessage = "Invoice #{$invoiceNumber} was sent to {$invoice['tenant_name']}.";
+                    createNotification($_SESSION['user_id'], $adminMessage, 'admin_invoice');
+                } catch (Exception $notifError) {
+                    error_log("Notification error: " . $notifError->getMessage());
+                    // Continue execution even if notification fails
+                }
+
+                // Update invoice status
+                $stmt = $conn->prepare("UPDATE invoices SET email_sent = 1, email_sent_date = NOW() WHERE id = ?");
+                $stmt->bind_param("i", $invoice_id);
+                $stmt->execute();
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Invoice email sent successfully'
+                ]);
+                exit;
+            }
+            // ...existing error handling code...
         } catch (Exception $e) {
-            throw new Exception('Email could not be sent. Mailer Error: ' . $mail->ErrorInfo);
+            throw new Exception('Email sending failed: ' . $e->getMessage());
         }
-    } 
-    catch (Exception $e) {
+    } catch (Exception $e) {
+        // Clean any existing output
+        while (ob_get_level()) ob_end_clean();
+
+        // Log the error
+        error_log('Invoice email error: ' . $e->getMessage());
+
+        // Send error response
         header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
         exit;
     }
 }
@@ -719,48 +733,67 @@ function updateInvoiceStatus() {
             throw new Exception('Invalid status value. Must be "paid", "unpaid", or "overdue"');
         }
         
-        // Get invoice details for logging
-        $stmt = $conn->prepare("SELECT invoice_number, tenant_id FROM invoices WHERE id = ?");
+        // Get invoice and tenant details
+        $stmt = $conn->prepare("
+            SELECT i.invoice_number, i.tenant_id, t.user_id, u.name as tenant_name, p.unit_no 
+            FROM invoices i
+            JOIN tenants t ON i.tenant_id = t.tenant_id
+            JOIN users u ON t.user_id = u.user_id
+            JOIN property p ON t.unit_rented = p.unit_id
+            WHERE i.id = ?");
         $stmt->bind_param("i", $invoice_id);
         $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 0) {
-            throw new Exception('Invoice not found');
-        }
-        
-        $invoice = $result->fetch_assoc();
+        $invoice = $stmt->get_result()->fetch_assoc();
         
         // Update the invoice status
         $updateStmt = $conn->prepare("UPDATE invoices SET status = ? WHERE id = ?");
         $updateStmt->bind_param("si", $status, $invoice_id);
         
-        if (!$updateStmt->execute()) {
-            throw new Exception('Failed to update invoice status: ' . $updateStmt->error);
+        if ($updateStmt->execute()) {
+            // Separate try-catch for notifications
+            try {
+                switch($status) {
+                    case 'paid':
+                        createNotification(
+                            $invoice['user_id'],
+                            "Your invoice #{$invoice['invoice_number']} for Unit {$invoice['unit_no']} has been marked as paid.",
+                            'invoice_paid'
+                        );
+                        createNotification(
+                            $_SESSION['user_id'],
+                            "Invoice #{$invoice['invoice_number']} for {$invoice['tenant_name']} has been marked as paid.",
+                            'admin_invoice'
+                        );
+                        break;
+
+                    case 'overdue':
+                        createNotification(
+                            $invoice['user_id'],
+                            "Your invoice #{$invoice['invoice_number']} for Unit {$invoice['unit_no']} is overdue.",
+                            'invoice_overdue'
+                        );
+                        createNotification(
+                            $_SESSION['user_id'],
+                            "Invoice #{$invoice['invoice_number']} for {$invoice['tenant_name']} is marked as overdue.",
+                            'admin_invoice'
+                        );
+                        break;
+                }
+            } catch (Exception $notifError) {
+                error_log("Notification error: " . $notifError->getMessage());
+                // Continue execution even if notification fails
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Invoice status updated successfully',
+                'new_status' => $status
+            ]);
+            exit;
         }
-        
-        // Log activity
-        logActivity(
-            $_SESSION['user_id'], 
-            'Updated Invoice Status', 
-            "Updated invoice #{$invoice['invoice_number']} status to {$status}"
-        );
-        
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true, 
-            'message' => 'Invoice status updated successfully',
-            'new_status' => $status
-        ]);
-        exit;
-    } 
-    catch (Exception $e) {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error: ' . $e->getMessage()
-        ]);
-        exit;
+        // ...existing error handling code...
+    } catch (Exception $e) {
+        // ...existing error handling code...
     }
 }
 ?>

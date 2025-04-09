@@ -1,7 +1,8 @@
 <?php
-require '../session/db.php';
 require_once '../session/session_manager.php';
-require '../session/audit_trail.php';
+require '../session/db.php';
+require_once '../session/audit_trail.php';
+require_once '../notification/notif_handler.php';
 
 session_start();
 
@@ -42,6 +43,24 @@ try {
         throw new Exception('Failed to upload file');
     }
 
+    // Get tenant and unit details
+    $tenant_query = "SELECT t.user_id, t.unit_rented, p.unit_no 
+                    FROM tenants t 
+                    JOIN property p ON t.unit_rented = p.unit_id 
+                    WHERE t.tenant_id = ?";
+    $stmt = $conn->prepare($tenant_query);
+    $stmt->bind_param("i", $tenant_id);
+    $stmt->execute();
+    $tenant_result = $stmt->get_result();
+    $tenant_data = $tenant_result->fetch_assoc();
+
+    if (!$tenant_data) {
+        throw new Exception('Tenant not found');
+    }
+
+    // Start transaction
+    $conn->begin_transaction();
+
     // Update database
     $stmt = $conn->prepare("UPDATE tenants SET contract_file = ?, contract_upload_date = CURRENT_TIMESTAMP WHERE tenant_id = ?");
     $relative_path = 'uploads/contracts/' . $filename;
@@ -56,9 +75,23 @@ try {
     $tenant_details = "Contract uploaded for tenant ID: $tenant_id - File: $filename";
     logActivity($user_id, "Upload Contract", $tenant_details);
 
-    echo json_encode(['success' => true]);
+    // After successful upload
+    $tenant_message = "Your rental contract for Unit {$tenant_data['unit_no']} has been uploaded.";
+    createNotification($tenant_data['user_id'], $tenant_message, 'contract');
+
+    $admin_message = "Contract uploaded for Unit {$tenant_data['unit_no']}";
+    createNotification($_SESSION['user_id'], $admin_message, 'admin_contract');
+
+    // Log the activity
+    logActivity($_SESSION['user_id'], 'Contract Upload', "Uploaded contract for tenant ID: $tenant_id");
+
+    $conn->commit();
+    echo json_encode(['success' => true, 'message' => 'Contract uploaded successfully']);
 
 } catch (Exception $e) {
+    if ($conn->connect_errno) {
+        $conn->rollback();
+    }
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }

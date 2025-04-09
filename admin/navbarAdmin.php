@@ -4,6 +4,7 @@ ob_start();
 require_once '../session/session_manager.php';
 require '../session/db.php';
 include('../session/auth.php');
+require_once '../notification/notif_handler.php'; // Add this line
 
 // Start secure session
 start_secure_session();
@@ -55,6 +56,10 @@ $stmt->close();
 // if no image is found, set a default image
 $profile_image_path = !empty($profile_image) ? $profile_image : "https://flowbite.com/docs/images/people/profile-picture-5.jpg";
 
+// Get notifications for admin
+$notifications = getNotifications($user_id);
+$unread_count = getUnreadCount($user_id);
+
 ?>
 
 
@@ -67,6 +72,43 @@ $profile_image_path = !empty($profile_image) ? $profile_image : "https://flowbit
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <title>Navbar</title>
+    <style>
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            background: #EF4444;
+            color: white;
+            font-size: 12px;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        .notification-dropdown {
+            width: 400px;
+            max-width: calc(100vw - 2rem);
+            right: 1rem;
+            margin-left: 1rem;
+        }
+        .notification-item {
+            transition: all 0.3s ease;
+            background-color: #ffffff;
+        }
+        .notification-item.unread {
+            border-left: 4px solid #3b82f6;
+            background-color: #f0f7ff;
+        }
+        .notification-message {
+            color: #1e293b;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+    </style>
 </head>
 <body>
 
@@ -93,10 +135,12 @@ $profile_image_path = !empty($profile_image) ? $profile_image : "https://flowbit
             <div class="flex items-center">
                 <div class="flex items-center ms-3 relative">
                     <!-- Notification Icon -->
-                    <button type="button" class="flex items-center justify-center w-10 h-10 bg-blue-700 rounded-full text-white" id="notification-button">
+                    <button type="button" class="flex items-center justify-center w-10 h-10 bg-blue-700 rounded-full text-white relative" id="notification-button">
                         <span class="sr-only">Open notifications</span>
-                        <!-- Feather Bell Icon -->
-                        <svg data-feather="bell" class="text-blue-800 dark:text-white icon-size"></svg>
+                        <svg data-feather="bell" class="w-6 h-6 text-white"></svg>
+                        <?php if ($unread_count > 0): ?>
+                            <span class="notification-badge"><?php echo $unread_count; ?></span>
+                        <?php endif; ?>
                     </button>
 
                     <button type="button" class="flex text-sm bg-blue-600 rounded-full focus:ring-4 ms-6 focus:ring-blue-300 dark:focus:ring-blue-600" aria-expanded="false" id="user-menu-button">
@@ -122,18 +166,53 @@ $profile_image_path = !empty($profile_image) ? $profile_image : "https://flowbit
                     </div>
 
                     <!-- Notifications menu -->
-                    <div class="absolute right-0 z-40 hidden w-48 top-[45px] origin-top-right shadow-lg bg-white dark:bg-blue-800 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="notification-button" id="dropdown-notifications">
-                        <div class="px-4 py-3">
-                            <p class="text-sm text-blue-900 dark:text-white">Notifications</p>
+                    <div class="absolute right-0 z-40 hidden notification-dropdown top-[45px] origin-top-right shadow-lg bg-white dark:bg-blue-900 ring-1 ring-black ring-opacity-5 focus:outline-none rounded-lg mx-4" role="menu" aria-orientation="vertical" aria-labelledby="notification-button" id="dropdown-notifications">
+                        <div class="px-4 py-3 border-b border-gray-200 dark:border-blue-800">
+                            <div class="flex justify-between items-center">
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">Notifications</p>
+                                <?php if ($unread_count > 0): ?>
+                                    <span class="text-sm text-blue-600 dark:text-blue-400"><?php echo $unread_count; ?> unread</span>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <ul class="py-1" role="none">
-                            <li>
-                                <a href="#" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem">Notification 1</a>
-                            </li>
-                            <li>
-                                <a href="#" class="block px-4 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:text-white dark:hover:bg-blue-600 dark:hover:text-white" role="menuitem">Notification 2</a>
-                            </li>
-                        </ul>
+                        <div class="max-h-[400px] overflow-y-auto" id="notifications-container">
+                            <?php if (empty($notifications)): ?>
+                                <div class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 text-center">
+                                    No notifications
+                                </div>
+                            <?php else: ?>
+                                <?php foreach ($notifications as $notif): ?>
+                                    <div class="notification-item <?php echo $notif['is_read'] ? '' : 'unread'; ?> p-4 border-b border-gray-200 dark:border-blue-700">
+                                        <div class="flex flex-col">
+                                            <div class="flex items-start justify-between">
+                                                <p class="text-sm notification-message flex-1 mr-4">
+                                                    <?php echo htmlspecialchars($notif['message']); ?>
+                                                </p>
+                                                <?php if (!$notif['is_read']): ?>
+                                                    <button onclick="markNotificationAsRead(<?php echo $notif['notification_id']; ?>, this)" 
+                                                            class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium whitespace-nowrap">
+                                                        Mark as read
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                                                <?php echo date('M j, H:i', strtotime($notif['created_at'])); ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                                <?php
+                                $total_notifications = getTotalNotifications($user_id);
+                                if ($total_notifications > 10):
+                                ?>
+                                    <div class="text-center py-3" id="load-more-container">
+                                        <button onclick="loadMoreNotifications()" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm font-medium">
+                                            Show More
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -176,6 +255,75 @@ $profile_image_path = !empty($profile_image) ? $profile_image : "https://flowbit
             dropdownNotifications.classList.add('hidden');
         }
     });
+
+    let currentOffset = 10;
+    let isLoading = false;
+
+    function markNotificationAsRead(notificationId, button) {
+        fetch('../notification/mark_as_read.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'notification_id=' + notificationId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const notifItem = button.closest('.notification-item');
+                notifItem.classList.remove('unread');
+                button.remove();
+                
+                // Update unread count
+                const unreadCount = document.querySelector('.notification-badge');
+                if (unreadCount) {
+                    const currentCount = parseInt(unreadCount.textContent) - 1;
+                    if (currentCount <= 0) {
+                        unreadCount.remove();
+                    } else {
+                        unreadCount.textContent = currentCount;
+                    }
+                }
+            }
+        });
+    }
+
+    function loadMoreNotifications() {
+        if (isLoading) return;
+        isLoading = true;
+
+        const loadMoreBtn = document.querySelector('#load-more-container button');
+        loadMoreBtn.textContent = 'Loading...';
+
+        fetch('../notification/load_more_notifications.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'offset=' + currentOffset
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const container = document.getElementById('notifications-container');
+                const loadMoreContainer = document.getElementById('load-more-container');
+                
+                loadMoreContainer.insertAdjacentHTML('beforebegin', data.html);
+                currentOffset += 10;
+                
+                if (!data.hasMore) {
+                    loadMoreContainer.remove();
+                }
+            }
+            isLoading = false;
+            loadMoreBtn.textContent = 'Show More';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            isLoading = false;
+            loadMoreBtn.textContent = 'Show More';
+        });
+    }
 </script>
 
 </body>

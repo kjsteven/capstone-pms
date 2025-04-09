@@ -17,6 +17,7 @@ require '../vendor/autoload.php';
 require '../config/config.php';
 require_once '../session/session_manager.php';
 require_once '../session/audit_trail.php';
+require_once '../notification/notif_handler.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -50,12 +51,30 @@ try {
 
     $conn->begin_transaction();
 
+    // Get user and reservation details first
+    $stmt = $conn->prepare("
+        SELECT r.user_id, r.unit_id, u.email, u.name, p.unit_no, r.viewing_date, r.viewing_time 
+        FROM reservations r
+        JOIN users u ON r.user_id = u.user_id
+        JOIN property p ON r.unit_id = p.unit_id
+        WHERE r.reservation_id = ?
+    ");
+    $stmt->bind_param("i", $data['reservation_id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $reservation = $result->fetch_assoc();
+
+    if (!$reservation) {
+        throw new Exception('Reservation not found');
+    }
+
     // Update status
-    $stmt = $conn->prepare("UPDATE reservations SET status = ? WHERE reservation_id = ?");
-    $stmt->bind_param("si", $data['status'], $data['reservation_id']);
+    $updateStmt = $conn->prepare("UPDATE reservations SET status = ? WHERE reservation_id = ?");
+    $status = ucfirst(strtolower($data['status'])); // Capitalize first letter
+    $updateStmt->bind_param("si", $status, $data['reservation_id']);
     
-    if (!$stmt->execute()) {
-        throw new Exception('Failed to update status');
+    if (!$updateStmt->execute()) {
+        throw new Exception('Failed to update status: ' . $updateStmt->error);
     }
 
     // Get admin/staff name for the audit log
@@ -101,19 +120,6 @@ try {
         }
     }
 
-    // Get user details for email
-    $stmt = $conn->prepare("
-        SELECT u.email, u.name, p.unit_no, r.viewing_date, r.viewing_time 
-        FROM reservations r
-        JOIN users u ON r.user_id = u.user_id
-        JOIN property p ON r.unit_id = p.unit_id
-        WHERE r.reservation_id = ?
-    ");
-    $stmt->bind_param("i", $data['reservation_id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $reservation = $result->fetch_assoc();
-
     // Send email notification using PHPMailer
     $mail = new PHPMailer(true);
     try {
@@ -132,7 +138,6 @@ try {
         // Format date and time
         $formattedDate = date('F j, Y', strtotime($reservation['viewing_date']));
         $formattedTime = date('g:i A', strtotime($reservation['viewing_time']));
-
 
         $statusMessage = match(strtolower($data['status'])) {
             'confirmed' => 'has been confirmed',
@@ -192,6 +197,40 @@ try {
         $mail->send();
     } catch (Exception $e) {
         error_log("Email sending failed: " . $e->getMessage());
+    }
+
+    // Create notification messages based on status
+    $statusMessages = [
+        'confirmed' => [
+            'user' => "Your reservation for Unit {$reservation['unit_no']} has been confirmed.",
+            'admin' => "Reservation #{$data['reservation_id']} for Unit {$reservation['unit_no']} has been confirmed."
+        ],
+        'completed' => [
+            'user' => "Your reservation viewing for Unit {$reservation['unit_no']} has been completed.",
+            'admin' => "Reservation #{$data['reservation_id']} for Unit {$reservation['unit_no']} is now completed."
+        ],
+        'cancelled' => [
+            'user' => "Your reservation for Unit {$reservation['unit_no']} has been cancelled.",
+            'admin' => "Reservation #{$data['reservation_id']} for Unit {$reservation['unit_no']} has been cancelled."
+        ]
+    ];
+
+    // Send notifications
+    $status = strtolower($data['status']);
+    if (isset($statusMessages[$status])) {
+        // Notification for user
+        createNotification(
+            $reservation['user_id'],
+            $statusMessages[$status]['user'],
+            'reservation_' . $status
+        );
+
+        // Notification for admin
+        createNotification(
+            $_SESSION['user_id'],
+            $statusMessages[$status]['admin'],
+            'admin_reservation_' . $status
+        );
     }
 
     $conn->commit();

@@ -30,12 +30,13 @@ if ($kyc_status !== 'approved') {
     exit();
 }
 
-// Fetch tenant data for unit selection
+// Fetch tenant data for unit selection with contract status
 $query = "
     SELECT 
         p.unit_id,
         p.unit_no,
-        t.outstanding_balance
+        t.outstanding_balance,
+        t.contract_file
     FROM tenants t
     JOIN property p ON t.unit_rented = p.unit_id
     WHERE t.user_id = ? AND t.status = 'active'
@@ -212,12 +213,30 @@ $stmt->close();
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
                     >
                         <option value="">Select your unit</option>
-                        <?php foreach ($units as $unit): ?>
-                            <option value="<?php echo $unit['unit_id']; ?>">
+                        <?php 
+                        $has_valid_units = false;
+                        foreach ($units as $unit): 
+                            $disabled = empty($unit['contract_file']) ? 'disabled' : '';
+                            $title = empty($unit['contract_file']) ? 'Contract not yet uploaded for this unit' : '';
+                            $has_valid_units = $has_valid_units || !empty($unit['contract_file']);
+                        ?>
+                            <option 
+                                value="<?php echo htmlspecialchars($unit['unit_id']); ?>" 
+                                <?php echo $disabled; ?>
+                                title="<?php echo $title; ?>"
+                            >
                                 <?php echo htmlspecialchars($unit['unit_no']); ?>
+                                <?php echo empty($unit['contract_file']) ? ' (No Contract)' : ''; ?>
                             </option>
                         <?php endforeach; ?>
+                        <?php if (!$has_valid_units): ?>
+                            <option value="" disabled>No units with uploaded contracts available</option>
+                        <?php endif; ?>
                     </select>
+                    <div class="mt-2 text-sm text-amber-600">
+                        <i class="fas fa-info-circle"></i>
+                        Note: Units without uploaded contracts are disabled. Please contact the admin to upload your contract first.
+                    </div>
                 </div>
 
                 <!-- Payment Type Selection -->

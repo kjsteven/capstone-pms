@@ -164,10 +164,10 @@
                             <option value="" disabled selected>Select your unit number</option>
                             <?php
                                 // Fetching units rented by the user
-                                $unit_query = "SELECT p.unit_no
-                                            FROM tenants t
-                                            JOIN property p ON t.unit_rented = p.unit_id
-                                            WHERE t.user_id = ?";
+                                $unit_query = "SELECT p.unit_no, t.contract_file
+                                               FROM tenants t
+                                               JOIN property p ON t.unit_rented = p.unit_id
+                                               WHERE t.user_id = ? AND t.status = 'active'";
                             
                                 $unit_stmt = mysqli_prepare($conn, $unit_query);
                                 mysqli_stmt_bind_param($unit_stmt, 'i', $user_id);
@@ -175,14 +175,36 @@
                                 $unit_result = mysqli_stmt_get_result($unit_stmt);
 
                                 if ($unit_result) {
+                                    $has_valid_units = false;
+                                    $options_html = '';
                                     while ($unit_row = mysqli_fetch_assoc($unit_result)) {
-                                        echo '<option value="' . htmlspecialchars($unit_row['unit_no']) . '">' . htmlspecialchars($unit_row['unit_no']) . '</option>';
+                                        $disabled = empty($unit_row['contract_file']) ? 'disabled' : '';
+                                        $title = empty($unit_row['contract_file']) ? 'Contract not yet uploaded for this unit' : '';
+                                        $options_html .= sprintf(
+                                            '<option value="%s" %s title="%s">%s %s</option>',
+                                            htmlspecialchars($unit_row['unit_no']),
+                                            $disabled,
+                                            $title,
+                                            htmlspecialchars($unit_row['unit_no']),
+                                            empty($unit_row['contract_file']) ? '(No Contract)' : ''
+                                        );
+                                        if (!empty($unit_row['contract_file'])) {
+                                            $has_valid_units = true;
+                                        }
                                     }
-                                } else {   
-                                    echo '<option value="">No units found</option>';
+                                }
+                                if (isset($options_html)) {
+                                    echo $options_html;
+                                }
+                                if (!isset($has_valid_units) || !$has_valid_units) {
+                                    echo '<option value="" disabled>No units with uploaded contracts available</option>';
                                 }
                             ?>
                         </select>
+                        <div class="mt-2 text-sm text-amber-600">
+                            <i class="fas fa-info-circle"></i>
+                            Note: Units without uploaded contracts are disabled. Please contact the admin to upload your contract first.
+                        </div>
                     </div>
 
                     <!-- Issue Selection -->

@@ -290,38 +290,68 @@ $unread_count = getUnreadCount($user_id);
 
     function loadMoreNotifications() {
         if (isLoading) return;
-        isLoading = true;
-
+        
         const loadMoreBtn = document.querySelector('#load-more-container button');
-        loadMoreBtn.textContent = 'Loading...';
+        if (!loadMoreBtn) return;
+        
+        isLoading = true;
+        loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
 
         fetch('../notification/load_more_notifications.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: 'offset=' + currentOffset
+            body: `offset=${currentOffset}`
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
+                // Get the container and load more button
                 const container = document.getElementById('notifications-container');
                 const loadMoreContainer = document.getElementById('load-more-container');
                 
-                loadMoreContainer.insertAdjacentHTML('beforebegin', data.html);
-                currentOffset += 10;
-                
-                if (!data.hasMore) {
-                    loadMoreContainer.remove();
+                if (data.html) {
+                    // Insert new notifications before the load more button
+                    if (loadMoreContainer) {
+                        loadMoreContainer.insertAdjacentHTML('beforebegin', data.html);
+                    } else {
+                        container.insertAdjacentHTML('beforeend', data.html);
+                    }
+
+                    // Update the offset for next load
+                    currentOffset = data.nextOffset;
+
+                    // Add or remove the "Show More" button based on whether there are more notifications
+                    if (!data.hasMore && loadMoreContainer) {
+                        loadMoreContainer.remove();
+                    }
+
+                    // Initialize mark as read buttons for new notifications
+                    document.querySelectorAll('.notification-item.unread button:not([data-initialized])').forEach(btn => {
+                        btn.setAttribute('data-initialized', 'true');
+                        btn.addEventListener('click', function() {
+                            const notifId = this.getAttribute('data-notification-id');
+                            if (notifId) markNotificationAsRead(notifId, this);
+                        });
+                    });
                 }
             }
-            isLoading = false;
-            loadMoreBtn.textContent = 'Show More';
         })
         .catch(error => {
             console.error('Error:', error);
+        })
+        .finally(() => {
             isLoading = false;
-            loadMoreBtn.textContent = 'Show More';
+            const btn = document.querySelector('#load-more-container button');
+            if (btn) {
+                btn.innerHTML = 'Show More';
+            }
         });
     }
 </script>

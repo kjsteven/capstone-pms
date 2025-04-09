@@ -101,6 +101,14 @@ function getNotificationIcon($type) {
             return 'alert-circle';
         case 'admin_invoice':
             return 'file-text';
+        case 'payment_recorded':
+            return 'check-circle';
+        case 'payment_pending':
+            return 'clock';
+        case 'payment_approved':
+            return 'check-circle';
+        case 'payment_rejected':
+            return 'x-circle';
         default:
             return 'bell';
     }

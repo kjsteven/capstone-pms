@@ -3,6 +3,7 @@ require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';
 require_once '../utils/email_sender.php';
+require_once '../notification/notif_handler.php'; // Add this line
 
 session_start();
 
@@ -172,6 +173,15 @@ try {
             }
         }
         
+        // Create notification for tenant
+        $tenantMessage = "Your payment of PHP " . number_format($payment['amount'], 2) . " has been approved.";
+        createNotification($payment['user_id'], $tenantMessage, 'payment_approved');
+
+        // Create notification for admin
+        $adminMessage = "Payment of PHP " . number_format($payment['amount'], 2) . " from " . 
+                       $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ") has been approved";
+        createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment');
+        
         // Log activity
         $activityDetails = "Approved payment of ₱" . number_format($payment['amount'], 2) . 
                           " for " . $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ")";
@@ -246,6 +256,18 @@ try {
                 error_log("Payment rejection email sent successfully to: $tenantEmail");
             }
         }
+        
+        // Create notification for tenant
+        $tenantMessage = "Your payment of PHP " . number_format($payment['amount'], 2) . " has been rejected.";
+        if (!empty($rejectionReason)) {
+            $tenantMessage .= " Reason: " . $rejectionReason;
+        }
+        createNotification($payment['user_id'], $tenantMessage, 'payment_rejected');
+
+        // Create notification for admin
+        $adminMessage = "Payment of PHP " . number_format($payment['amount'], 2) . " from " . 
+                       $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ") has been rejected";
+        createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment');
         
         $message = "Payment rejected successfully";
     }

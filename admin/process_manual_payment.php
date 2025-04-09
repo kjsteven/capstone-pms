@@ -300,25 +300,21 @@ try {
         }
     }
     
-    // Log activity
-    $adminName = $_SESSION['name'] ?? 'Admin';
-    $paymentMethodText = ($payment_method === 'gcash') ? 'GCash' : 'Cash';
-    
-    // Different activity details for rent vs other payments
-    if ($payment_type === 'rent') {
-        $activityDetails = "Recorded $paymentMethodText rent payment of ₱" . number_format($amount, 2) . 
-                          " for " . $tenant['tenant_name'] . " (Unit " . $tenant['unit_no'] . ")";
-    } else {
-        $activityDetails = "Recorded $paymentMethodText payment of ₱" . number_format($amount, 2) . 
-                          " for " . $bill_item . " - " . $tenant['tenant_name'] . " (Unit " . $tenant['unit_no'] . ")";
+    // After successful payment insertion, add notifications
+    try {
+        // Create notification for tenant
+        $tenantMessage = "Your payment of PHP " . number_format($amount, 2) . " has been recorded.";
+        createNotification($tenant['user_id'], $tenantMessage, 'payment_recorded');
+
+        // Create notification for admin
+        $adminMessage = "Manual payment of PHP " . number_format($amount, 2) . " recorded for " . 
+                       $tenant['tenant_name'] . " (Unit " . $tenant['unit_no'] . ")";
+        createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment');
+    } catch (Exception $notifError) {
+        // Log notification error but continue with the process
+        error_log("Failed to create notifications: " . $notifError->getMessage());
     }
-    
-    logActivity(
-        $_SESSION['user_id'],
-        'Recorded Manual Payment',
-        $activityDetails
-    );
-    
+
     // Commit transaction
     $conn->commit();
     

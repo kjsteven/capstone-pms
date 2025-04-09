@@ -452,4 +452,94 @@ function sendTurnoverCompletionEmail($email, $tenantName, $unitNo, $inspectionRe
         return false;
     }
 }
+
+/**
+ * Sends inspection assignment notification email to staff
+ * 
+ * @param string $email Staff member's email address
+ * @param string $staffName Staff member's name
+ * @param string $tenantName Tenant's name
+ * @param string $unitNo Unit number being inspected
+ * @param string $inspectionDate Date and time of the scheduled inspection
+ * @param string $notes Additional notes about the inspection
+ * @return bool True if email sent successfully, false otherwise
+ */
+function sendStaffInspectionAssignmentEmail($email, $staffName, $tenantName, $unitNo, $inspectionDate, $notes = '') {
+    $mail = new PHPMailer(true);
+    try {
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
+        $mail->Username = SMTP_USERNAME;
+        $mail->Password = SMTP_PASSWORD;
+        $mail->setFrom(SMTP_USERNAME, 'PropertyWise | Inspection Assignment');
+        $mail->addAddress($email, $staffName);
+        $mail->isHTML(true);
+        
+        // Format inspection date
+        $formattedDate = date('F d, Y \a\t h:i A', strtotime($inspectionDate));
+        
+        // Notes section
+        $notesSection = !empty($notes) ? 
+            "<p style='margin: 5px 0;'><strong>Additional Notes:</strong> " . nl2br($notes) . "</p>" : "";
+        
+        // Email content with HTML and inline CSS
+        $mail->Subject = 'Unit Inspection Assignment - PropertyWise';
+        $mail->Body = '
+        <div style="font-family: \'Arial\', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f3f4f6;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #1f2937; font-size: 24px; font-weight: bold; margin-bottom: 10px;">New Inspection Assignment</h1>
+                    <p style="color: #6b7280; font-size: 16px; margin-bottom: 20px;">You have been assigned to conduct a unit inspection</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Dear ' . $staffName . ',</strong></p>
+                    <div style="margin: 15px 0; line-height: 1.6; color: #4b5563;">
+                        <p>You have been assigned to conduct an inspection for the following unit. Please ensure you are available at the scheduled time.</p>
+                    </div>
+                </div>
+                
+                <div style="background-color: #f0f7ff; border: 1px solid #bcdcff; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                    <p style="margin: 5px 0;"><strong>Tenant:</strong> ' . $tenantName . '</p>
+                    <p style="margin: 5px 0;"><strong>Unit #:</strong> ' . $unitNo . '</p>
+                    <p style="margin: 5px 0;"><strong>Inspection Date:</strong> ' . $formattedDate . '</p>
+                    ' . $notesSection . '
+                </div>
+                
+                <div style="color: #4b5563; font-size: 14px; margin-top: 20px;">
+                    <h3 style="font-size: 16px; color: #1f2937;">Inspection Checklist:</h3>
+                    <ul style="margin-top: 5px; padding-left: 20px;">
+                        <li>Check cleanliness of all rooms</li>
+                        <li>Document any damages to walls, floors, and ceilings</li>
+                        <li>Verify all fixtures and equipment are working properly</li>
+                        <li>Collect and check all keys</li>
+                        <li>Take photos of any issues for documentation</li>
+                    </ul>
+                </div>
+                
+                <div style="color: #6b7280; font-size: 14px; text-align: center; margin-top: 20px;">
+                    <p>If you are unable to complete this assignment, please contact management immediately.</p>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px;">
+                    <p>This is an automated message from our property management system.</p>
+                    <p style="margin-top: 5px;">&copy; ' . date("Y") . ' PropertyWise. All rights reserved.</p>
+                </div>
+            </div>
+        </div>';
+
+        // Plain text version for non-HTML mail clients
+        $mail->AltBody = "Unit Inspection Assignment\n\nDear {$staffName},\n\nYou have been assigned to conduct an inspection for unit {$unitNo}.\n\nTenant: {$tenantName}\nInspection Date: {$formattedDate}\n\nPlease ensure you are available at the scheduled time.";
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        error_log('Error sending staff inspection assignment email: ' . $e->getMessage());
+        return false;
+    }
+}
 ?>

@@ -173,12 +173,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('Inspection date and staff assignment are required');
                 }
                 
-                // Get staff name for activity log and email
-                $staffQuery = $conn->prepare("SELECT name FROM staff WHERE staff_id = ?");
+                // Get staff details including email for notification
+                $staffQuery = $conn->prepare("SELECT name, Email FROM staff WHERE staff_id = ?");
                 $staffQuery->bind_param("i", $staff_assigned);
                 $staffQuery->execute();
                 $staffResult = $staffQuery->get_result();
-                $staffName = $staffResult->fetch_assoc()['name'] ?? 'Unknown staff';
+                $staffData = $staffResult->fetch_assoc();
+                $staffName = $staffData['name'] ?? 'Unknown staff';
+                $staffEmail = $staffData['Email'] ?? null; // Note: Using 'Email' as per the table schema
                 
                 // Update turnover record
                 if ($existingTurnover) {
@@ -205,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $insertStmt->execute();
                 }
                 
-                // Send inspection schedule email
+                // Send inspection schedule email to tenant
                 $result = sendInspectionScheduleEmail(
                     $tenant['email'],
                     $tenant['tenant_name'],
@@ -217,6 +219,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if (!$result) {
                     error_log('Failed to send inspection schedule email to ' . $tenant['email']);
+                }
+                
+                // Send inspection assignment email to staff
+                if ($staffEmail) {
+                    $staffNotified = sendStaffInspectionAssignmentEmail(
+                        $staffEmail,
+                        $staffName,
+                        $tenant['tenant_name'],
+                        $tenant['unit_no'],
+                        $inspection_date,
+                        $notes
+                    );
+                    
+                    if (!$staffNotified) {
+                        error_log('Failed to send inspection assignment email to ' . $staffEmail);
+                    }
                 }
                 
                 // Log activity

@@ -2,6 +2,7 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';  // Add this line
+require_once '../notification/notif_handler.php';
 
 session_start();
 
@@ -79,6 +80,14 @@ try {
             'Submit Maintenance Request',
             "Submitted maintenance request for unit {$_POST['unit']}, Issue: {$_POST['issue']}"
         );
+
+        // Create notification for the tenant
+        $userMessage = "Your maintenance request for Unit {$_POST['unit']} has been submitted successfully. Our team will review it shortly.";
+        createNotification($_SESSION['user_id'], $userMessage, 'maintenance');
+
+        // Create notification for admin (assuming admin user_id is 1)
+        $adminMessage = "New maintenance request from Unit {$_POST['unit']} - Issue: {$_POST['issue']}";
+        createNotification(1, $adminMessage, 'admin_maintenance');
 
         http_response_code(200); // OK
         echo "Success: Maintenance request submitted successfully.";

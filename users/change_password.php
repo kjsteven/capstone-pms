@@ -2,6 +2,7 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require '../session/audit_trail.php';
+require_once '../notification/notif_handler.php';  // Add this line
 
 start_secure_session();
 
@@ -41,6 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Log the password change
             $action_details = "Password changed successfully";
             logActivity($user_id, "Password Change", $action_details);
+
+            // Create notification for password change
+            $notification_message = "Your account password was changed successfully. If you didn't make this change, please contact support immediately.";
+            createNotification($user_id, $notification_message, 'security');
 
             $_SESSION['notification'] = [
                 'type' => 'success',

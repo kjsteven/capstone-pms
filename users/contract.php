@@ -2,6 +2,7 @@
 
 require_once '../session/session_manager.php';
 require '../session/db.php';
+require_once '../notification/notif_handler.php';
 
 start_secure_session();
 
@@ -142,11 +143,47 @@ $contracts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         // Show notification when contract is downloaded
         document.querySelectorAll('a[download]').forEach(link => {
             link.addEventListener('click', () => {
+                // Show toast notification
                 Toastify({
                     text: "Downloading contract...",
                     duration: 3000,
                     backgroundColor: "#4CAF50"
                 }).showToast();
+
+                // Get the unit number from the closest card
+                const unitNo = link.closest('.bg-white').querySelector('h3').textContent.trim().replace('Unit ', '');
+
+                // Create system notification
+                fetch('create_contract_notification.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `unit_no=${unitNo}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update notification badge in navbar
+                        const notifBadge = document.querySelector('.notification-badge');
+                        if (notifBadge) {
+                            notifBadge.textContent = data.unreadCount;
+                        } else if (data.unreadCount > 0) {
+                            // Create new badge if it doesn't exist
+                            const bellIcon = document.querySelector('#notification-button');
+                            const newBadge = document.createElement('span');
+                            newBadge.className = 'notification-badge';
+                            newBadge.textContent = data.unreadCount;
+                            bellIcon.appendChild(newBadge);
+                        }
+
+                        // Refresh notifications dropdown if it's open
+                        const dropdown = document.querySelector('#dropdown-notifications');
+                        if (!dropdown.classList.contains('hidden')) {
+                            location.reload(); // Refresh to show new notification
+                        }
+                    }
+                });
             });
         });
     </script>

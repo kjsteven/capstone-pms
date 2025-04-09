@@ -3,6 +3,7 @@ session_start();
 
 require_once '../session/db.php';
 require_once '../session/audit_trail.php';
+require_once '../notification/notif_handler.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -242,6 +243,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // Log activity
                     logActivity($user_id, 'KYC Submission', 'User submitted KYC verification');
                     
+                    // Create notification for user
+                    $userNotification = "Your KYC verification request has been submitted successfully. We will review your information shortly.";
+                    createNotification($user_id, $userNotification, 'kyc');
+
+                    // Create notification for admin (assuming admin user_id is 1)
+                    $adminNotification = "New KYC verification request from " . htmlspecialchars($_POST['firstName'] . ' ' . $_POST['lastName']);
+                    createNotification(1, $adminNotification, 'kyc_admin');
+
                     // Commit transaction
                     $conn->commit();
                     

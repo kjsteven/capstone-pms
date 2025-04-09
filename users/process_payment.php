@@ -2,6 +2,7 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php'; // Added audit_trail.php inclusion
+require_once '../notification/notif_handler.php'; // Add this line
 
 session_start();
 
@@ -156,6 +157,16 @@ try {
     // Log the payment using the audit_trail function
     $actionDetails = "Payment of PHP " . number_format($amount, 2) . " submitted for review (Reference: $reference_number)";
     logActivity($_SESSION['user_id'], 'Payment Submission', $actionDetails);
+
+    // After successful payment insertion and before commit
+    // Create notification for the tenant
+    $userMessage = "Your payment of PHP " . number_format($amount, 2) . " has been submitted and is pending review.";
+    createNotification($_SESSION['user_id'], $userMessage, 'payment');
+
+    // Create notification for admin
+    $adminMessage = "New payment of PHP " . number_format($amount, 2) . " submitted for Unit " . 
+                   $unit_id . " (Reference: " . $reference_number . ")";
+    createNotification(1, $adminMessage, 'admin_payment');
 
     // Commit transaction
     $conn->commit();

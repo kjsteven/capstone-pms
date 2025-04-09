@@ -30,7 +30,8 @@ try {
             p.square_meter
         FROM tenants t
         JOIN users u ON t.user_id = u.user_id
-        JOIN property p ON t.unit_rented = p.unit_id";
+        JOIN property p ON t.unit_rented = p.unit_id
+        WHERE t.status = 'active'";
 
     $result = $conn->query($query);
     

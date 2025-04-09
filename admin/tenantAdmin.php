@@ -417,21 +417,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column"><?= $tenant['created_at'] ?></td>
                 <td class="hidden px-4 py-2 text-left border border-gray-300 extra-column">
                     <div class="flex gap-2">
-                        <button class="inline-flex items-center justify-center px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                                onclick="editTenant(<?= $tenant['tenant_id'] ?>)"
-                                title="Edit contract">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                            Edit
+                        <button class="text-blue-600 hover:text-blue-900" onclick="editTenant(<?= $tenant['tenant_id'] ?>)" title="Edit contract">
+                            <i class="fas fa-edit"></i>
                         </button>
-                        <button class="inline-flex items-center justify-center px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50" 
-                                onclick="archiveTenant(<?= $tenant['tenant_id'] ?>)" 
-                                title="Archive this tenant">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                            </svg>
-                            Archive
+                        <button class="text-green-600 hover:text-green-900" onclick="turnoverUnit(<?= $tenant['tenant_id'] ?>)" title="Turn over unit">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                        <button class="text-red-600 hover:text-red-900" onclick="archiveTenant(<?= $tenant['tenant_id'] ?>)" title="Archive this tenant">
+                            <i class="fas fa-archive"></i>
                         </button>
                     </div>
                 </td>
@@ -679,6 +672,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
         function closeExistingModal() {
             document.getElementById('existingTenantModal').classList.add('hidden');
         }
+        
+        // Function to close the turnover modal
+        function closeTurnoverModal() {
+            document.getElementById('turnoverModal').classList.add('hidden');
+        }
+        
+        // Function to navigate between turnover steps
+        function goToTurnoverStep(stepNumber) {
+            // Hide all steps first
+            document.querySelectorAll('.turnover-step').forEach(step => {
+                step.classList.add('hidden');
+            });
+            
+            // Show the requested step
+            document.getElementById('turnover-step-' + stepNumber).classList.remove('hidden');
+        }
 
         // Handle tenant selection
         document.getElementById('existing_user_id').addEventListener('change', async function() {
@@ -888,6 +897,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                     
                     // Show the renewal modal
                     document.getElementById('renewContractModal').classList.remove('hidden');
+                    
+                    // Setup the calculation events
+                    setupRenewalFormEvents();
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -901,9 +913,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             document.getElementById('renewContractForm').reset();
         }
 
+        // Add calculation functions for lease calculations
+        function calculateLeaseDetails() {
+            const rentFrom = document.getElementById('renewal_rent_from').value;
+            const rentUntil = document.getElementById('renewal_rent_until').value;
+            const monthlyRate = parseFloat(document.getElementById('renewal_monthly_rate').value);
+            const downpaymentAmount = parseFloat(document.getElementById('renewal_downpayment_amount').value) || 0;
+            
+            if (!rentFrom || !rentUntil || isNaN(monthlyRate)) {
+                return; // Not enough data to calculate
+            }
+            
+            // Calculate exact days between dates
+            const date1 = new Date(rentFrom);
+            const date2 = new Date(rentUntil);
+            const diffTime = Math.abs(date2 - date1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Calculate months more precisely (average month = 365.25/12 days)
+            const exactMonths = diffDays / (365.25/12);
+            
+            // Calculate total rent based on exact months
+            const totalRent = exactMonths * monthlyRate;
+            
+            // Calculate outstanding balance
+            let outstandingBalance = totalRent - downpaymentAmount;
+            
+            // Calculate payable months - ensure consistency with outstanding balance
+            const payableMonths = Math.ceil(outstandingBalance / monthlyRate);
+            
+            // Recalculate outstanding balance based on payable months
+            outstandingBalance = payableMonths * monthlyRate;
+            
+            // Create hidden fields if they don't exist
+            addHiddenFieldIfNeeded('renewal_total_rent', totalRent.toFixed(2));
+            addHiddenFieldIfNeeded('renewal_outstanding_balance', outstandingBalance.toFixed(2));
+            addHiddenFieldIfNeeded('renewal_payable_months', payableMonths);
+            addHiddenFieldIfNeeded('renewal_exact_months', exactMonths.toFixed(2));
+            
+            // Show calculation summary
+            const summaryElement = document.getElementById('renewal_calculation_summary');
+            if (summaryElement) {
+                summaryElement.innerHTML = `
+                    <div class="p-3 bg-blue-50 rounded-md mt-3 mb-2 text-sm">
+                        <div class="flex justify-between mb-1">
+                            <span>Lease Period:</span>
+                            <span>${exactMonths.toFixed(2)} months (${diffDays} days)</span>
+                        </div>
+                        <div class="flex justify-between mb-1">
+                            <span>Total Rent:</span>
+                            <span>₱${totalRent.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between mb-1 font-semibold">
+                            <span>Outstanding Balance:</span>
+                            <span>₱${outstandingBalance.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Payable Months:</span>
+                            <span>${payableMonths}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Add hidden field to the form if it doesn't exist
+        function addHiddenFieldIfNeeded(id, value) {
+            const form = document.getElementById('renewContractForm');
+            let field = document.getElementById(id);
+            
+            if (!field) {
+                field = document.createElement('input');
+                field.type = 'hidden';
+                field.id = id;
+                field.name = id.replace('renewal_', '');
+                form.appendChild(field);
+            }
+            
+            field.value = value;
+        }
+
         // Handle renewal form submission
         document.getElementById('renewContractForm').addEventListener('submit', function(event) {
             event.preventDefault();
+            
+            // Calculate final values before submission
+            calculateLeaseDetails();
 
             const formData = new FormData(this);
             const unitNo = document.getElementById('renewal_unit_no').textContent;
@@ -966,6 +1061,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
                 }).showToast();
             });
         });
+
+        // Add event listeners to the renewal form fields
+        function setupRenewalFormEvents() {
+            const dateFields = ['renewal_rent_from', 'renewal_rent_until'];
+            const amountField = 'renewal_downpayment_amount';
+            
+            dateFields.forEach(id => {
+                const field = document.getElementById(id);
+                if (field) {
+                    field.addEventListener('change', calculateLeaseDetails);
+                }
+            });
+            
+            const downpaymentField = document.getElementById(amountField);
+            if (downpaymentField) {
+                downpaymentField.addEventListener('input', calculateLeaseDetails);
+                downpaymentField.addEventListener('change', calculateLeaseDetails);
+            }
+        }
+
+        // Setup the events when the modal is opened
+        document.getElementById('renewContractModal').addEventListener('shown.modal', setupRenewalFormEvents);
 
         // Search filter functionality
        document.getElementById('search-keyword').addEventListener('input', function () {
@@ -1198,7 +1315,900 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
             const monthlyRate = selectedOption.getAttribute('data-rent');
             document.getElementById('monthly_rate').value = monthlyRate;
         });
+        
+    // Add turnover function
+    function turnoverUnit(tenantId) {
+            
+    // Show loading indicator
+    const loadingToast = Toastify({
+        text: "Loading tenant information...",
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: {
+            background: "#3498db"
+        }
+    });
+    
+    loadingToast.showToast();
+    
+    // Use cache-busting to prevent issues
+    const timestamp = new Date().getTime();
+    
+    fetch(`turnover_unit.php?action=get_details&tenant_id=${tenantId}&_=${timestamp}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            // Verify the content type is JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                throw new Error('Invalid response format: Expected JSON');
+            }
+        })
+        .then(data => {
+            // Hide loading toast when data is received
+            if (loadingToast) {
+                loadingToast.hideToast && loadingToast.hideToast();
+            }
+            
+            if (data.success) {
+                // Populate the modal with tenant information
+                document.getElementById('turnover_tenant_id').value = tenantId;
+                
+                // Safely update text content
+                const tenantNameEl = document.getElementById('turnover_tenant_name');
+                const unitNoEl = document.getElementById('turnover_unit_no');
+                const emailField = document.getElementById('turnover_tenant_email');
+                
+                if (tenantNameEl) tenantNameEl.textContent = data.tenant_name || 'Unknown';
+                if (unitNoEl) unitNoEl.textContent = data.unit_no || 'Unknown';
+                if (emailField) emailField.value = data.email || '';
+                
+                // Reset the turnover progress steps
+                document.querySelectorAll('.turnover-step').forEach(step => {
+                    step.classList.add('hidden');
+                });
+                
+                // Update progress based on turnover status
+                if (data.turnover_status) {
+                    // Helper function to update progress indicators
+                    function updateProgressIndicators(status) {
+                        const progressBars = document.querySelectorAll('.progress-bar');
+                        const stepIndicators = document.querySelectorAll('.flex.flex-col.items-center');
+                        
+                        // Reset all progress indicators first
+                        progressBars.forEach(bar => {
+                            if (bar) bar.style.width = '0%';
+                        });
+                        
+                        stepIndicators.forEach((indicator, index) => {
+                            if (index > 0) { // Skip the first one which is always active
+                                indicator.firstElementChild.classList.remove('bg-blue-500', 'text-white');
+                                indicator.firstElementChild.classList.add('bg-gray-300', 'text-gray-600');
+                            }
+                        });
+                        
+                        // Update based on status
+                        if (status === 'notified' || status === 'scheduled' || status === 'inspected' || status === 'completed') {
+                            if (progressBars[0]) progressBars[0].style.width = '100%';
+                            if (stepIndicators[1] && stepIndicators[1].firstElementChild) {
+                                stepIndicators[1].firstElementChild.classList.remove('bg-gray-300', 'text-gray-600');
+                                stepIndicators[1].firstElementChild.classList.add('bg-blue-500', 'text-white');
+                            }
+                        }
+                        
+                        if (status === 'scheduled' || status === 'inspected' || status === 'completed') {
+                            if (progressBars[1]) progressBars[1].style.width = '100%';
+                            if (stepIndicators[2] && stepIndicators[2].firstElementChild) {
+                                stepIndicators[2].firstElementChild.classList.remove('bg-gray-300', 'text-gray-600');
+                                stepIndicators[2].firstElementChild.classList.add('bg-blue-500', 'text-white');
+                            }
+                        }
+                        
+                        if (status === 'inspected' || status === 'completed') {
+                            if (progressBars[2]) progressBars[2].style.width = '100%';
+                            if (stepIndicators[3] && stepIndicators[3].firstElementChild) {
+                                stepIndicators[3].firstElementChild.classList.remove('bg-gray-300', 'text-gray-600');
+                                stepIndicators[3].firstElementChild.classList.add('bg-blue-500', 'text-white');
+                            }
+                        }
+                    }
+                    
+                    // Update the progress indicators
+                    updateProgressIndicators(data.turnover_status);
+                    
+                    // Show appropriate step based on status
+                    showTurnoverStep(data.turnover_status);
+                } else {
+                    // No status, start at step 1
+                    document.getElementById('turnover-step-1').classList.remove('hidden');
+                }
+                
+                // Show the modal
+                document.getElementById('turnoverModal').classList.remove('hidden');
+            } else {
+                throw new Error(data.message || 'Unknown error occurred');
+            }
+        })
+        .catch(error => {
+            // Hide loading toast on error
+            if (loadingToast) {
+                loadingToast.hideToast && loadingToast.hideToast();
+            }
+            
+            console.error('Error:', error);
+            showToast('Error retrieving tenant information: ' + error.message, 'error');
+        });
+}
+
+// Helper function to show the appropriate turnover step based on status
+function showTurnoverStep(status) {
+    switch (status) {
+        case 'completed':
+            document.getElementById('turnover-step-4').classList.remove('hidden');
+            document.getElementById('turnover-step-4').innerHTML = `
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-500 mb-4">
+                        <i class="fas fa-check-circle text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Turnover Process Complete!</h3>
+                    <p class="text-gray-600 mb-6">This unit has been successfully turned over.</p>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4 text-sm text-blue-800">
+                        The tenant status has been updated to "turnover" and the property status has been set to "Available".
+                    </div>
+                    <button type="button" 
+                            class="mt-4 px-6 py-3 bg-gray-600 text-white text-lg font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all"
+                            onclick="closeTurnoverModal()">
+                        Close <i class="fas fa-times ml-2"></i>
+                    </button>
+                </div>
+            `;
+            break;
+        case 'inspected':
+            document.getElementById('turnover-step-3').classList.remove('hidden');
+            document.getElementById('turnover-step-3').innerHTML = `
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-4">
+                        <i class="fas fa-check text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Inspection Already Completed!</h3>
+                    <p class="text-gray-600 mb-6">The inspection results have been recorded successfully.</p>
+                    <div class="border-t border-b border-gray-200 py-4 my-4">
+                        <p class="text-sm font-medium text-gray-700 mb-4">Continue to the final step in the process</p>
+                    </div>
+                    <button type="button" 
+                            class="mt-2 px-6 py-3 bg-blue-600 text-white text-lg font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
+                            onclick="goToTurnoverStep(4)">
+                        Continue to Completion <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            `;
+            break;
+        case 'scheduled':
+            document.getElementById('turnover-step-2').classList.remove('hidden');
+            document.getElementById('turnover-step-2').innerHTML = `
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-4">
+                        <i class="fas fa-check text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Inspection Already Scheduled!</h3>
+                    <p class="text-gray-600 mb-6">The inspection has been scheduled for this unit.</p>
+                    <div class="border-t border-b border-gray-200 py-4 my-4">
+                        <p class="text-sm font-medium text-gray-700 mb-4">Continue to the next step in the process</p>
+                    </div>
+                    <button type="button" 
+                            class="mt-2 px-6 py-3 bg-blue-600 text-white text-lg font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
+                            onclick="goToTurnoverStep(3)">
+                        Continue to Inspection <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            `;
+            break;
+        case 'notified':
+            document.getElementById('turnover-step-1').classList.remove('hidden');
+            document.getElementById('turnover-step-1').innerHTML = `
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-500 mb-4">
+                        <i class="fas fa-check text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Notification Already Sent!</h3>
+                    <p class="text-gray-600 mb-6">The tenant has been previously notified about the turnover process.</p>
+                    <p class="text-sm text-gray-500 mb-4">Continue to the next step in the process</p>
+                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="goToTurnoverStep(2)">
+                        Continue to Scheduling
+                    </button>
+                </div>
+            `;
+            break;
+        default:
+            // If status is pending or unknown, show step 1 normally
+            document.getElementById('turnover-step-1').classList.remove('hidden');
+    }
+}
+
+// Improved scheduleInspection function with better error handling
+function scheduleInspection() {
+    const tenantId = document.getElementById('turnover_tenant_id').value;
+    const inspectionDate = document.getElementById('inspection_date').value;
+    const staffAssigned = document.getElementById('staff_assigned').value;
+    const inspectionNotes = document.getElementById('inspection_notes').value || '';
+    const scheduleButton = document.querySelector('button[onclick="scheduleInspection()"]');
+    
+    if (!inspectionDate || !staffAssigned) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Show spinner and disable button
+    scheduleButton.disabled = true;
+    const originalBtnText = scheduleButton.innerHTML;
+    scheduleButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Scheduling...';
+    
+    // Add cache-busting parameter and use FormData for safer transmission
+    const timestamp = new Date().getTime();
+    const formData = new FormData();
+    formData.append('action', 'schedule');
+    formData.append('tenant_id', tenantId);
+    formData.append('inspection_date', inspectionDate);
+    formData.append('staff_assigned', staffAssigned);
+    formData.append('notes', inspectionNotes);
+    
+    // Convert FormData to URL-encoded string for the fetch request
+    const urlEncodedData = new URLSearchParams();
+    for (const [key, value] of formData) {
+        urlEncodedData.append(key, value);
+    }
+    
+    fetch(`turnover_unit.php?_=${timestamp}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',  // Request JSON specifically
+            'X-Requested-With': 'XMLHttpRequest'  // Mark as AJAX request
+        },
+        body: urlEncodedData
+    })
+    .then(response => {
+        // Check if response is valid
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Verify content type
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            throw new Error('Invalid response format: Expected JSON but got ' + contentType);
+        }
+    })
+    .then(data => {
+        if (data.success) {
+            showToast('Inspection scheduled successfully!', 'success');
+            
+            // Safely update progress indicators
+            safelyUpdateProgressIndicator(1, '100%');
+            safelyUpdateStepIndicator(2);
+            
+            // Store the updated status safely
+            const tenantIdElement = document.getElementById('turnover_tenant_id');
+            if (tenantIdElement) {
+                tenantIdElement.setAttribute('data-status', 'scheduled');
+            }
+            
+            // Update step 2 content safely
+            const step2 = document.getElementById('turnover-step-2');
+            if (step2) {
+                step2.innerHTML = `
+                    <div class="text-center py-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-4">
+                            <i class="fas fa-check text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Inspection Scheduled!</h3>
+                        <p class="text-gray-600 mb-6">The inspection has been scheduled and the tenant has been notified.</p>
+                        <div class="border-t border-b border-gray-200 py-4 my-4">
+                            <p class="text-sm font-medium text-gray-700 mb-4">Next Step: Conduct the unit inspection</p>
+                        </div>
+                        <button type="button" 
+                                id="continue-to-inspection"
+                                class="mt-2 px-6 py-3 bg-blue-600 text-white text-lg font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all">
+                            Continue to Inspection <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listener with a slight delay to ensure DOM is updated
+                setTimeout(() => {
+                    const continueButton = document.getElementById('continue-to-inspection');
+                    if (continueButton) {
+                        continueButton.addEventListener('click', () => goToTurnoverStep(3));
+                    }
+                }, 100);
+            }
+        } else {
+            throw new Error(data.message || 'Unknown error occurred');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to schedule inspection: ' + error.message, 'error');
+        
+        // Reset button state
+        if (scheduleButton) {
+            scheduleButton.disabled = false;
+            scheduleButton.innerHTML = originalBtnText;
+        }
+    });
+}
+
+// Helper function to safely update progress bar
+function safelyUpdateProgressIndicator(index, width) {
+    const progressBars = document.querySelectorAll('.progress-bar');
+    if (progressBars && progressBars[index]) {
+        progressBars[index].style.width = width;
+    }
+}
+
+// Helper function to safely update step indicator
+function safelyUpdateStepIndicator(index) {
+    const stepIndicators = document.querySelectorAll('.flex.flex-col.items-center');
+    if (stepIndicators && stepIndicators[index] && stepIndicators[index].firstElementChild) {
+        stepIndicators[index].firstElementChild.classList.remove('bg-gray-300', 'text-gray-600');
+        stepIndicators[index].firstElementChild.classList.add('bg-blue-500', 'text-white');
+    }
+}
+
+// Function to send notification email
+function sendTurnoverNotification() {
+    const tenantId = document.getElementById('turnover_tenant_id').value;
+    const customMessage = document.getElementById('turnover_notification_message').value;
+    const notifyButton = document.querySelector('[onclick="sendTurnoverNotification()"]');
+    
+    // Show spinner and disable button
+    notifyButton.disabled = true;
+    const originalBtnText = notifyButton.innerHTML;
+    notifyButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending...';
+    
+    fetch('turnover_unit.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=notify&tenant_id=${tenantId}&message=${encodeURIComponent(customMessage)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Notification sent successfully!', 'success');
+            
+            // Update progress indicator
+            document.querySelectorAll('.progress-bar')[0].style.width = '100%';
+            document.querySelectorAll('.flex.flex-col.items-center')[1].firstElementChild.classList.remove('bg-gray-300', 'text-gray-600');
+            document.querySelectorAll('.flex.flex-col.items-center')[1].firstElementChild.classList.add('bg-blue-500', 'text-white');
+            
+            // Show transition message before moving to next step
+            const step1 = document.getElementById('turnover-step-1');
+            step1.innerHTML = `
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-500 mb-4">
+                        <i class="fas fa-check text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Notification Sent Successfully!</h3>
+                    <p class="text-gray-600 mb-6">The tenant has been notified via email about the upcoming turnover process.</p>
+                    <p class="text-sm text-gray-500 mb-4">Next: Schedule an inspection for the unit</p>
+                    <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="goToTurnoverStep(2)">
+                        Continue to Scheduling
+                    </button>
+                </div>
+            `;
+        } else {
+            showToast('Error: ' + data.message, 'error');
+            // Reset button
+            notifyButton.disabled = false;
+            notifyButton.innerHTML = originalBtnText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to send notification', 'error');
+        // Reset button
+        notifyButton.disabled = false;
+        notifyButton.innerHTML = originalBtnText;
+    });
+}
+
+// Similarly update other functions with spinners
+function scheduleInspection() {
+    const tenantId = document.getElementById('turnover_tenant_id').value;
+    const inspectionDate = document.getElementById('inspection_date').value;
+    const staffAssigned = document.getElementById('staff_assigned').value;
+    const inspectionNotes = document.getElementById('inspection_notes').value || '';
+    const scheduleButton = document.querySelector('button[onclick="scheduleInspection()"]');
+    
+    if (!inspectionDate || !staffAssigned) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Show spinner and disable button
+    scheduleButton.disabled = true;
+    const originalBtnText = scheduleButton.innerHTML;
+    scheduleButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Scheduling...';
+    
+    // Add cache-busting parameter
+    const timestamp = new Date().getTime();
+    
+    // Create form data for better control
+    const formData = new FormData();
+    formData.append('action', 'schedule');
+    formData.append('tenant_id', tenantId);
+    formData.append('inspection_date', inspectionDate);
+    formData.append('staff_assigned', staffAssigned);
+    formData.append('notes', inspectionNotes);
+    
+    fetch(`turnover_unit.php?_=${timestamp}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            throw new Error('Invalid response format: Expected JSON');
+        }
+    })
+    .then(data => {
+        if (data.success) {
+            showToast('Inspection scheduled successfully!', 'success');
+            
+            // Update progress indicator safely
+            const progressBars = document.querySelectorAll('.progress-bar');
+            if (progressBars && progressBars[1]) {
+                progressBars[1].style.width = '100%';
+            }
+            
+            const stepIndicators = document.querySelectorAll('.flex.flex-col.items-center');
+            if (stepIndicators && stepIndicators[2] && stepIndicators[2].firstElementChild) {
+                stepIndicators[2].firstElementChild.classList.remove('bg-gray-300', 'text-gray-600');
+                stepIndicators[2].firstElementChild.classList.add('bg-blue-500', 'text-white');
+            }
+            
+            // Store the updated status safely
+            const tenantIdElement = document.getElementById('turnover_tenant_id');
+            if (tenantIdElement) {
+                tenantIdElement.setAttribute('data-status', 'scheduled');
+            }
+            
+            // Update step 2 content
+            const step2 = document.getElementById('turnover-step-2');
+            if (step2) {
+                step2.innerHTML = `
+                    <div class="text-center py-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-4">
+                            <i class="fas fa-check text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Inspection Scheduled!</h3>
+                        <p class="text-gray-600 mb-6">The inspection has been scheduled and the tenant has been notified.</p>
+                        <div class="border-t border-b border-gray-200 py-4 my-4">
+                            <p class="text-sm font-medium text-gray-700 mb-4">Next Step: Conduct the unit inspection</p>
+                        </div>
+                        <button type="button" 
+                                id="continue-to-inspection"
+                                class="mt-2 px-6 py-3 bg-blue-600 text-white text-lg font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all">
+                            Continue to Inspection <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listener with a slight delay to ensure DOM is updated
+                setTimeout(() => {
+                    const continueButton = document.getElementById('continue-to-inspection');
+                    if (continueButton) {
+                        continueButton.addEventListener('click', () => goToTurnoverStep(3));
+                    }
+                }, 100);
+            }
+        } else {
+            throw new Error(data.message || 'Unknown error occurred');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to schedule inspection: ' + error.message, 'error');
+        
+        // Reset button state
+        if (scheduleButton) {
+            scheduleButton.disabled = false;
+            scheduleButton.innerHTML = originalBtnText;
+        }
+    });
+}
+
+// Function to submit inspection results
+function submitInspection() {
+    const tenantId = document.getElementById('turnover_tenant_id').value;
+    const formData = new FormData(document.getElementById('inspection_form'));
+    const submitButton = document.querySelector('button[onclick="submitInspection()"]');
+    
+    // Validate form inputs
+    const cleanliness = document.querySelector('select[name="cleanliness"]').value;
+    const damages = document.querySelector('select[name="damages"]').value;
+    const equipment = document.querySelector('select[name="equipment"]').value;
+    const report = document.querySelector('textarea[name="inspection_report"]').value;
+    
+    if (!cleanliness || !damages || !equipment || !report) {
+        showToast('Please complete all required fields', 'error');
+        return;
+    }
+    
+    // Show spinner and disable button
+    submitButton.disabled = true;
+    const originalBtnText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+    
+    formData.append('action', 'inspect');
+    formData.append('tenant_id', tenantId);
+    
+    fetch('turnover_unit.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Inspection results saved successfully!', 'success');
+            
+            // Update progress indicator
+            document.querySelectorAll('.progress-bar')[2].style.width = '100%';
+            document.querySelectorAll('.flex.flex-col.items-center')[3].firstElementChild.classList.remove('bg-gray-300', 'text-gray-600');
+            document.querySelectorAll('.flex.flex-col.items-center')[3].firstElementChild.classList.add('bg-blue-500', 'text-white');
+            
+            // Show transition message before moving to next step
+            const step3 = document.getElementById('turnover-step-3');
+            step3.innerHTML = `
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-500 mb-4">
+                        <i class="fas fa-check text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Inspection Completed!</h3>
+                    <p class="text-gray-600 mb-6">The inspection results have been recorded successfully.</p>
+                    <div class="border-t border-b border-gray-200 py-4 my-4">
+                        <p class="text-sm font-medium text-gray-700 mb-4">Next Step: Complete the turnover process</p>
+                    </div>
+                    <button type="button" 
+                            class="mt-2 px-6 py-3 bg-blue-600 text-white text-lg font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
+                            onclick="goToTurnoverStep(4)">
+                        Finalize Turnover <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listener to ensure button works
+            setTimeout(() => {
+                const continueButton = step3.querySelector('button');
+                if (continueButton) {
+                    continueButton.addEventListener('click', () => goToTurnoverStep(4));
+                }
+            }, 100);
+        } else {
+            showToast('Error: ' + data.message, 'error');
+            // Reset button
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalBtnText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to save inspection results', 'error');
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalBtnText;
+    });
+}
+
+// Function to complete turnover
+function completeTurnover() {
+    const tenantId = document.getElementById('turnover_tenant_id').value;
+    const keysReturned = document.getElementById('keys_returned').checked;
+    const additionalNotes = document.getElementById('completion_notes').value;
+    const completeButton = document.querySelector('button[onclick="completeTurnover()"]');
+    
+    if (!keysReturned) {
+        showToast('Keys must be returned to complete turnover', 'error');
+        return;
+    }
+    
+    // Show spinner and disable button
+    completeButton.disabled = true;
+    const originalBtnText = completeButton.innerHTML;
+    completeButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Completing...';
+    
+    fetch('turnover_unit.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `action=complete&tenant_id=${tenantId}&notes=${encodeURIComponent(additionalNotes)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Turnover completed successfully!', 'success');
+            
+            // Show completion message
+            const step4 = document.getElementById('turnover-step-4');
+            step4.innerHTML = `
+                <div class="text-center py-6">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-500 mb-4">
+                        <i class="fas fa-check-circle text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Turnover Process Complete!</h3>
+                    <p class="text-gray-600 mb-6">The unit has been successfully turned over and is now available for new tenants.</p>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4 text-sm text-blue-800">
+                        The tenant status has been updated to "turnover" and the property status has been set to "Available".
+                    </div>
+                    <button type="button" 
+                            class="mt-4 px-6 py-3 bg-gray-600 text-white text-lg font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all"
+                            onclick="closeTurnoverModal()">
+                        Close <i class="fas fa-times ml-2"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Reload page after a delay to update tenant status
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        } else {
+            showToast('Error: ' + data.message, 'error');
+            // Reset button
+            completeButton.disabled = false;
+            completeButton.innerHTML = originalBtnText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to complete turnover', 'error');
+        // Reset button
+        completeButton.disabled = false;
+        completeButton.innerHTML = originalBtnText;
+    });
+}
     </script>
+
+<!-- Add Turnover Process Modal -->
+<div id="turnoverModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6 border-b pb-3">
+            <h2 class="text-2xl font-semibold text-gray-800">Unit Turnover Process</h2>
+            <button onclick="closeTurnoverModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <input type="hidden" id="turnover_tenant_id">
+        
+        <!-- Tenant Info Section -->
+        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+            <h3 class="text-lg font-medium text-gray-700 mb-2">Tenant Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-500">Tenant Name:</p>
+                    <p id="turnover_tenant_name" class="font-semibold"></p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Unit:</p>
+                    <p id="turnover_unit_no" class="font-semibold"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="flex justify-between mb-8">
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mb-1">1</div>
+                <span class="text-xs text-center">Notification</span>
+            </div>
+            <div class="flex-1 h-1 bg-gray-200 self-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 h-full bg-blue-500 progress-bar" style="width: 0%"></div>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center mb-1">2</div>
+                <span class="text-xs text-center">Schedule</span>
+            </div>
+            <div class="flex-1 h-1 bg-gray-200 self-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 h-full bg-blue-500 progress-bar" style="width: 0%"></div>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center mb-1">3</div>
+                <span class="text-xs text-center">Inspection</span>
+            </div>
+            <div class="flex-1 h-1 bg-gray-200 self-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 h-full bg-blue-500 progress-bar" style="width: 0%"></div>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center mb-1">4</div>
+                <span class="text-xs text-center">Complete</span>
+            </div>
+        </div>
+        
+        <!-- Step 1: Notify Tenant -->
+        <div id="turnover-step-1" class="turnover-step">
+            <h3 class="text-xl font-semibold mb-4">Step 1: Notify Tenant</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tenant Email</label>
+                <input type="email" id="turnover_tenant_email" readonly class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notification Message</label>
+                <textarea id="turnover_notification_message" rows="5" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">Dear tenant,
+
+We would like to inform you of your upcoming move-out and need to schedule a unit inspection. Please prepare the unit according to our turnover guidelines.
+
+Thank you,
+Building Management</textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" onclick="closeTurnoverModal()">Cancel</button>
+                <button type="button" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" onclick="sendTurnoverNotification()">Send Notification</button>
+            </div>
+        </div>
+        
+        <!-- Step 2: Schedule Inspection -->
+        <div id="turnover-step-2" class="turnover-step hidden">
+            <h3 class="text-xl font-semibold mb-4">Step 2: Schedule Inspection</h3>
+            <div class="mb-4">
+                <label for="inspection_date" class="block text-sm font-medium text-gray-700 mb-1">Inspection Date</label>
+                <input type="datetime-local" id="inspection_date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div class="mb-4">
+                <label for="staff_assigned" class="block text-sm font-medium text-gray-700 mb-1">Staff Assigned</label>
+                <select id="staff_assigned" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select staff member</option>
+                    <?php
+                    // Query to get staff members from staff table
+                    $staffQuery = "SELECT staff_id, name FROM staff ORDER BY name";
+                    $staffResult = $conn->query($staffQuery);
+                    while ($staff = $staffResult->fetch_assoc()) {
+                        echo "<option value=\"{$staff['staff_id']}\">{$staff['name']}</option>";
+                    }
+                    ?>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label for="inspection_notes" class="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                <textarea id="inspection_notes" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="flex justify-between">
+                <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" onclick="goToTurnoverStep(1)">Back</button>
+                <button type="button" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" onclick="scheduleInspection()">Schedule Inspection</button>
+            </div>
+        </div>
+        
+        <!-- Step 3: Conduct Inspection -->
+        <div id="turnover-step-3" class="turnover-step hidden">
+            <h3 class="text-xl font-semibold mb-4">Step 3: Conduct Inspection</h3>
+            <form id="inspection_form">
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cleanliness</label>
+                        <select name="cleanliness" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Select rating</option>
+                            <option value="excellent">Excellent</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                            <option value="poor">Poor</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Damages</label>
+                        <select name="damages" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Select rating</option>
+                            <option value="none">None</option>
+                            <option value="minor">Minor</option>
+                            <option value="moderate">Moderate</option>
+                            <option value="major">Major</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Equipment Condition</label>
+                        <select name="equipment" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Select rating</option>
+                            <option value="excellent">Excellent</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                            <option value="poor">Poor</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Inspection Photos (Max 5)</label>
+                        <input type="file" name="inspection_photos[]" accept="image/*" multiple class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white" onchange="previewInspectionPhotos(this)">
+                        <p class="text-xs text-gray-500 mt-1">Please upload photos of any damages or issues</p>
+                        <div id="photo-previews" class="grid grid-cols-3 gap-2 mt-2"></div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Inspection Notes</label>
+                        <textarea name="inspection_report" rows="4" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+                    </div>
+                </div>
+            </form>
+            <div class="flex justify-between">
+                <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" onclick="goToTurnoverStep(2)">Back</button>
+                <button type="button" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" onclick="submitInspection()">Submit Inspection</button>
+            </div>
+        </div>
+        
+        <!-- Step 4: Complete Turnover -->
+        <div id="turnover-step-4" class="turnover-step hidden">
+            <h3 class="text-xl font-semibold mb-4">Step 4: Complete Turnover</h3>
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="checkbox" id="keys_returned" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <span class="ml-2">Keys have been returned</span>
+                </label>
+            </div>
+            <div class="mb-6">
+                <label for="completion_notes" class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+                <textarea id="completion_notes" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="flex justify-between">
+                <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" onclick="goToTurnoverStep(3)">Back</button>
+                <button type="button" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700" onclick="completeTurnover()">Complete Turnover</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Photo preview function
+function previewInspectionPhotos(input) {
+    const previewsContainer = document.getElementById('photo-previews');
+    previewsContainer.innerHTML = '';
+    
+    if (input.files) {
+        const maxFiles = 5;
+        const filesToShow = Math.min(input.files.length, maxFiles);
+        
+        for (let i = 0; i < filesToShow; i++) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const preview = document.createElement('div');
+                preview.className = 'relative';
+                preview.innerHTML = `
+                    <img src="${e.target.result}" alt="Photo ${i+1}" class="w-full h-24 object-cover rounded-lg">
+                    <span class="absolute top-0 right-0 bg-gray-800 text-white text-xs rounded-bl-lg px-1">${i+1}</span>
+                `;
+                previewsContainer.appendChild(preview);
+            }
+            
+            reader.readAsDataURL(input.files[i]);
+        }
+        
+        if (input.files.length > maxFiles) {
+            const note = document.createElement('div');
+            note.className = 'text-xs text-gray-500 col-span-3 mt-1';
+            note.textContent = `+${input.files.length - maxFiles} more files selected`;
+            previewsContainer.appendChild(note);
+        }
+    }
+}
+</script>
 
 <!-- Add a receipt viewer modal -->
 <div id="receiptModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">

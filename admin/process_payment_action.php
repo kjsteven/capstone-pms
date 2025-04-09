@@ -95,7 +95,33 @@ try {
              WHERE payment_id = ?"
         );
         $updateStmt->bind_param("si", $adminName, $payment_id);
-        $updateStmt->execute();
+        
+        try {
+            // After updating payment status
+            if ($updateStmt->execute()) {
+                try {
+                    // Create notification for tenant with error logging
+                    $tenantMessage = "Your payment of PHP " . number_format($payment['amount'], 2) . " has been approved.";
+                    $tenantNotifResult = createNotification($payment['user_id'], $tenantMessage, 'payment_approved');
+                    if (!$tenantNotifResult) {
+                        error_log("Failed to create tenant notification for payment approval");
+                    }
+
+                    // Create notification for admin with error logging
+                    $adminMessage = "Payment of PHP " . number_format($payment['amount'], 2) . " from " . 
+                                  $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ") has been approved";
+                    $adminNotifResult = createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment');
+                    if (!$adminNotifResult) {
+                        error_log("Failed to create admin notification for payment approval");
+                    }
+                } catch (Exception $notifError) {
+                    error_log("Notification error during payment approval: " . $notifError->getMessage());
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Error in payment approval: " . $e->getMessage());
+            throw $e;
+        }
         
         // Check if this is a rent payment (only update balances for rent payments)
         $paymentTypeStmt = $conn->prepare("SELECT payment_type FROM payments WHERE payment_id = ?");
@@ -173,15 +199,6 @@ try {
             }
         }
         
-        // Create notification for tenant
-        $tenantMessage = "Your payment of PHP " . number_format($payment['amount'], 2) . " has been approved.";
-        createNotification($payment['user_id'], $tenantMessage, 'payment_approved');
-
-        // Create notification for admin
-        $adminMessage = "Payment of PHP " . number_format($payment['amount'], 2) . " from " . 
-                       $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ") has been approved";
-        createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment');
-        
         // Log activity
         $activityDetails = "Approved payment of ₱" . number_format($payment['amount'], 2) . 
                           " for " . $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ")";
@@ -211,7 +228,36 @@ try {
              WHERE payment_id = ?"
         );
         $updateStmt->bind_param("sssi", $adminName, $rejectionReason, $rejectionReason, $payment_id);
-        $updateStmt->execute();
+        
+        try {
+            // After updating payment status
+            if ($updateStmt->execute()) {
+                try {
+                    // Create notification for tenant with error logging
+                    $tenantMessage = "Your payment of PHP " . number_format($payment['amount'], 2) . " has been rejected.";
+                    if (!empty($rejectionReason)) {
+                        $tenantMessage .= " Reason: " . $rejectionReason;
+                    }
+                    $tenantNotifResult = createNotification($payment['user_id'], $tenantMessage, 'payment_rejected');
+                    if (!$tenantNotifResult) {
+                        error_log("Failed to create tenant notification for payment rejection");
+                    }
+
+                    // Create notification for admin with error logging
+                    $adminMessage = "Payment of PHP " . number_format($payment['amount'], 2) . " from " . 
+                                  $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ") has been rejected";
+                    $adminNotifResult = createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment');
+                    if (!$adminNotifResult) {
+                        error_log("Failed to create admin notification for payment rejection");
+                    }
+                } catch (Exception $notifError) {
+                    error_log("Notification error during payment rejection: " . $notifError->getMessage());
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Error in payment rejection: " . $e->getMessage());
+            throw $e;
+        }
         
         // Log activity
         $activityDetails = "Rejected payment of ₱" . number_format($payment['amount'], 2) . 
@@ -256,18 +302,6 @@ try {
                 error_log("Payment rejection email sent successfully to: $tenantEmail");
             }
         }
-        
-        // Create notification for tenant
-        $tenantMessage = "Your payment of PHP " . number_format($payment['amount'], 2) . " has been rejected.";
-        if (!empty($rejectionReason)) {
-            $tenantMessage .= " Reason: " . $rejectionReason;
-        }
-        createNotification($payment['user_id'], $tenantMessage, 'payment_rejected');
-
-        // Create notification for admin
-        $adminMessage = "Payment of PHP " . number_format($payment['amount'], 2) . " from " . 
-                       $payment['tenant_name'] . " (Unit " . $payment['unit_no'] . ") has been rejected";
-        createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment');
         
         $message = "Payment rejected successfully";
     }

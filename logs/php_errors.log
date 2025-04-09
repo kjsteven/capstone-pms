@@ -330,3 +330,25 @@ Stack trace:
 [09-Apr-2025 19:33:41 Europe/Berlin] Starting invoice_actions.php with action: view
 [09-Apr-2025 19:33:44 Europe/Berlin] Starting invoice_actions.php with action: send_email
 [09-Apr-2025 19:34:02 Europe/Berlin] Starting invoice_actions.php with action: update_status
+[09-Apr-2025 19:45:07 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Apr-2025 19:45:07 Europe/Berlin] Preparing to insert payment for tenant ID: 55, amount: 90000, processed by: 1
+[09-Apr-2025 19:45:10 Europe/Berlin] Payment confirmation email sent successfully to: palmagenalyn17@gmail.com
+[09-Apr-2025 19:45:10 Europe/Berlin] PHP error in manual payment: Call to undefined function createNotification() - #0 {main}
+[09-Apr-2025 19:50:21 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Apr-2025 19:50:21 Europe/Berlin] Preparing to insert payment for tenant ID: 47, amount: 90000, processed by: 1
+[09-Apr-2025 19:50:24 Europe/Berlin] Payment confirmation email sent successfully to: kjstevengaming@gmail.com
+[09-Apr-2025 19:50:24 Europe/Berlin] PHP Warning:  Undefined array key "user_id" in C:\xampp\htdocs\capstone-pms\admin\process_manual_payment.php on line 308
+[09-Apr-2025 19:50:24 Europe/Berlin] Failed to create notifications: Column 'user_id' cannot be null
+[09-Apr-2025 19:51:33 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Apr-2025 19:51:33 Europe/Berlin] Preparing to insert payment for tenant ID: 55, amount: 90000, processed by: 1
+[09-Apr-2025 19:51:36 Europe/Berlin] Payment confirmation email sent successfully to: palmagenalyn17@gmail.com
+[09-Apr-2025 19:51:36 Europe/Berlin] PHP Warning:  Undefined array key "user_id" in C:\xampp\htdocs\capstone-pms\admin\process_manual_payment.php on line 308
+[09-Apr-2025 19:51:36 Europe/Berlin] Failed to create notifications: Column 'user_id' cannot be null
+[09-Apr-2025 19:56:05 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Apr-2025 19:56:05 Europe/Berlin] Preparing to insert payment for tenant ID: 55, amount: 90000, processed by: 1
+[09-Apr-2025 19:56:08 Europe/Berlin] Payment confirmation email sent successfully to: palmagenalyn17@gmail.com
+[09-Apr-2025 19:56:08 Europe/Berlin] PHP Warning:  Undefined array key "user_id" in C:\xampp\htdocs\capstone-pms\admin\process_manual_payment.php on line 308
+[09-Apr-2025 19:56:08 Europe/Berlin] Failed to create notifications: Column 'user_id' cannot be null
+[09-Apr-2025 20:00:20 Europe/Berlin] Processing manual payment. User: 1, Method: POST
+[09-Apr-2025 20:00:20 Europe/Berlin] Preparing to insert payment for tenant ID: 53, amount: 1500, processed by: 1
+[09-Apr-2025 20:00:24 Europe/Berlin] Payment confirmation email sent successfully to: palmagenalyn17@gmail.com

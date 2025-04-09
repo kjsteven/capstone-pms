@@ -2,6 +2,7 @@
 require_once '../session/session_manager.php';
 require '../session/db.php';
 require_once '../session/audit_trail.php';
+require_once '../notification/notif_handler.php';  // Add this line
 
 start_secure_session();
 

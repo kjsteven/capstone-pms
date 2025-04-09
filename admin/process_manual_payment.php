@@ -42,6 +42,7 @@ try {
     require '../session/db.php';
     require_once '../session/audit_trail.php';
     require_once '../utils/email_sender.php';
+    require_once '../notification/notif_handler.php';  // Add this line
 
     // Use start_secure_session instead of session_start
     start_secure_session();
@@ -252,13 +253,14 @@ try {
     
     // Get tenant info for logging
     $tenantInfoStmt = $conn->prepare(
-        "SELECT t.tenant_id, u.name AS tenant_name, p.unit_no, u.email
+        "SELECT t.tenant_id, t.user_id, u.name AS tenant_name, p.unit_no, u.email
          FROM tenants t
          JOIN users u ON t.user_id = u.user_id
          JOIN property p ON t.unit_rented = p.unit_id
          WHERE t.tenant_id = ?"
     );
     $tenantInfoStmt->bind_param("i", $tenant_id);
+    
     if (!$tenantInfoStmt->execute()) {
         throw new Exception('Error retrieving tenant info: ' . $tenantInfoStmt->error);
     }
@@ -268,6 +270,24 @@ try {
     
     if (!$tenant) {
         throw new Exception('Tenant information not found');
+    }
+
+    // Create notification for tenant
+    try {
+        // For tenant
+        $tenantMessage = "Your payment of PHP " . number_format($amount, 2) . " has been recorded successfully.";
+        if (!createNotification($tenant['user_id'], $tenantMessage, 'payment_recorded')) {
+            error_log("Failed to create tenant notification for user_id: " . $tenant['user_id']);
+        }
+
+        // For admin
+        $adminMessage = "Manual payment of PHP " . number_format($amount, 2) . " recorded for " . 
+                       $tenant['tenant_name'] . " (Unit " . $tenant['unit_no'] . ").";
+        if (!createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment')) {
+            error_log("Failed to create admin notification for user_id: " . $_SESSION['user_id']);
+        }
+    } catch (Exception $notifError) {
+        error_log("Notification error: " . $notifError->getMessage());
     }
     
     // Prepare payment data for email
@@ -300,21 +320,6 @@ try {
         }
     }
     
-    // After successful payment insertion, add notifications
-    try {
-        // Create notification for tenant
-        $tenantMessage = "Your payment of PHP " . number_format($amount, 2) . " has been recorded.";
-        createNotification($tenant['user_id'], $tenantMessage, 'payment_recorded');
-
-        // Create notification for admin
-        $adminMessage = "Manual payment of PHP " . number_format($amount, 2) . " recorded for " . 
-                       $tenant['tenant_name'] . " (Unit " . $tenant['unit_no'] . ")";
-        createNotification($_SESSION['user_id'], $adminMessage, 'admin_payment');
-    } catch (Exception $notifError) {
-        // Log notification error but continue with the process
-        error_log("Failed to create notifications: " . $notifError->getMessage());
-    }
-
     // Commit transaction
     $conn->commit();
     

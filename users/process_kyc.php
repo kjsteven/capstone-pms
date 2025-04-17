@@ -4,6 +4,7 @@ session_start();
 require_once '../session/db.php';
 require_once '../session/audit_trail.php';
 require_once '../notification/notif_handler.php';
+require_once 'email_kyc.php';  // Add this line
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -250,6 +251,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // Create notification for admin (assuming admin user_id is 1)
                     $adminNotification = "New KYC verification request from " . htmlspecialchars($_POST['firstName'] . ' ' . $_POST['lastName']);
                     createNotification(1, $adminNotification, 'kyc_admin');
+
+                    // Send email notification
+                    $emailSent = sendKYCSubmissionEmail($email, $firstName);
+                    if (!$emailSent) {
+                        error_log("Failed to send KYC submission email to user: $email");
+                    }
 
                     // Commit transaction
                     $conn->commit();

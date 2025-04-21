@@ -85,7 +85,7 @@
     }
 
     // Query to get maintenance requests
-    $query = "SELECT id, unit, issue, description, service_date, status, image, maintenance_cost 
+    $query = "SELECT id, unit, issue, description, service_date, status, image, maintenance_cost, report_pdf 
               FROM maintenance_requests 
               WHERE user_id = ? AND archived = 0";
               
@@ -294,6 +294,7 @@
                     <th class="py-2 px-4 border text-center align-middle">Status</th>
                     <th class="py-2 px-4 border text-center align-middle">Image</th>
                     <th class="py-2 px-4 border text-center align-middle">Maintenance Cost</th>
+                    <th class="py-2 px-4 border text-center align-middle">Report</th>
                     <th class="py-2 px-4 border text-center align-middle">Actions</th>
                 </tr>
             </thead>
@@ -331,6 +332,17 @@
                             <td class="px-4 py-2 border-b border-gray-300 text-center">
                                 <?php echo $row['maintenance_cost'] ? '₱' . number_format($row['maintenance_cost'], 2) : 'Not set'; ?>
                             </td>
+                            <td class="px-4 py-2 border-b border-gray-300 text-center">
+                                <?php if (!empty($row['report_pdf'])) : ?>
+                                    <a href="../reports/maintenance_reports/<?php echo htmlspecialchars($row['report_pdf']); ?>" 
+                                       target="_blank" 
+                                       class="text-blue-600 hover:text-blue-800 flex items-center justify-center">
+                                        View Report
+                                    </a>
+                                <?php else : ?>
+                                    <span class="text-gray-500">No report</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="py-2 px-4 text-center border-b">
                                 <div class="flex items-center justify-center space-x-2">
                                     <?php if ($row['status'] === 'Completed'): ?>
@@ -348,7 +360,7 @@
                         <?php endwhile; ?>
                     <?php
                     } else {
-                        echo "<tr><td colspan='8' class='text-center'>No request history found</td></tr>";
+                        echo "<tr><td colspan='9' class='text-center'>No request history found</td></tr>";
                     }
                     ?>
             </tbody>
